@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOBI - Bảng Điều Khiển Bản Quyền</title>
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/lib/index.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased">
+
+    <!-- MÀN HÌNH ĐĂNG NHẬP ADMIN -->
+    <div id="admin-login-screen" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="inline-block p-3.5 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-600/30 text-2xl mb-3">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white tracking-wider">DOBI ADMIN</h2>
+                <p class="text-xs text-slate-400 mt-1">Đăng nhập phiên quản trị hệ thống</p>
+            </div>
+            <form id="admin-login-form" class="space-y-4">
+                <div>
+                    <label class="block font-medium text-slate-400 mb-1 text-xs uppercase tracking-wider">Tài khoản Admin</label>
+                    <input type="text" id="admin-username" required placeholder="admin" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-400 mb-1 text-xs uppercase tracking-wider">Mật khẩu</label>
+                    <input type="password" id="admin-password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500 text-sm">
+                </div>
+                <div id="login-error-msg" class="text-xs text-red-400 text-center font-medium hidden"></div>
+                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition shadow-lg shadow-indigo-600/30 text-sm">
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng Nhập
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-72 bg-slate-900 border-r border-slate-800 flex flex-col justify-between hidden md:flex">
+            <div>
+                <!-- Brand / Logo -->
+                <div class="p-6 border-b border-slate-800 flex items-center space-x-3">
+                    <div class="bg-indigo-600 p-2.5 rounded-lg text-white font-bold shadow-lg shadow-indigo-600/30">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <span class="text-xl font-bold tracking-wider text-white">DOBI AUTH</span>
+                </div>
+
+                <!-- Navigation Links -->
+                <nav class="p-4 space-y-1.5 text-sm">
+                    <a href="#" onclick="switchTab('overview')" id="nav-overview" class="tab-btn flex items-center space-x-3 px-4 py-3 rounded-lg bg-indigo-600/10 text-indigo-400 font-medium border border-indigo-500/20 transition">
+                        <i class="fa-solid fa-chart-pie w-5"></i>
+                        <span>Tổng Quan</span>
+                    </a>
+                    <a href="#" onclick="switchTab('apps')" id="nav-apps" class="tab-btn flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                        <i class="fa-solid fa-box-archive w-5"></i>
+                        <span>Ứng Dụng</span>
+                    </a>
+                    <a href="#" onclick="switchTab('generator')" id="nav-generator" class="tab-btn flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                        <i class="fa-solid fa-wand-magic-sparkles w-5"></i>
+                        <span>Tạo Mã Key</span>
+                    </a>
+                    <a href="#" onclick="switchTab('manager')" id="nav-manager" class="tab-btn flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                        <i class="fa-solid fa-sliders w-5"></i>
+                        <span>Quản Lý Licenses</span>
+                    </a>
+                    <a href="#" onclick="switchTab('integration')" id="nav-integration" class="tab-btn flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                        <i class="fa-solid fa-code w-5"></i>
+                        <span>Kiểm Tra Key</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Account Details Footer -->
+            <div class="p-4 border-t border-slate-800 bg-slate-900/50">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Gói Tài Khoản</span>
+                    <span class="px-2.5 py-0.5 text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded font-medium">Pro Cloud Sync</span>
+                </div>
+                <div class="text-xs text-slate-400 truncate mb-3" title="huypc708@gmail.com">
+                    <i class="fa-solid fa-envelope mr-1.5 text-slate-500"></i> huypc708@gmail.com
+                </div>
+                <button onclick="adminLogout()" class="w-full py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Đăng Xuất</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+            <!-- Top Header -->
+            <header class="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-10 px-6 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <h1 id="header-title" class="text-base font-semibold text-white">Tổng Quan Bảng Điều Khiển</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-slate-400 hidden sm:inline">Hệ Thống: <code class="text-indigo-400 bg-slate-800 px-2 py-1 rounded">DOBI v2.7 Cloud</code></span>
+                    <div class="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center font-bold text-white text-sm">D</div>
+                </div>
+            </header>
+
+            <!-- Dashboard Dynamic Views Container -->
+            <div class="p-6 space-y-6 max-w-7xl mx-auto w-full text-sm">
+
+                <!-- TAB 1: OVERVIEW -->
+                <div id="view-overview" class="space-y-6 tab-content">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
+                            <div class="text-slate-400 font-medium">Tổng Số Ứng Dụng</div>
+                            <div class="text-2xl font-bold text-white mt-1" id="stat-total-apps">1</div>
+                            <div class="text-xs text-indigo-400 mt-2"><i class="fa-solid fa-arrow-up mr-1"></i> Ứng dụng đang hoạt động</div>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
+                            <div class="text-slate-400 font-medium">Tổng Số Mã DOBI</div>
+                            <div class="text-2xl font-bold text-white mt-1" id="stat-total-keys">0</div>
+                            <div class="text-xs text-emerald-400 mt-2"><i class="fa-solid fa-check mr-1"></i> Định dạng: DOBI-xxxxxx-xxxxxx</div>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
+                            <div class="text-slate-400 font-medium">Bảo Mật HWID</div>
+                            <div class="text-2xl font-bold text-white mt-1">Tối đa 1 Thiết Bị</div>
+                            <div class="text-xs text-slate-500 mt-2">Khóa phần cứng khi đăng nhập</div>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 p-5 rounded-xl shadow-sm">
+                            <div class="text-slate-400 font-medium">Trạng Thái Hệ Thống</div>
+                            <div class="text-2xl font-bold text-emerald-400 mt-1">Bảo Mật 100%</div>
+                            <div class="text-xs text-slate-400 mt-2">Đã bật lưu trữ liên tục</div>
+                        </div>
+                    </div>
+
+                    <!-- SELLER KEYS -->
+                    <div class="bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-xl space-y-5">
+                        <div class="flex items-center space-x-3 text-white font-bold text-lg">
+                            <i class="fa-solid fa-key text-amber-400 text-xl"></i>
+                            <span>Khóa Người Bán (Seller Keys)</span>
+                        </div>
+                        
+                        <div class="bg-slate-950 border border-slate-800 p-5 rounded-xl flex items-center justify-between">
+                            <div class="text-sm sm:text-base text-slate-200 font-mono tracking-wide truncate">
+                                <span class="text-slate-400 font-semibold mr-3">OwnerID:</span>
+                                <span class="text-indigo-400 font-bold">49c2856b-d7e8-4b2-9886-0476de8beac1</span>
+                            </div>
+                            <button onclick="copyText('49c2856b-d7e8-4b2-9886-0476de8beac1')" class="p-3 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl transition text-sm flex items-center space-x-1.5 ml-4 shrink-0" title="Sao chép OwnerID">
+                                <i class="fa-regular fa-copy text-base"></i>
+                                <span class="hidden sm:inline">Sao chép</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: APPLICATIONS -->
+                <div id="view-apps" class="space-y-6 tab-content hidden">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-base font-semibold text-white">Quản Lý Ứng Dụng</h2>
+                        <button onclick="openCreateAppModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition shadow-lg shadow-indigo-600/25">
+                            <i class="fa-solid fa-plus mr-1.5"></i> Tạo Ứng Dụng Mới
+                        </button>
+                    </div>
+                    <div id="apps-container" class="space-y-4"></div>
+                </div>
+
+                <!-- TAB 3: KEY GENERATOR -->
+                <div id="view-generator" class="space-y-6 tab-content hidden">
+                    <div class="max-w-xl mx-auto bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-xl">
+                        <div class="text-center mb-6">
+                            <div class="inline-block p-3 bg-indigo-600/10 text-indigo-400 rounded-xl border border-indigo-500/20 text-xl mb-2">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <h2 class="text-lg font-bold text-white">Tạo Mã DOBI Key</h2>
+                            <p class="text-xs text-slate-400 mt-1">Key được lưu trữ an toàn và đồng bộ bền vững.</p>
+                        </div>
+
+                        <form id="generate-form" class="space-y-4">
+                            <div>
+                                <label class="block font-medium text-slate-400 mb-1">Ứng Dụng Mục Tiêu</label>
+                                <select id="app-target-select" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500">
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block font-medium text-slate-400 mb-1">Thời Hạn (Ngày)</label>
+                                <input type="number" id="key-days" value="30" min="1" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-white focus:outline-none focus:border-indigo-500">
+                            </div>
+                            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-400 flex items-center justify-between">
+                                <span>Định dạng mã key sinh ra:</span>
+                                <code class="text-indigo-400 font-mono font-bold">DOBI-xxxxxx-xxxxxx</code>
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition shadow-lg shadow-indigo-600/30">
+                                <i class="fa-solid fa-circle-plus mr-2"></i> Tạo DOBI Key Ngay
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB 4: LICENSES MANAGER -->
+                <div id="view-manager" class="space-y-6 tab-content hidden">
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl flex flex-col">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                            <div>
+                                <h2 class="text-base font-bold text-white flex items-center space-x-2">
+                                    <i class="fa-solid fa-sliders text-indigo-500"></i>
+                                    <span>Quản Lý Licenses & Thiết Bị</span>
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1">Đã bật sao lưu tự động nhằm tránh thất thoát dữ liệu.</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="clearAllKeys()" class="bg-red-600/15 text-red-400 hover:bg-red-600/25 px-3.5 py-2 rounded-lg border border-red-500/20 transition font-medium">
+                                    <i class="fa-solid fa-trash-can mr-1.5"></i> Xóa Tất Cả
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto flex-1">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
+                                        <th class="py-3 px-4 font-semibold">License Key / Ứng Dụng</th>
+                                        <th class="py-3 px-4 font-semibold">Khóa Phần Cứng (HWID)</th>
+                                        <th class="py-3 px-4 font-semibold">Trạng Thái & Thời Gian</th>
+                                        <th class="py-3 px-4 font-semibold text-right">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="key-table-body" class="divide-y divide-slate-800/50">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: TEST KEY -->
+                <div id="view-integration" class="space-y-6 tab-content hidden">
+                    <div class="max-w-md mx-auto bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl">
+                        <div class="text-center mb-6">
+                            <div class="inline-block p-3 bg-indigo-600/10 text-indigo-400 rounded-xl border border-indigo-500/20 text-xl mb-2">
+                                <i class="fa-solid fa-right-to-bracket"></i>
+                            </div>
+                            <h2 class="text-lg font-bold text-white">Kiểm Tra DOBI Key</h2>
+                            <p class="text-xs text-slate-400 mt-1">Mô phỏng quy trình khách hàng kích hoạt phần cứng.</p>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block font-medium text-slate-400 mb-1">Mã Key Của Khách Hàng</label>
+                                <input type="text" id="login-key-input" placeholder="Ví dụ: DOBI-XXXXXX-XXXXXX" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-white font-mono focus:outline-none focus:border-indigo-500">
+                            </div>
+                            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 text-slate-400 flex items-center justify-between">
+                                <span class="text-xs">Mã Thiết Bị Ảo:</span>
+                                <code id="mock-hwid-display" class="text-amber-400 font-mono text-xs">PC-DOBI-992X</code>
+                            </div>
+                            <button onclick="simulateClientLogin()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition shadow-lg shadow-emerald-600/30">
+                                <i class="fa-solid fa-key mr-2"></i> Đăng Nhập & Kích Hoạt Key
+                            </button>
+                            <div id="login-message" class="text-center font-medium mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- CREATE APP MODAL -->
+    <div id="create-app-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-md w-full p-6 shadow-2xl text-sm">
+            <h3 class="text-base font-bold text-white mb-4 flex items-center space-x-2">
+                <i class="fa-solid fa-box-archive text-indigo-500"></i>
+                <span>Tạo Ứng Dụng Mới</span>
+            </h3>
+            <form id="create-app-form" class="space-y-4">
+                <div>
+                    <label class="block font-medium text-slate-400 mb-1">Tên Ứng Dụng</label>
+                    <input type="text" id="new-app-name" required placeholder="Ví dụ: Aimbot..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-white focus:outline-none focus:border-indigo-500">
+                </div>
+                <div class="flex space-x-3 pt-2">
+                    <button type="button" onclick="closeCreateAppModal()" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium transition">Hủy Bỏ</button>
+                    <button type="submit" class="flex-1 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium transition">Tạo App</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function checkAdminAuth() {
+            const isLoggedIn = sessionStorage.getItem('dobi_admin_logged');
+            const loginScreen = document.getElementById('admin-login-screen');
+            if (!isLoggedIn) {
+                loginScreen.classList.remove('hidden');
+            } else {
+                loginScreen.classList.add('hidden');
+            }
+        }
+
+        document.getElementById('admin-login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = document.getElementById('admin-username').value.trim();
+            const pass = document.getElementById('admin-password').value.trim();
+            const errorMsg = document.getElementById('login-error-msg');
+
+            const currentAdminPass = localStorage.getItem('dobi_admin_password') || 'admin123';
+
+            if (user === 'admin' && pass === currentAdminPass) {
+                sessionStorage.setItem('dobi_admin_logged', 'true');
+                document.getElementById('admin-login-screen').classList.add('hidden');
+                errorMsg.classList.add('hidden');
+                document.getElementById('admin-login-form').reset();
+            } else {
+                errorMsg.innerText = '❌ Sai tài khoản hoặc mật khẩu quản trị!';
+                errorMsg.classList.remove('hidden');
+            }
+        });
+
+        function adminLogout() {
+            if(confirm('Bạn có chắc chắn muốn đăng xuất không?')) {
+                sessionStorage.removeItem('dobi_admin_logged');
+                checkAdminAuth();
+            }
+        }
+
+        checkAdminAuth();
+
+        let appsList = JSON.parse(localStorage.getItem('dobi_apps')) || [
+            {
+                id: 'fa9233f4-8a12-4c21-9988-123456789abc',
+                secret: 'dd63f1e0986c8d568d5c59f3a3f8b788',
+                name: 'Aimbot',
+                created: '2026'
+            }
+        ];
+
+        let keysList = JSON.parse(localStorage.getItem('dobi_keys')) || [];
+
+        function saveStorage() {
+            try {
+                localStorage.setItem('dobi_apps', JSON.stringify(appsList));
+                localStorage.setItem('dobi_keys', JSON.stringify(keysList));
+                window.name = JSON.stringify({ apps: appsList, keys: keysList });
+            } catch (err) {
+                console.error("Lỗi lưu trữ:", err);
+            }
+        }
+
+        if (keysList.length === 0 && window.name) {
+            try {
+                const backupData = JSON.parse(window.name);
+                if (backupData && backupData.keys) {
+                    appsList = backupData.apps || appsList;
+                    keysList = backupData.keys || keysList;
+                }
+            } catch(e) {}
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-indigo-600/10', 'text-indigo-400', 'border', 'border-indigo-500/20');
+                el.classList.add('text-slate-400');
+            });
+
+            document.getElementById('view-' + tabId).classList.remove('hidden');
+            const activeNav = document.getElementById('nav-' + tabId);
+            activeNav.classList.add('bg-indigo-600/10', 'text-indigo-400', 'border', 'border-indigo-500/20');
+            activeNav.classList.remove('text-slate-400');
+
+            const titles = {
+                'overview': 'Tổng Quan Bảng Điều Khiển',
+                'apps': 'Quản Lý Ứng Dụng',
+                'generator': 'Tạo Mã Key DOBI',
+                'manager': 'Quản Lý Licenses & Thiết Bị',
+                'integration': 'Kiểm Tra DOBI Key'
+            };
+            document.getElementById('header-title').innerText = titles[tabId];
+
+            if(tabId === 'apps') renderAppsList();
+            if(tabId === 'generator') renderSelectApps();
+            if(tabId === 'manager') renderKeysTable();
+        }
+
+        function openCreateAppModal() {
+            document.getElementById('create-app-modal').classList.remove('hidden');
+        }
+        function closeCreateAppModal() {
+            document.getElementById('create-app-modal').classList.add('hidden');
+        }
+
+        document.getElementById('create-app-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const appName = document.getElementById('new-app-name').value.trim();
+            const newAppId = Math.random().toString(36).substring(2, 10) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 6) + '-' + Math.random().toString(36).substring(2, 14);
+            const newSecret = 'dd63f' + Array.from({length: 27}, () => Math.floor(Math.random()*16).toString(16)).join('');
+
+            appsList.push({
+                id: newAppId,
+                secret: newSecret,
+                name: appName,
+                created: new Date().toLocaleDateString('vi-VN')
+            });
+
+            saveStorage();
+            closeCreateAppModal();
+            renderAppsList();
+            renderSelectApps();
+            document.getElementById('create-app-form').reset();
+        });
+
+        function renderAppsList() {
+            const container = document.getElementById('apps-container');
+            document.getElementById('stat-total-apps').innerText = appsList.length;
+            container.innerHTML = '';
+
+            appsList.forEach((app, index) => {
+                const userCount = keysList.filter(k => k.app === app.name).length;
+                const shortId = app.id.length > 10 ? app.id.substring(0, 8) + '...' : app.id;
+                
+                container.innerHTML += `
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+                        <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-300">
+                                    <i class="fa-solid fa-box text-xs"></i>
+                                </div>
+                                <h3 class="font-bold text-white text-base">${app.name}</h3>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="px-2.5 py-1 bg-slate-800 text-slate-300 rounded-full text-xs font-medium">${userCount} người dùng</span>
+                                <span class="text-xs text-slate-400 font-mono">ID: ${shortId}</span>
+                                ${appsList.length > 1 ? `<button onclick="deleteApp(${index})" class="text-red-400 hover:text-red-300 p-1"><i class="fa-solid fa-trash text-xs"></i></button>` : ''}
+                            </div>
+                        </div>
+                        <div class="p-5 bg-slate-950 flex items-center justify-between">
+                            <div class="text-sm sm:text-base text-slate-200 font-mono tracking-wide truncate">
+                                <span class="text-slate-400 font-semibold mr-3">Secret:</span>
+                                <span class="text-indigo-400 font-bold">${app.secret}</span>
+                            </div>
+                            <button onclick="copyText('${app.secret}')" class="p-3 bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-xl transition text-sm flex items-center space-x-1.5 ml-4 shrink-0" title="Sao chép">
+                                <i class="fa-regular fa-copy text-base"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function deleteApp(index) {
+            if(confirm('Bạn có chắc chắn muốn xóa ứng dụng này không?')) {
+                appsList.splice(index, 1);
+                saveStorage();
+                renderAppsList();
+                renderSelectApps();
+            }
+        }
+
+        function renderSelectApps() {
+            const select = document.getElementById('app-target-select');
+            if(!select) return;
+            select.innerHTML = '';
+            appsList.forEach(app => {
+                select.innerHTML += `<option value="${app.name}">${app.name}</option>`;
+            });
+        }
+
+        document.getElementById('generate-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const days = parseInt(document.getElementById('key-days').value) || 30;
+            const appName = document.getElementById('app-target-select').value;
+            
+            const part1 = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const part2 = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const dobiKey = `DOBI-${part1}-${part2}`;
+            
+            const now = new Date();
+
+            const newKey = {
+                id: Date.now(),
+                app: appName,
+                key: dobiKey,
+                days: days,
+                hwid: null,               
+                status: 'active',         
+                createdTime: now.toLocaleTimeString('vi-VN') + ' ' + now.toLocaleDateString('vi-VN'),
+                expireTime: null,         
+                expireTimestamp: null
+            };
+
+            keysList.unshift(newKey);
+            saveStorage();
+            switchTab('manager'); 
+        });
+
+        function simulateClientLogin() {
+            const inputKey = document.getElementById('login-key-input').value.trim();
+            const msgEl = document.getElementById('login-message');
+            
+            const foundKey = keysList.find(k => k.key.toUpperCase() === inputKey.toUpperCase());
+
+            if (!foundKey) {
+                msgEl.className = "text-xs text-center font-medium mt-2 text-red-400";
+                msgEl.innerText = "❌ Mã DOBI key không tồn tại hoặc không hợp lệ!";
+                return;
+            }
+
+            if (foundKey.hwid) {
+                msgEl.className = "text-xs text-center font-medium mt-2 text-amber-400";
+                msgEl.innerText = "⚠️ Key này đã được kích hoạt trên thiết bị khác trước đó!";
+                return;
+            }
+
+            if (foundKey.status === 'stopped') {
+                msgEl.className = "text-xs text-center font-medium mt-2 text-red-400";
+                msgEl.innerText = "❌ Key này đang bị khóa tạm thời bởi quản trị viên!";
+                return;
+            }
+
+            const randomHWID = "HWID_" + Math.random().toString(36).substring(2, 10).toUpperCase();
+            foundKey.hwid = randomHWID;
+
+            if (!foundKey.expireTimestamp) {
+                const now = new Date();
+                const safeDays = parseInt(foundKey.days) || 30;
+                const expireDate = new Date(now.getTime() + safeDays * 24 * 60 * 60 * 1000);
+
+                foundKey.expireTime = expireDate.toLocaleTimeString('vi-VN') + ' ' + expireDate.toLocaleDateString('vi-VN');
+                foundKey.expireTimestamp = expireDate.getTime();
+            }
+
+            saveStorage();
+
+            msgEl.className = "text-xs text-center font-medium mt-2 text-emerald-400";
+            msgEl.innerText = "✅ Đăng nhập thành công! Đã ghi nhận mã thiết bị.";
+            
+            setTimeout(() => {
+                switchTab('manager');
+            }, 1200);
+        }
+
+        function renderKeysTable() {
+            const tableBody = document.getElementById('key-table-body');
+            const totalKeysEl = document.getElementById('stat-total-keys');
+            if(totalKeysEl) totalKeysEl.innerText = keysList.length;
+
+            if(!tableBody) return;
+
+            if (keysList.length === 0) {
+                tableBody.innerHTML = `<tr class="text-slate-500 text-center"><td colspan="4" class="py-8">Chưa có license key nào được tạo.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = '';
+            keysList.forEach((item) => {
+                const isStopped = item.status === 'stopped';
+                const safeDays = parseInt(item.days) || 30;
+                
+                let timeRemainingHTML = '';
+                if (item.expireTimestamp) {
+                    const now = Date.now();
+                    const diff = item.expireTimestamp - now;
+
+                    if (diff > 0) {
+                        const daysLeft = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hoursLeft = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minsLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const secsLeft = Math.floor((diff % (1000 * 60)) / 1000);
+
+                        timeRemainingHTML = `<span class="text-emerald-400 font-bold">Còn lại: ${daysLeft} ngày ${hoursLeft}h ${minsLeft}m ${secsLeft}s</span>`;
+                    } else {
+                        timeRemainingHTML = `<span class="text-red-400 font-bold">Đã hết hạn</span>`;
+                    }
+                } else {
+                    timeRemainingHTML = `<span class="text-amber-400 font-medium">⏳ Chưa kích hoạt (${safeDays} ngày)</span>`;
+                }
+                
+                tableBody.innerHTML += `
+                    <tr class="hover:bg-slate-800/30 transition">
+                        <td class="py-3.5 px-4">
+                            <div class="font-medium text-white flex items-center space-x-2">
+                                <span class="text-xs text-indigo-400 font-semibold uppercase">[${item.app}]</span>
+                                ${isStopped ? `<span class="px-1.5 py-0.5 text-[10px] bg-red-500/10 text-red-400 border border-red-500/20 rounded">Đã Dừng</span>` : ''}
+                            </div>
+                            <div class="text-sm text-white font-mono cursor-pointer font-bold mt-0.5 hover:text-indigo-400 transition group inline-flex items-center" onclick="copyText('${item.key}')" title="Sao chép key">
+                                <span>${item.key}</span>
+                                <i class="fa-regular fa-copy text-xs ml-1.5 opacity-0 group-hover:opacity-100 transition text-indigo-400"></i>
+                            </div>
+                        </td>
+                        <td class="py-3.5 px-4 text-xs">
+                            ${item.hwid ? `<span class="text-amber-400 font-mono bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20" title="${item.hwid}">${item.hwid}</span>` : 
+                            `<span class="text-slate-500 italic">Chưa liên kết thiết bị</span>`}
+                        </td>
+                        <td class="py-3.5 px-4 text-xs text-slate-300">
+                            <div><strong class="text-slate-400">Tạo:</strong> ${item.createdTime}</div>
+                            <div class="mt-0.5">${timeRemainingHTML}</div>
+                        </td>
+                        <td class="py-3.5 px-4 text-right space-x-1.5">
+                            <button onclick="resetHWID(${item.id})" class="p-2 bg-amber-600/10 hover:bg-amber-600/20 text-amber-400 rounded-lg text-xs transition" title="Đặt lại HWID"><i class="fa-solid fa-rotate-right"></i></button>
+                            
+                            <button onclick="toggleKeyStatus(${item.id})" class="p-2 ${isStopped ? 'bg-emerald-600/10 hover:bg-emerald-600/20 text-emerald-400' : 'bg-purple-600/10 hover:bg-purple-600/20 text-purple-400'} rounded-lg text-xs transition" title="Đổi trạng thái">
+                                <i class="fa-solid ${isStopped ? 'fa-play' : 'fa-pause'}"></i>
+                            </button>
+
+                            <button onclick="copyText('${item.key}')" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition" title="Sao chép Key"><i class="fa-regular fa-copy"></i></button>
+                            
+                            <button onclick="deleteKey(${item.id})" class="p-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 rounded-lg text-xs transition" title="Xóa Key"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        setInterval(() => {
+            const managerTab = document.getElementById('view-manager');
+            if (managerTab && !managerTab.classList.contains('hidden') && keysList.length > 0) {
+                renderKeysTable();
+            }
+        }, 1000);
+
+        function resetHWID(id) {
+            if(confirm('Bạn có muốn đặt lại mã phần cứng cho key này không?')) {
+                const keyItem = keysList.find(k => k.id === id);
+                if(keyItem) {
+                    keyItem.hwid = null; 
+                    saveStorage();
+                    renderKeysTable();
+                }
+            }
+        }
+
+        function toggleKeyStatus(id) {
+            const keyItem = keysList.find(k => k.id === id);
+            if(keyItem) {
+                keyItem.status = keyItem.status === 'stopped' ? 'active' : 'stopped';
+                saveStorage();
+                renderKeysTable();
+            }
+        }
+
+        function deleteKey(id) {
+            if(confirm('Bạn có chắc chắn muốn xóa license key này không?')) {
+                keysList = keysList.filter(item => item.id !== id);
+                saveStorage();
+                renderKeysTable();
+            }
+        }
+
+        function clearAllKeys() {
+            if(confirm('Xóa toàn bộ danh sách license key?')) {
+                keysList = [];
+                saveStorage();
+                renderKeysTable();
+            }
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+        }
+
+        renderAppsList();
+        renderSelectApps();
+        renderKeysTable();
+    </script>
+</body>
+</html>
