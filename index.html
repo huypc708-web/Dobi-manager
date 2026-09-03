@@ -298,9 +298,9 @@
             const pass = document.getElementById('admin-password').value.trim();
             const errorMsg = document.getElementById('login-error-msg');
 
-            const currentAdminPass = localStorage.getItem('dobi_admin_password') || 'admin123';
+            const currentAdminPass = localStorage.getItem('dobi_admin_password') || 'Giahui12@';
 
-            if (user === 'admin' && pass === currentAdminPass) {
+            if (user === 'dobi' && pass === currentAdminPass) {
                 sessionStorage.setItem('dobi_admin_logged', 'true');
                 document.getElementById('admin-login-screen').classList.add('hidden');
                 errorMsg.classList.add('hidden');
