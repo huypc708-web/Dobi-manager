@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DOBI - Bảng Điều Khiển Bản Quyền</title>
+    <title>DOBI - Bảng Điều Khiển & Tích Hợp Khách Hàng Hoàn Chỉnh</title>
     <script src="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.5/lib/index.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -31,12 +31,13 @@
                 </div>
                 <div id="login-error-msg" class="text-xs text-red-400 text-center font-medium hidden"></div>
                 <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold transition shadow-lg shadow-indigo-600/30 text-sm">
-                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng Nhập
+                    <i class="fa-solid fa-right-to-bracket mr-2"></i> Đăng Nhập Quản Trị
                 </button>
             </form>
         </div>
     </div>
 
+    <!-- GIAO DIỆN CHÍNH -->
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar Navigation -->
         <aside class="w-72 bg-slate-900 border-r border-slate-800 flex flex-col justify-between hidden md:flex">
@@ -68,8 +69,12 @@
                         <span>Quản Lý Licenses</span>
                     </a>
                     <a href="#" onclick="switchTab('integration')" id="nav-integration" class="tab-btn flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition">
+                        <i class="fa-solid fa-key w-5"></i>
+                        <span>Mô Phỏng Client Login</span>
+                    </a>
+                    <a href="#" onclick="switchTab('csharp')" id="nav-csharp" class="tab-btn flex items-center space-x-3 px-4 py-3 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition">
                         <i class="fa-solid fa-code w-5"></i>
-                        <span>Kiểm Tra Key</span>
+                        <span>Mã C# (.NET)</span>
                     </a>
                 </nav>
             </div>
@@ -85,7 +90,7 @@
                 </div>
                 <button onclick="adminLogout()" class="w-full py-2 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/20 rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-2">
                     <i class="fa-solid fa-right-from-bracket"></i>
-                    <span>Đăng Xuất</span>
+                    <span>Đăng Xuất Admin</span>
                 </button>
             </div>
         </aside>
@@ -229,30 +234,126 @@
                     </div>
                 </div>
 
-                <!-- TAB 5: TEST KEY -->
+                <!-- TAB 5: CLIENT INTEGRATION SIMULATOR -->
                 <div id="view-integration" class="space-y-6 tab-content hidden">
                     <div class="max-w-md mx-auto bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl">
                         <div class="text-center mb-6">
-                            <div class="inline-block p-3 bg-indigo-600/10 text-indigo-400 rounded-xl border border-indigo-500/20 text-xl mb-2">
-                                <i class="fa-solid fa-right-to-bracket"></i>
+                            <div class="inline-block p-3.5 bg-indigo-600/10 text-indigo-400 rounded-xl border border-indigo-500/20 text-xl mb-2">
+                                <i class="fa-solid fa-key"></i>
                             </div>
-                            <h2 class="text-lg font-bold text-white">Kiểm Tra DOBI Key</h2>
-                            <p class="text-xs text-slate-400 mt-1">Mô phỏng quy trình khách hàng kích hoạt phần cứng.</p>
+                            <h2 class="text-lg font-bold text-white">Mô Phỏng Giao Diện Khách Hàng (Client)</h2>
+                            <p class="text-xs text-slate-400 mt-1">Trải nghiệm xác thực tích hợp từ phía ứng dụng client.</p>
                         </div>
 
-                        <div class="space-y-4">
+                        <form id="client-auth-form" class="space-y-4">
                             <div>
-                                <label class="block font-medium text-slate-400 mb-1">Mã Key Của Khách Hàng</label>
-                                <input type="text" id="login-key-input" placeholder="Ví dụ: DOBI-XXXXXX-XXXXXX" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-white font-mono focus:outline-none focus:border-indigo-500">
+                                <label class="block font-medium text-slate-400 mb-1 text-xs uppercase tracking-wider">Mã Bản Quyền (License Key)</label>
+                                <input type="text" id="client-key-input" required placeholder="DOBI-XXXXXX-XXXXXX" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 text-white font-mono focus:outline-none focus:border-indigo-500 text-sm">
                             </div>
-                            <div class="bg-slate-950 p-3.5 rounded-lg border border-slate-800 text-slate-400 flex items-center justify-between">
-                                <span class="text-xs">Mã Thiết Bị Ảo:</span>
-                                <code id="mock-hwid-display" class="text-amber-400 font-mono text-xs">PC-DOBI-992X</code>
+
+                            <div>
+                                <label class="block font-medium text-slate-400 mb-1 text-xs uppercase tracking-wider">Mã Thiết Bị (HWID Tự Động)</label>
+                                <div class="flex items-center space-x-2">
+                                    <input type="text" id="client-hwid-input" readonly class="w-full bg-slate-950/50 border border-slate-800 rounded-lg px-3.5 py-2.5 text-amber-400 font-mono focus:outline-none text-sm select-all">
+                                    <button type="button" onclick="generateNewClientHWID()" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs transition" title="Tạo lại HWID ảo">
+                                        <i class="fa-solid fa-rotate"></i>
+                                    </button>
+                                </div>
                             </div>
-                            <button onclick="simulateClientLogin()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition shadow-lg shadow-emerald-600/30">
-                                <i class="fa-solid fa-key mr-2"></i> Đăng Nhập & Kích Hoạt Key
+
+                            <div id="client-status-msg" class="text-xs text-center font-medium hidden p-3 rounded-lg border"></div>
+
+                            <button type="submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition shadow-lg shadow-emerald-600/30 text-sm flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-shield-halved"></i>
+                               <span>Xác Thực & Vào Ứng Dụng</span>
                             </button>
-                            <div id="login-message" class="text-center font-medium mt-2"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- TAB 6: C# SOURCE CODE INTEGRATION (CẬP NHẬT URL API MỚI) -->
+                <div id="view-csharp" class="space-y-6 tab-content hidden">
+                    <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-4">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                            <div>
+                                <h2 class="text-base font-bold text-white flex items-center space-x-2">
+                                    <i class="fa-solid fa-code text-indigo-400"></i>
+                                    <span>Mã Nguồn Tích Hợp C# (.NET)</span>
+                                </h2>
+                                <p class="text-xs text-slate-400 mt-1">SDK Dependency Command: <code class="text-indigo-400 bg-slate-800 px-2 py-0.5 rounded font-mono">dotnet add package Newtonsoft.Json</code></p>
+                            </div>
+                            <button onclick="copyCSharpCode()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition flex items-center space-x-2 shadow-lg shadow-indigo-600/30">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Sao Chép Mã C#</span>
+                            </button>
+                        </div>
+
+                        <!-- Khung hiển thị code C# đã thay thế URL API -->
+                        <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 overflow-x-auto text-xs font-mono text-slate-200 leading-relaxed max-h-[500px]">
+                            <pre id="csharp-source-code">using System.Security.Cryptography;
+using System.Text;
+using Newtonsoft.Json;
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+namespace AuthFusion
+{
+    public class Auth
+    {
+        private readonly string OwnerId;
+        private readonly string Secret;
+        private readonly string ApiUrl;
+        private static readonly HttpClient client = new HttpClient();
+
+        public Auth(string ownerid, string secret, string apiUrl = "https://dobi-manager.vercel.app")
+        {
+            OwnerId = ownerid;
+            Secret = secret;
+
+            if (apiUrl.EndsWith("/"))
+                apiUrl = apiUrl.TrimEnd('/');
+
+            ApiUrl = $"${apiUrl}/api/1.0/user_login";
+        }
+
+        private static string GetHwid()
+        {
+            var input = $"${Environment.MachineName}-${Environment.UserName}-${Environment.ProcessorCount}";
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(input));
+                return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+            }
+        }
+
+        public async Task&lt;dynamic&gt; Login(string username, string password)
+        {
+            var payload = new
+            {
+                ownerid = OwnerId,
+                app_secret = Secret,
+                username = username,
+                password = password,
+                hwid = GetHwid()
+            };
+
+            var json = JsonConvert.SerializeObject(payload);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            try
+            {
+                var response = await client.PostAsync(ApiUrl, content);
+                var result = await response.Content.ReadAsStringAsync();
+                return JsonConvert.DeserializeObject(result);
+            }
+            catch (HttpRequestException e)
+            {
+                return new { success = false, message = $"Connection Error: ${e.Message}" };
+            }
+        }
+    }
+}</pre>
                         </div>
                     </div>
                 </div>
@@ -281,7 +382,38 @@
         </div>
     </div>
 
+    <!-- MÀN HÌNH DASHBOARD SAU KHI CLIENT LOGIN THÀNH CÔNG -->
+    <div id="client-dashboard-screen" class="fixed inset-0 bg-slate-950 z-50 hidden flex flex-col items-center justify-center p-6 text-center">
+        <div class="max-w-lg w-full bg-slate-900 border border-slate-800 p-8 rounded-2xl shadow-2xl space-y-6">
+            <div class="inline-block p-4 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-2xl text-3xl mb-2">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white">Xác Thực Bản Quyền Thành Công!</h1>
+            <p class="text-sm text-slate-400">Ứng dụng của bạn đã được kích hoạt thành công trên thiết bị này.</p>
+            
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-left space-y-2 text-xs font-mono">
+                <div class="flex justify-between text-slate-400">
+                    <span>Key sử dụng:</span>
+                    <span id="res-key" class="text-indigo-400 font-bold"></span>
+                </div>
+                <div class="flex justify-between text-slate-400">
+                    <span>Thiết bị (HWID):</span>
+                    <span id="res-hwid" class="text-amber-400"></span>
+                </div>
+                <div class="flex justify-between text-slate-400">
+                    <span>Thời hạn:</span>
+                    <span id="res-expire" class="text-emerald-400"></span>
+                </div>
+            </div>
+
+            <button onclick="clientLogout()" class="w-full py-3 bg-red-600/15 hover:bg-red-600/25 text-red-400 border border-red-500/20 rounded-xl font-semibold transition text-sm">
+                <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Đăng Xuất / Hủy Kích Hoạt Client
+            </button>
+        </div>
+    </div>
+
     <script>
+        // Xử lý xác thực Admin
         function checkAdminAuth() {
             const isLoggedIn = sessionStorage.getItem('dobi_admin_logged');
             const loginScreen = document.getElementById('admin-login-screen');
@@ -298,9 +430,9 @@
             const pass = document.getElementById('admin-password').value.trim();
             const errorMsg = document.getElementById('login-error-msg');
 
-            const currentAdminPass = localStorage.getItem('dobi_admin_password') || 'Giahui12@';
+            const currentAdminPass = localStorage.getItem('dobi_admin_password') || 'admin123';
 
-            if (user === 'dobi' && pass === currentAdminPass) {
+            if (user === 'admin' && pass === currentAdminPass) {
                 sessionStorage.setItem('dobi_admin_logged', 'true');
                 document.getElementById('admin-login-screen').classList.add('hidden');
                 errorMsg.classList.add('hidden');
@@ -312,7 +444,7 @@
         });
 
         function adminLogout() {
-            if(confirm('Bạn có chắc chắn muốn đăng xuất không?')) {
+            if(confirm('Bạn có chắc chắn muốn đăng xuất phiên quản trị không?')) {
                 sessionStorage.removeItem('dobi_admin_logged');
                 checkAdminAuth();
             }
@@ -335,20 +467,9 @@
             try {
                 localStorage.setItem('dobi_apps', JSON.stringify(appsList));
                 localStorage.setItem('dobi_keys', JSON.stringify(keysList));
-                window.name = JSON.stringify({ apps: appsList, keys: keysList });
             } catch (err) {
                 console.error("Lỗi lưu trữ:", err);
             }
-        }
-
-        if (keysList.length === 0 && window.name) {
-            try {
-                const backupData = JSON.parse(window.name);
-                if (backupData && backupData.keys) {
-                    appsList = backupData.apps || appsList;
-                    keysList = backupData.keys || keysList;
-                }
-            } catch(e) {}
         }
 
         function switchTab(tabId) {
@@ -368,7 +489,8 @@
                 'apps': 'Quản Lý Ứng Dụng',
                 'generator': 'Tạo Mã Key DOBI',
                 'manager': 'Quản Lý Licenses & Thiết Bị',
-                'integration': 'Kiểm Tra DOBI Key'
+                'integration': 'Mô Phỏng Giao Diện Khách Hàng (Client)',
+                'csharp': 'Mã Nguồn Tích Hợp C# (.NET)'
             };
             document.getElementById('header-title').innerText = titles[tabId];
 
@@ -488,52 +610,6 @@
             switchTab('manager'); 
         });
 
-        function simulateClientLogin() {
-            const inputKey = document.getElementById('login-key-input').value.trim();
-            const msgEl = document.getElementById('login-message');
-            
-            const foundKey = keysList.find(k => k.key.toUpperCase() === inputKey.toUpperCase());
-
-            if (!foundKey) {
-                msgEl.className = "text-xs text-center font-medium mt-2 text-red-400";
-                msgEl.innerText = "❌ Mã DOBI key không tồn tại hoặc không hợp lệ!";
-                return;
-            }
-
-            if (foundKey.hwid) {
-                msgEl.className = "text-xs text-center font-medium mt-2 text-amber-400";
-                msgEl.innerText = "⚠️ Key này đã được kích hoạt trên thiết bị khác trước đó!";
-                return;
-            }
-
-            if (foundKey.status === 'stopped') {
-                msgEl.className = "text-xs text-center font-medium mt-2 text-red-400";
-                msgEl.innerText = "❌ Key này đang bị khóa tạm thời bởi quản trị viên!";
-                return;
-            }
-
-            const randomHWID = "HWID_" + Math.random().toString(36).substring(2, 10).toUpperCase();
-            foundKey.hwid = randomHWID;
-
-            if (!foundKey.expireTimestamp) {
-                const now = new Date();
-                const safeDays = parseInt(foundKey.days) || 30;
-                const expireDate = new Date(now.getTime() + safeDays * 24 * 60 * 60 * 1000);
-
-                foundKey.expireTime = expireDate.toLocaleTimeString('vi-VN') + ' ' + expireDate.toLocaleDateString('vi-VN');
-                foundKey.expireTimestamp = expireDate.getTime();
-            }
-
-            saveStorage();
-
-            msgEl.className = "text-xs text-center font-medium mt-2 text-emerald-400";
-            msgEl.innerText = "✅ Đăng nhập thành công! Đã ghi nhận mã thiết bị.";
-            
-            setTimeout(() => {
-                switchTab('manager');
-            }, 1200);
-        }
-
         function renderKeysTable() {
             const tableBody = document.getElementById('key-table-body');
             const totalKeysEl = document.getElementById('stat-total-keys');
@@ -651,6 +727,117 @@
 
         function copyText(text) {
             navigator.clipboard.writeText(text);
+            alert('Đã sao chép vào bộ nhớ tạm!');
+        }
+
+        function copyCSharpCode() {
+            const codeText = document.getElementById('csharp-source-code').innerText;
+            navigator.clipboard.writeText(codeText);
+            alert('Đã sao chép mã nguồn C# thành công!');
+        }
+
+        function getClientHWID() {
+            let hwid = localStorage.getItem('dobi_client_hwid');
+            if (!hwid) {
+                hwid = "PC-DOBI-" + Math.random().toString(36).substring(2, 10).toUpperCase() + "-" + Math.floor(Math.random() * 8999 + 1000);
+                localStorage.setItem('dobi_client_hwid', hwid);
+            }
+            return hwid;
+        }
+
+        function generateNewClientHWID() {
+            const newHwid = "PC-DOBI-" + Math.random().toString(36).substring(2, 10).toUpperCase() + "-" + Math.floor(Math.random() * 8999 + 1000);
+            localStorage.setItem('dobi_client_hwid', newHwid);
+            document.getElementById('client-hwid-input').value = newHwid;
+        }
+
+        function checkExistingClientSession() {
+            const savedSession = localStorage.getItem('dobi_client_session');
+            if (savedSession) {
+                try {
+                    const sessionData = JSON.parse(savedSession);
+                    showClientDashboard(sessionData);
+                } catch(e) {
+                    localStorage.removeItem('dobi_client_session');
+                }
+            }
+        }
+
+        document.getElementById('client-hwid-input').value = getClientHWID();
+        checkExistingClientSession();
+
+        document.getElementById('client-auth-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const inputKey = document.getElementById('client-key-input').value.trim();
+            const currentHWID = document.getElementById('client-hwid-input').value.trim();
+            const msgEl = document.getElementById('client-status-msg');
+
+            msgEl.classList.remove('hidden');
+
+            const foundKey = keysList.find(k => k.key.toUpperCase() === inputKey.toUpperCase());
+
+            if (!foundKey) {
+                msgEl.className = "text-xs text-center font-medium p-3 rounded-lg border bg-red-500/10 border-red-500/20 text-red-400";
+                msgEl.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> Mã DOBI key không tồn tại trong hệ thống!`;
+                return;
+            }
+
+            if (foundKey.status === 'stopped') {
+                msgEl.className = "text-xs text-center font-medium p-3 rounded-lg border bg-red-500/10 border-red-500/20 text-red-400";
+                msgEl.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> Key này đang bị khóa tạm thời bởi quản trị viên!`;
+                return;
+            }
+
+            if (foundKey.hwid && foundKey.hwid !== currentHWID) {
+                msgEl.className = "text-xs text-center font-medium p-3 rounded-lg border bg-amber-500/10 border-amber-500/20 text-amber-400";
+                msgEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-1"></i> Key này đã được kích hoạt trên một thiết bị khác!`;
+                return;
+            }
+
+            if (!foundKey.hwid) {
+                foundKey.hwid = currentHWID;
+            }
+
+            if (!foundKey.expireTimestamp) {
+                const now = new Date();
+                const safeDays = parseInt(foundKey.days) || 30;
+                const expireDate = new Date(now.getTime() + safeDays * 24 * 60 * 60 * 1000);
+
+                foundKey.expireTime = expireDate.toLocaleTimeString('vi-VN') + ' ' + expireDate.toLocaleDateString('vi-VN');
+                foundKey.expireTimestamp = expireDate.getTime();
+            }
+
+            saveStorage();
+
+            msgEl.className = "text-xs text-center font-medium p-3 rounded-lg border bg-emerald-500/10 border-emerald-500/20 text-emerald-400";
+            msgEl.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> Xác thực thành công! Đang chuyển hướng...`;
+
+            const sessionData = {
+                key: foundKey.key,
+                hwid: currentHWID,
+                expireTime: foundKey.expireTime
+            };
+            localStorage.setItem('dobi_client_session', JSON.stringify(sessionData));
+
+            setTimeout(() => {
+                showClientDashboard(sessionData);
+            }, 1000);
+        });
+
+        function showClientDashboard(data) {
+            document.getElementById('res-key').innerText = data.key;
+            document.getElementById('res-hwid').innerText = data.hwid;
+            document.getElementById('res-expire').innerText = data.expireTime;
+            document.getElementById('client-dashboard-screen').classList.remove('hidden');
+        }
+
+        function clientLogout() {
+            if(confirm('Bạn có muốn đăng xuất khỏi phiên làm việc client này không?')) {
+                localStorage.removeItem('dobi_client_session');
+                document.getElementById('client-dashboard-screen').classList.add('hidden');
+                document.getElementById('client-key-input').value = '';
+                document.getElementById('client-status-msg').classList.add('hidden');
+            }
         }
 
         renderAppsList();
