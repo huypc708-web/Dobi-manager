@@ -1,11 +1,14 @@
-export default function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  const { key } = req.query;
-
-  // Thay "DOBI-VIP" thành key bản quyền bạn muốn dùng
-  if (key && key.trim() === "DOBI-VIP") {
-    return res.status(200).send("success");
-  } else {
-    return res.status(200).send("invalid");
+async function checkKeyOnWeb(userKey) {
+  try {
+    let response = await fetch(`https://dobi-manager.vercel.app/api/verify?key=${encodeURIComponent(userKey)}`);
+    let text = await response.text();
+    
+    if (text.includes("success")) {
+      alert("Key này hợp lệ và có thể dùng để đăng nhập Tool C#!");
+    } else {
+      alert("Key không tồn tại hoặc chưa được kích hoạt trên hệ thống!");
+    }
+  } catch (error) {
+    console.error("Lỗi kết nối:", error);
   }
 }
