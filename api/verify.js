@@ -6,52 +6,25 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  const { key, hwid } = req.query;
-
-  if (!key) {
-    return res.status(200).send("invalid");
-  }
 
   try {
-    // Truy vấn kiểm tra key bằng cột 'license_key' từ web
+    // Lấy toàn bộ dữ liệu trong bảng 'keys' để xem nó đang có cấu trúc thế nào
     const { data, error } = await supabase
       .from('keys')
-      .select('*')
-      .eq('license_key', key.trim())
-      .single();
+      .select('*');
 
-    if (error || !data) {
-      return res.status(200).send("invalid");
+    if (error) {
+      return res.status(200).send("DB Error: " + JSON.stringify(error));
     }
 
-    if (data.status === 'banned') {
-      return res.status(200).send("banned");
-    }
-
-    if (data.status === 'active') {
-      if (data.hwid === hwid) {
-        return res.status(200).send("success");
-      } else {
-        return res.status(200).send("device_locked");
-      }
-    }
-
-    if (data.status === 'unused' || !data.hwid) {
-      const { error: updateError } = await supabase
-        .from('keys')
-        .update({ status: 'active', hwid: hwid })
-        .eq('license_key', key.trim());
-
-      if (updateError) {
-        return res.status(200).send("error");
-      }
-
-      return res.status(200).send("success");
-    }
-
-    return res.status(200).send("invalid");
+    // Trả về danh sách dạng chữ để đọc trực tiếp trên web
+    return res.status(200).json({
+      message: "Ket noi Supabase thanh cong!",
+      total_keys: data.length,
+      data: data
+    });
 
   } catch (err) {
-    return res.status(200).send("error");
+    return res.status(200).send("Exception: " + err.message);
   }
 }
