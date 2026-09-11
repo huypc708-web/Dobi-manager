@@ -1,21 +1,20 @@
 import { createClient } from '@supabase/supabase-js'
 
+// Khởi tạo kết nối Supabase bằng biến môi trường trên Vercel
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  
-  // Nhận key và mã thiết bị (hwid) từ tool C# gửi lên
-  const { key, hwid } = req.query;
+  const { key } = req.query;
 
   if (!key) {
     return res.status(200).send("invalid");
   }
 
   try {
-    // 1. Kiểm tra xem key có tồn tại trong hệ thống web không
+    // Truy vấn bảng chứa key trên Supabase (giả sử bảng của bạn tên là 'keys' và cột chứa key tên là 'key_string')
     const { data, error } = await supabase
       .from('keys')
       .select('*')
@@ -23,41 +22,17 @@ export default async function handler(req, res) {
       .single();
 
     if (error || !data) {
-      return res.status(200).send("invalid"); // Key không tồn tại
+      return res.status(200).send("invalid"); // Key không tồn tại trên web
     }
 
-    // 2. Kiểm tra nếu key đã bị khóa
-    if (data.status === 'banned') {
-      return res.status(200).send("banned");
+    // Kiểm tra xem key đã bị khóa hoặc hết hạn chưa (nếu có cột status hoặc expires_at)
+    if (data.status === 'banned' || data.status === 'expired') {
+      return res.status(200).send("expired");
     }
 
-    // 3. Kiểm tra xem key đã được kích hoạt cho thiết bị khác chưa
-    if (data.status === 'active') {
-      // Nếu key đã kích hoạt nhưng đúng là cái thiết bị (hwid) này đang dùng thì cho qua
-      if (data.hwid === hwid) {
-        return res.status(200).send("success");
-      } else {
-        return res.status(200).send("device_locked"); // Khóa đã bị gắn với máy khác
-      }
-    }
-
-    // 4. Nếu key chưa được sử dụng lần nào (chưa có thiết bị nào gắn)
-    if (data.status === 'unused' || !data.hwid) {
-      // Khóa key này lại với HWID của thiết bị hiện tại
-      const { updateError } = await supabase
-        .from('keys')
-        .update({ status: 'active', hwid: hwid })
-        .eq('key_string', key.trim());
-
-      if (updateError) {
-        return res.status(200).send("error");
-      }
-
-      return res.status(200).send("success"); // Kích hoạt thành công lần đầu
-    }
-
-    return res.status(200).send("invalid");
-
+    // Key hợp lệ tồn tại trên web -> Trả về success cho tool C# login
+    return res.status(200).send("success");
+    
   } catch (err) {
     return res.status(200).send("error");
   }
