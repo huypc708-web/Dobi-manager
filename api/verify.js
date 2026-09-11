@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_KEY; // Đã đổi từ SUPABASE_ANON_KEY thành SUPABASE_KEY
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
@@ -13,7 +13,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Truy vấn kiểm tra key trong bảng 'keys' trên Supabase
     const { data, error } = await supabase
       .from('keys')
       .select('*')
