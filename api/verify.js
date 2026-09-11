@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY; // Đã đổi từ SUPABASE_ANON_KEY thành SUPABASE_KEY
+const supabaseKey = process.env.SUPABASE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
@@ -13,10 +13,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Truy vấn kiểm tra key bằng cột 'license_key' từ web
     const { data, error } = await supabase
       .from('keys')
       .select('*')
-      .eq('key_string', key.trim())
+      .eq('license_key', key.trim())
       .single();
 
     if (error || !data) {
@@ -39,7 +40,7 @@ export default async function handler(req, res) {
       const { error: updateError } = await supabase
         .from('keys')
         .update({ status: 'active', hwid: hwid })
-        .eq('key_string', key.trim());
+        .eq('license_key', key.trim());
 
       if (updateError) {
         return res.status(200).send("error");
