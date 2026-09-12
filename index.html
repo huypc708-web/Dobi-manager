@@ -944,14 +944,13 @@
             });
         }
 
-        // FIX: Đặt lại HWID nhưng giữ nguyên thời gian đếm ngược hiện tại
+        // Đặt lại HWID và trả trạng thái về Unactivated
         function resetHwid(idx) {
             db.licenses[idx].hwid = 'Chưa liên kết';
             db.licenses[idx].status = 'Unactivated';
-            // Không gán expiryTimestamp = null ở đây để giữ nguyên thời gian còn lại của key!
             saveData();
             renderLicenses();
-            showToast("Đã đặt lại HWID thành công (Giữ nguyên thời gian)!");
+            showToast("Đã đặt lại HWID thành công!");
         }
 
         function toggleBan(idx) {
@@ -972,7 +971,7 @@
             }
         }
 
-        // FIX: Kiểm tra hoặc kích hoạt key (nếu đã có expiryTimestamp trước đó thì không reset lại giờ)
+        // FIX: Xử lý kích hoạt chuẩn xác, cập nhật trạng thái thành 'Active' và lưu ngay vào Firebase Realtime Database
         function verifyKeyWithHwid() {
             const keyVal = document.getElementById('checkKeyInput').value.trim();
             const hwidVal = document.getElementById('checkHwidInput').value.trim();
@@ -998,12 +997,11 @@
 
             const now = Date.now();
 
-            // Nếu key chưa liên kết hoặc vừa được reset HWID
-            if(found.hwid === 'Chưa liên kết' || !found.hwid) {
+            // Nếu key chưa liên kết hoặc chưa kích hoạt
+            if(found.hwid === 'Chưa liên kết' || !found.hwid || found.status === 'Unactivated') {
                 found.hwid = hwidVal;
-                found.status = 'Active';
+                found.status = 'Active'; // Cập nhật đúng trạng thái Active để giao diện đổi thành Đã kích hoạt
                 
-                // Chỉ thiết lập thời hạn mới nếu key này CHƯA TỪNG được kích hoạt trước đó
                 if(!found.expiryTimestamp) {
                     if(found.durationDays !== 365) {
                         found.expiryTimestamp = now + (found.durationDays * 24 * 60 * 60 * 1000);
@@ -1012,13 +1010,13 @@
                     }
                 }
 
-                saveData();
+                saveData(); // Lưu ngay lập tức lên Firebase để đồng bộ giao diện quản lý Key
                 resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Kích hoạt và đăng nhập thành công! (Thiết bị mới đã liên kết)</span>`;
                 renderLicenses();
                 return;
             }
 
-            // Kiểm tra xem key đã hết hạn chưa (nếu không phải vĩnh viễn)
+            // Kiểm tra xem key đã hết hạn chưa
             if(found.expiryTimestamp !== 'Lifetime' && found.expiryTimestamp && now > found.expiryTimestamp) {
                 resultBox.innerHTML = `<span style="color: #f87171;">Key đã hết hạn sử dụng!</span>`;
                 return;
