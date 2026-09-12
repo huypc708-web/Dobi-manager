@@ -14,31 +14,36 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "Thiếu Key bản quyền!" });
     }
 
+    // Tìm key trong danh sách trên Vercel
     const foundKey = VALID_KEYS.find(k => k.key === key);
 
     if (!foundKey) {
       return res.status(404).json({ message: "Key không tồn tại trên hệ thống!" });
     }
 
+    // Kiểm tra trạng thái bị ban
     if (foundKey.status === 'banned') {
       return res.status(400).json({ message: "banned" });
     }
 
-    // Nếu key chưa có HWID hoặc chưa có thiết bị nào sử dụng
+    // 1. Nếu key chưa có HWID (Chưa ai dùng) -> Gán HWID và thiết lập 1/1 thiết bị
     if (!foundKey.hwid || foundKey.hwid === "") {
       foundKey.hwid = hwid || "default_hwid";
       foundKey.status = "Đã kích hoạt";
+      foundKey.maxDevices = 1;
       foundKey.currentDevices = 1;
     } 
-    // Nếu HWID gửi lên khớp với HWID đã lưu (thiết bị cũ đăng nhập lại)
-    else if (foundKey.hwid === hwid) {
+    // 2. Nếu đúng thiết bị cũ gửi lên
+    else if (hwid && foundKey.hwid === hwid) {
+      foundKey.maxDevices = 1;
       foundKey.currentDevices = 1;
     }
-    // Nếu khác thiết bị -> Chặn vì đã tối đa 1 thiết bị
+    // 3. Nếu khác thiết bị -> Chặn vì đã đạt tối đa 1 thiết bị
     else {
       return res.status(400).json({ message: "device_locked" });
     }
 
+    // Trả về thành công khi đúng HWID hoặc vừa kích hoạt xong
     return res.status(200).json({
       message: "Thành công",
       data: [foundKey]
