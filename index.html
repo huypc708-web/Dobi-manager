@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DOBI MANAGER - Local Offline</title>
+    <title>DOBI MANAGER - Key System</title>
     <style>
         * {
             box-sizing: border-box;
@@ -25,7 +25,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             text-align: center;
             border: 1px solid #262626;
         }
@@ -45,33 +45,20 @@
             padding: 12px;
             border-radius: 8px;
             border-left: 4px solid #4CAF50;
-            font-size: 14px;
+            font-size: 13px;
             color: #ddd;
             margin-bottom: 15px;
             text-align: left;
         }
-        .action-box {
-            background: #1f1f1f;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #333;
-            text-align: left;
-        }
-        .action-box label {
-            font-size: 13px;
-            color: #aaa;
-            display: block;
-            margin-bottom: 5px;
-        }
         input {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             background: #111;
             border: 1px solid #444;
             color: #fff;
-            border-radius: 6px;
-            margin-bottom: 10px;
+            border-radius: 5px;
+            margin-top: 6px;
+            margin-bottom: 6px;
             font-size: 13px;
             text-align: center;
         }
@@ -80,13 +67,13 @@
             color: white;
             border: none;
             padding: 10px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
             width: 100%;
+            margin-top: 4px;
             transition: 0.2s;
-            margin-bottom: 5px;
         }
         button:hover {
             background-color: #45a049;
@@ -98,8 +85,8 @@
             background-color: #0b7dda;
         }
         .result-text {
+            margin-top: 6px;
             font-size: 12px;
-            margin-top: 5px;
             font-family: monospace;
             word-break: break-all;
         }
@@ -116,28 +103,28 @@
 
     <div class="container">
         <h1>DOBI X MANAGER</h1>
-        <p>Hệ thống xác thực Key độc lập</p>
+        <p>Hệ thống xác thực Key tự động</p>
         
         <div class="status-box">
-            Trạng thái: <span style="color: #4CAF50; font-weight: bold;">Chạy trực tiếp trên máy (Offline)</span>
+            Trạng thái: <span style="color: #4CAF50; font-weight: bold;">Đang hoạt động (Offline)</span>[cite: 1]
         </div>
 
-        <!-- Khung tạo key mới -->
-        <div class="action-box">
+        <!-- Khung Tạo Key -->
+        <div class="status-box">
             <button onclick="createKey()">TẠO KEY MỚI NGAY</button>
             <div id="createResult" class="result-text success"></div>
         </div>
 
-        <!-- Khung kiểm tra key trực tiếp -->
-        <div class="action-box">
-            <label>Kiểm tra tính hợp lệ của Key:</label>
+        <!-- Khung Kiểm Tra Key -->
+        <div class="status-box">
+            <div style="font-size: 12px; color: #aaa;">Kiểm tra Key:</div>
             <input type="text" id="inputKeyToCheck" placeholder="Dán key vào đây...">
-            <button class="btn-check" onclick="verifyKeyOnWeb()">KIỂM TRA KEY</button>
+            <button class="btn-check" onclick="verifyKey()">KIỂM TRA NGAY</button>
             <div id="checkResult" class="result-text"></div>
         </div>
 
         <div class="footer">
-            &copy; 2026 Dobi Project. No Vercel / No Supabase.
+            &copy; 2026 Dobi Project. All rights reserved.[cite: 1]
         </div>
     </div>
 
@@ -168,20 +155,20 @@
             navigator.clipboard.writeText(finalKey);
         }
 
-        function verifyKeyOnWeb() {
+        function verifyKey() {
             const key = document.getElementById("inputKeyToCheck").value.trim();
             const resultEl = document.getElementById("checkResult");
 
             if (!key || !key.startsWith("DOBI-")) {
                 resultEl.className = "result-text error";
-                resultEl.innerText = "Key không hợp lệ hoặc sai định dạng!";
+                resultEl.innerText = "Key sai định dạng!";
                 return;
             }
 
             const parts = key.split("-");
             if (parts.length < 3) {
                 resultEl.className = "result-text error";
-                resultEl.innerText = "Key thiếu mã bảo mật!";
+                resultEl.innerText = "Key không hợp lệ!";
                 return;
             }
 
@@ -191,10 +178,10 @@
 
             if (clientSignature === expectedSignature) {
                 resultEl.className = "result-text success";
-                resultEl.innerText = "✓ Key hợp lệ, hệ thống chấp nhận!";
+                resultEl.innerText = "✓ Key hợp lệ, dùng được ngay!";
             } else {
                 resultEl.className = "result-text error";
-                resultEl.innerText = "✕ Key giả mạo hoặc chưa từng được tạo!";
+                resultEl.innerText = "✕ Key giả mạo hoặc không tồn tại!";
             }
         }
     </script>
