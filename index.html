@@ -88,7 +88,7 @@
             padding: 13px 16px;
             color: #94a3b8;
             text-decoration: none;
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 600;
             border-radius: 10px;
             cursor: pointer;
@@ -370,7 +370,7 @@
 </head>
 <body>
 
-    <!-- Sidebar với các Icon chuẩn -->
+    <!-- Sidebar với các Icon chuẩn theo yêu cầu -->
     <div class="sidebar">
         <div>
             <div class="user-profile">
@@ -450,7 +450,7 @@
             </div>
             <div class="instruction-card">
                 <h3>Welcome to Dobi Manager</h3>
-                <p>Hệ thống quản lý key chuyên nghiệp, chỉ bắt đầu tính thời gian khi thiết bị đầu tiên kích hoạt thành công (Giới hạn tối đa 1 thiết bị duy nhất).</p>
+                <p>Hệ thống quản lý key chuyên nghiệp. Thời gian chỉ bắt đầu đếm ngược từ lần kích hoạt đầu tiên trên thiết bị và giới hạn tối đa chỉ 1 thiết bị duy nhất sử dụng key.</p>
             </div>
         </div>
 
@@ -517,10 +517,10 @@
         <div id="view-checkkey" class="view-section">
             <div class="section-title" style="margin-bottom: 15px;">License Key Verification</div>
             <div class="checker-wrapper">
-                <p style="color: #94a3b8; font-size: 14px;">Nhập mã License Key và mã thiết bị (HWID) của bạn để kiểm tra hoặc kích hoạt:</p>
+                <p style="color: #94a3b8; font-size: 14px;">Nhập mã License Key và mã thiết bị (HWID) để kích hoạt và sử dụng (Tối đa 1 thiết bị duy nhất):</p>
                 <div class="checker-input-row" style="flex-direction: column; gap: 10px;">
                     <input type="text" id="checkKeyInput" class="search-box" placeholder="Nhập License Key...">
-                    <input type="text" id="checkHwidInput" class="search-box" placeholder="Nhập mã thiết bị của bạn (HWID, ví dụ: PC_DEVICE_01)...">
+                    <input type="text" id="checkHwidInput" class="search-box" placeholder="Nhập mã thiết bị của bạn (HWID)...">
                 </div>
                 <button class="btn-primary" onclick="verifyKeyWithHwid()">🔍 Kiểm tra / Kích hoạt Key</button>
                 <div id="checkerResultBox" class="checker-result"></div>
@@ -608,7 +608,7 @@
         }
 
         function createApp() {
-            const name = document.getElementById('appNameInput'].value.trim();
+            const name = document.getElementById('appNameInput').value.trim();
             if(!name) return alert('Vui lòng nhập tên ứng dụng!');
             db.apps.push({ id: Date.now(), name: name, secret: 'sec_' + Math.random().toString(36).substring(7) });
             saveData();
@@ -670,10 +670,10 @@
             
             db.licenses.push({
                 key: `${appName.substring(0,4).toUpperCase()}-${p1}-${p2}-${p3}`,
-                status: 'Unactivated', // Trạng thái ban đầu chưa kích hoạt, chưa tính thời gian
+                status: 'Unactivated',
                 hwid: 'Unbound',
                 durationDays: days,
-                expiryTimestamp: null // Thời gian hết hạn tính từ lúc kích hoạt thiết bị đầu tiên
+                expiryTimestamp: null
             });
             saveData();
             closeModal();
@@ -682,9 +682,15 @@
 
         function renderLicenses() {
             const tbody = document.getElementById('licenseTableBody');
-            const keyword = document.getElementById('searchInput').value.toLowerCase();
-            const statusVal = document.getElementById('statusFilter').value;
-            const appFilterVal = document.getElementById('appSelectFilter').value;
+            const searchInputEl = document.getElementById('searchInput');
+            const statusFilterEl = document.getElementById('statusFilter');
+            const appSelectFilterEl = document.getElementById('appSelectFilter');
+
+            if (!tbody) return;
+
+            const keyword = searchInputEl ? searchInputEl.value.toLowerCase() : '';
+            const statusVal = statusFilterEl ? statusFilterEl.value : '';
+            const appFilterVal = appSelectFilterEl ? appSelectFilterEl.value : '';
 
             let filtered = db.licenses.filter(l => l.key.toLowerCase().includes(keyword));
             if(statusVal) filtered = filtered.filter(l => l.status === statusVal);
@@ -730,7 +736,6 @@
         }
 
         function resetHwid(index) {
-            // Reset HWID về Unbound và đưa trạng thái về Unactivated để sẵn sàng cho 1 thiết bị mới kích hoạt lại mà không mất thời gian gốc
             db.licenses[index].hwid = 'Unbound';
             db.licenses[index].status = 'Unactivated';
             db.licenses[index].expiryTimestamp = null;
@@ -779,9 +784,8 @@
                 return;
             }
 
-            // Kiểm tra giới hạn tối đa 1 thiết bị duy nhất
+            // Chỉ duy nhất 1 thiết bị dùng key này được kích hoạt và tính thời gian
             if(found.hwid === 'Unbound') {
-                // Kích hoạt lần đầu cho thiết bị này và bắt đầu tính thời gian
                 found.hwid = queryHwid;
                 found.status = 'Active';
                 if(found.durationDays !== 365) {
@@ -791,8 +795,7 @@
                 }
                 saveData();
             } else if(found.hwid !== queryHwid) {
-                // Nếu thiết bị khác cố gắng dùng
-                resultBox.innerHTML = `<span style="color: #f87171;">❌ Từ chối! Key này đã được kích hoạt trên thiết bị khác tối đa (1 thiết bị duy nhất).</span>`;
+                resultBox.innerHTML = `<span style="color: #f87171;">❌ Từ chối! Key này đã được kích hoạt trên thiết bị khác (Giới hạn tối đa 1 thiết bị).</span>`;
                 return;
             }
 
