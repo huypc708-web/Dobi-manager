@@ -314,7 +314,7 @@
             margin-bottom: 22px;
             flex-wrap: wrap;
         }
-        .search-box, select, input[type="text"] {
+        .search-box, select, input[type="text"], input[type="number"] {
             background-color: #131822;
             border: 1px solid #1e293b;
             color: #ffffff;
@@ -403,7 +403,7 @@
             padding: 30px;
             border-radius: 10px;
             width: 100%;
-            max-width: 420px;
+            max-width: 440px;
         }
         .modal-content h3 { color: #fff; margin-bottom: 18px; font-size: 18px; font-weight: 700; }
         .modal-content select, .modal-content input { width: 100%; margin-bottom: 14px; }
@@ -769,15 +769,24 @@
         function openLicenseModal() {
             if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Ứng dụng trước khi tạo License Key!');
             document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Tạo License Key Mới (Tự động tính giờ)</h3>
+                <h3>Tạo License Key Tùy chỉnh (Test Phút/Giờ/Ngày)</h3>
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Chọn ứng dụng:</label>
                 <select id="modalAppSelect">${db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('')}</select>
-                <select id="modalDurationDays">
-                    <option value="1">1 Ngày</option>
-                    <option value="7" selected>7 Ngày</option>
-                    <option value="30">30 Ngày</option>
-                    <option value="365">Vĩnh viễn (Lifetime)</option>
-                </select>
-                <input type="text" id="modalHwidInput" placeholder="Nhập HWID tùy chỉnh (hoặc để trống tự động nhận)">
+                
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Thời lượng tùy chỉnh (Nhập số & Chọn đơn vị):</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                    <input type="number" id="modalDurationValue" value="1" min="1" style="flex: 1; margin-bottom: 0;">
+                    <select id="modalDurationUnit" style="flex: 1; margin-bottom: 0;">
+                        <option value="minutes">Phút (Test)</option>
+                        <option value="hours">Giờ (Test)</option>
+                        <option value="days" selected>Ngày</option>
+                        <option value="lifetime">Vĩnh viễn (Lifetime)</option>
+                    </select>
+                </div>
+
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">HWID (Để trống để tự sinh):</label>
+                <input type="text" id="modalHwidInput" placeholder="Nhập HWID tùy chỉnh hoặc để trống...">
+                
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="closeModal()">Hủy</button>
                     <button class="btn-primary" onclick="generateLicense()">Tạo Key</button>
@@ -788,7 +797,8 @@
 
         function generateLicense() {
             const appName = document.getElementById('modalAppSelect').value;
-            const days = parseInt(document.getElementById('modalDurationDays').value);
+            const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
+            const unit = document.getElementById('modalDurationUnit').value;
             const customHwid = document.getElementById('modalHwidInput').value.trim();
             const p1 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const p2 = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -798,15 +808,21 @@
             const assignedHwid = customHwid !== "" ? customHwid : `HWID_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
             
             let expiry = 'Lifetime';
-            if (days !== 365) {
-                expiry = now + (days * 24 * 60 * 60 * 1000);
+            let multiplier = 0;
+            if (unit === 'minutes') multiplier = 60 * 1000;
+            else if (unit === 'hours') multiplier = 60 * 60 * 1000;
+            else if (unit === 'days') multiplier = 24 * 60 * 60 * 1000;
+
+            if (unit !== 'lifetime') {
+                expiry = now + (val * multiplier);
             }
 
             db.licenses.push({
                 key: `${appName.substring(0,4).toUpperCase()}-${p1}-${p2}-${p3}`,
                 status: 'Active',
                 hwid: assignedHwid,
-                durationDays: days,
+                durationValue: val,
+                durationUnit: unit,
                 expiryTimestamp: expiry
             });
             saveData();
@@ -816,18 +832,25 @@
 
         function openEditLicenseModal(originalIdx) {
             const l = db.licenses[originalIdx];
+            const currentVal = l.durationValue || 1;
+            const currentUnit = l.durationUnit || 'days';
+
             document.getElementById('modalBodyContent').innerHTML = `
                 <h3>Tùy chỉnh Key: ${l.key}</h3>
-                <label style="font-size: 12px; color: #94a3b8;">Mã thiết bị (HWID):</label>
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Mã thiết bị (HWID):</label>
                 <input type="text" id="editHwidInput" value="${l.hwid}">
                 
-                <label style="font-size: 12px; color: #94a3b8;">Thời hạn mới:</label>
-                <select id="editDurationDays">
-                    <option value="1" ${l.durationDays === 1 ? 'selected' : ''}>1 Ngày</option>
-                    <option value="7" ${l.durationDays === 7 ? 'selected' : ''}>7 Ngày</option>
-                    <option value="30" ${l.durationDays === 30 ? 'selected' : ''}>30 Ngày</option>
-                    <option value="365" ${l.durationDays === 365 ? 'selected' : ''}>Vĩnh viễn (Lifetime)</option>
-                </select>
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Thời hạn mới:</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                    <input type="number" id="editDurationValue" value="${currentVal}" min="1" style="flex: 1; margin-bottom: 0;">
+                    <select id="editDurationUnit" style="flex: 1; margin-bottom: 0;">
+                        <option value="minutes" ${currentUnit === 'minutes' ? 'selected' : ''}>Phút</option>
+                        <option value="hours" ${currentUnit === 'hours' ? 'selected' : ''}>Giờ</option>
+                        <option value="days" ${currentUnit === 'days' ? 'selected' : ''}>Ngày</option>
+                        <option value="lifetime" ${currentUnit === 'lifetime' ? 'selected' : ''}>Vĩnh viễn</option>
+                    </select>
+                </div>
+
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="closeModal()">Hủy</button>
                     <button class="btn-primary" onclick="saveEditedLicense(${originalIdx})">Lưu thay đổi</button>
@@ -838,16 +861,21 @@
 
         function saveEditedLicense(idx) {
             const newHwid = document.getElementById('editHwidInput').value.trim();
-            const newDays = parseInt(document.getElementById('editDurationDays').value);
+            const newVal = parseInt(document.getElementById('editDurationValue').value) || 1;
+            const newUnit = document.getElementById('editDurationUnit').value;
             
             db.licenses[idx].hwid = newHwid !== "" ? newHwid : "Chưa liên kết";
-            db.licenses[idx].durationDays = newDays;
+            db.licenses[idx].durationValue = newVal;
+            db.licenses[idx].durationUnit = newUnit;
             
             const now = Date.now();
-            if (newDays === 365) {
+            if (newUnit === 'lifetime') {
                 db.licenses[idx].expiryTimestamp = 'Lifetime';
             } else {
-                db.licenses[idx].expiryTimestamp = now + (newDays * 24 * 60 * 60 * 1000);
+                let multiplier = 24 * 60 * 60 * 1000;
+                if (newUnit === 'minutes') multiplier = 60 * 1000;
+                else if (newUnit === 'hours') multiplier = 60 * 60 * 1000;
+                db.licenses[idx].expiryTimestamp = now + (newVal * multiplier);
             }
 
             db.licenses[idx].status = 'Active';
@@ -898,7 +926,7 @@
                             <span class="badge ${badgeClass}">${statusText}</span><br>
                             <small style="color: #38bdf8; cursor: pointer;" onclick="openEditLicenseModal(${originalIdx})">🔗 ${l.hwid} (Bấm để sửa)</small>
                         </td>
-                        <td><span class="countdown-timer" data-index="${originalIdx}" data-expiry="${l.expiryTimestamp}" data-status="${l.status}" data-duration="${l.durationDays}">Đang tính toán...</span></td>
+                        <td><span class="countdown-timer" data-index="${originalIdx}" data-expiry="${l.expiryTimestamp}" data-status="${l.status}">Đang tính toán...</span></td>
                         <td>
                             <div class="action-btns">
                                 <button class="btn-action btn-edit" onclick="openEditLicenseModal(${originalIdx})">Sửa HWID/Giờ</button>
@@ -916,7 +944,6 @@
             updateCountdowns();
         }
 
-        // Cập nhật đồng hồ đếm ngược với tính năng đóng băng (Freeze) khi Banned
         function updateCountdowns() {
             const timers = document.querySelectorAll('.countdown-timer');
             const now = Date.now();
@@ -955,7 +982,13 @@
                             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-                            timer.innerText = `${days} ngày ${hours}h ${minutes}m ${seconds}s`;
+                            if (days > 0) {
+                                timer.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                            } else if (hours > 0) {
+                                timer.innerText = `${hours}h ${minutes}m ${seconds}s`;
+                            } else {
+                                timer.innerText = `${minutes}m ${seconds}s`;
+                            }
                             timer.style.color = '#38bdf8';
                         }
                     }
