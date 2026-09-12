@@ -640,7 +640,6 @@
     <div id="toast">Đã sao chép thành công!</div>
 
     <script>
-        // Cấu hình Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyC9bzr6Jgn1W3aMtrV_ndwPB-npr5lSzk",
             authDomain: "dobi-manager.firebaseapp.com",
@@ -660,9 +659,6 @@
             users: []
         };
 
-        let currentCheckedKey = null;
-
-        // Bắt buộc đăng nhập lại từ đầu mỗi khi load trang (F5 hoặc mở tab mới)
         window.onload = function() {
             handleLogout();
         };
@@ -769,6 +765,10 @@
             document.getElementById('globalModal').style.display = 'flex';
         }
 
+        function closeModal() {
+            document.getElementById('globalModal').style.display = 'none';
+        }
+
         function createApp() {
             const name = document.getElementById('appNameInput').value.trim();
             if(!name) return alert('Vui lòng nhập tên ứng dụng!');
@@ -867,36 +867,37 @@
                 return;
             }
 
-            tbody.innerHTML = filtered.map((item) => {
-                const realIndex = db.licenses.findIndex(l => l.key === item.key);
-                
+            tbody.innerHTML = filtered.map((l) => {
+                const originalIdx = db.licenses.findIndex(item => item.key === l.key);
                 let badgeClass = 'badge-unactivated';
-                let statusName = 'Chưa kích hoạt';
-                if(item.status === 'Active') { badgeClass = 'badge-active'; statusName = 'Đang hoạt động'; }
-                if(item.status === 'Banned') { badgeClass = 'badge-banned'; statusName = 'Đã khóa'; }
-
-                let expiryText = 'Chưa kích hoạt';
-                if(item.status === 'Active') {
-                    if(item.durationDays === 365 || item.expiryTimestamp === 'Lifetime') expiryText = 'Vĩnh viễn';
-                    else expiryText = formatCountdown(item.expiryTimestamp);
-                } else if(item.status === 'Unactivated' && item.expiryTimestamp) {
-                    expiryText = (item.durationDays === 365 || item.expiryTimestamp === 'Lifetime') ? 'Vĩnh viễn' : formatCountdown(item.expiryTimestamp) + ' (Đã lưu)';
+                let statusText = 'Chưa kích hoạt';
+                if(l.status === 'Active') {
+                    badgeClass = 'badge-active';
+                    statusText = 'Đã kích hoạt';
+                } else if(l.status === 'Banned') {
+                    badgeClass = 'badge-banned';
+                    statusText = 'Đã khóa';
                 }
 
-                let banUnbanBtn = item.status === 'Banned'
-                    ? `<button class="btn-action btn-unban" onclick="toggleBan(${realIndex})">Mở khóa</button>`
-                    : `<button class="btn-action btn-ban" onclick="toggleBan(${realIndex})">Khóa</button>`;
+                // Hiển thị thời hạn (đã bỏ chữ Đã lưu)
+                let timeStr = l.durationDays === 365 ? 'Vĩnh viễn' : `${l.durationDays} Ngày`;
 
                 return `
                     <tr>
-                        <td><span class="key-code" onclick="copyKey('${item.key}')" title="Click để sao chép">${item.key}</span></td>
-                        <td><span class="badge ${badgeClass}">${statusName}</span> <span style="font-size: 13px; color: #64748b;">(${item.hwid})</span></td>
-                        <td>${expiryText}</td>
+                        <td><span class="key-code" onclick="copyKey('${l.key}')">${l.key}</span></td>
+                        <td>
+                            <span class="badge ${badgeClass}">${statusText}</span><br>
+                            <small style="color: #64748b;">${l.hwid}</small>
+                        </td>
+                        <td>${timeStr}</td>
                         <td>
                             <div class="action-btns">
-                                <button class="btn-action btn-reset" onclick="resetHwid(${realIndex})">Đặt lại HWID</button>
-                                ${banUnbanBtn}
-                                <button class="btn-action btn-delete" onclick="deleteLicense(${realIndex})">Xóa</button>
+                                <button class="btn-action btn-reset" onclick="resetHwid(${originalIdx})">Đặt lại HWID</button>
+                                ${l.status === 'Banned' ? 
+                                    `<button class="btn-action btn-unban" onclick="toggleBan(${originalIdx})">Mở khóa</button>` : 
+                                    `<button class="btn-action btn-ban" onclick="toggleBan(${originalIdx})">Khóa</button>`
+                                }
+                                <button class="btn-action btn-delete" onclick="deleteLicense(${originalIdx})">Xóa</button>
                             </div>
                         </td>
                     </tr>
@@ -904,125 +905,90 @@
             }).join('');
         }
 
-        function resetHwid(index) {
-            db.licenses[index].hwid = 'Chưa liên kết';
-            db.licenses[index].status = 'Unactivated';
+        function resetHwid(idx) {
+            db.licenses[idx].hwid = 'Chưa liên kết';
+            db.licenses[idx].status = 'Unactivated';
+            db.licenses[idx].expiryTimestamp = null;
             saveData();
             renderLicenses();
-            showToast('Đã đặt lại HWID thành công trên Cloud!');
+            showToast("Đã đặt lại HWID thành công!");
         }
 
-        function toggleBan(index) {
-            if(db.licenses[index].status === 'Banned') {
-                db.licenses[index].status = db.licenses[index].hwid === 'Chưa liên kết' ? 'Unactivated' : 'Active';
+        function toggleBan(idx) {
+            if(db.licenses[idx].status === 'Banned') {
+                db.licenses[idx].status = db.licenses[idx].hwid === 'Chưa liên kết' ? 'Unactivated' : 'Active';
             } else {
-                db.licenses[index].status = 'Banned';
+                db.licenses[idx].status = 'Banned';
             }
             saveData();
             renderLicenses();
         }
 
-        function deleteLicense(index) {
+        function deleteLicense(idx) {
             if(confirm('Bạn có chắc chắn muốn xóa key này?')) {
-                db.licenses.splice(index, 1);
+                db.licenses.splice(idx, 1);
                 saveData();
                 renderLicenses();
             }
         }
 
+        // Logic kiểm tra / kích hoạt và chặn HWID trái phép
         function verifyKeyWithHwid() {
-            const queryKey = document.getElementById('checkKeyInput').value.trim();
-            const queryHwid = document.getElementById('checkHwidInput').value.trim();
+            const keyVal = document.getElementById('checkKeyInput').value.trim();
+            const hwidVal = document.getElementById('checkHwidInput').value.trim();
             const resultBox = document.getElementById('checkerResultBox');
+
             resultBox.style.display = 'block';
 
-            if(!queryKey || !queryHwid) {
-                resultBox.innerHTML = `<span style="color: #f87171;">⚠️ Vui lòng nhập đầy đủ License Key và Mã thiết bị (HWID)!</span>`;
-                currentCheckedKey = null;
+            if(!keyVal || !hwidVal) {
+                resultBox.innerHTML = `<span style="color: #f87171;">Vui lòng nhập đầy đủ License Key và HWID!</span>`;
                 return;
             }
 
-            const found = db.licenses.find(l => l.key.toLowerCase() === queryKey.toLowerCase());
+            const found = db.licenses.find(l => l.key === keyVal);
             if(!found) {
-                resultBox.innerHTML = `<span style="color: #f87171;">❌ Không tìm thấy License Key này trên hệ thống Cloud!</span>`;
-                currentCheckedKey = null;
+                resultBox.innerHTML = `<span style="color: #f87171;">Key không tồn tại trên hệ thống!</span>`;
                 return;
             }
 
             if(found.status === 'Banned') {
-                resultBox.innerHTML = `<span style="color: #f87171;">🚫 Key này đã bị khóa (Banned)!</span>`;
-                currentCheckedKey = null;
+                resultBox.innerHTML = `<span style="color: #f87171;">Key này đã bị khóa (Banned)!</span>`;
                 return;
             }
 
-            if(found.hwid === 'Chưa liên kết') {
-                found.hwid = queryHwid;
+            const now = Date.now();
+
+            // Nếu key chưa kích hoạt (Chưa liên kết HWID)
+            if(found.hwid === 'Chưa liên kết' || !found.hwid) {
+                found.hwid = hwidVal;
                 found.status = 'Active';
-                if(found.durationDays === 365) {
+                
+                if(found.durationDays !== 365) {
+                    found.expiryTimestamp = now + (found.durationDays * 24 * 60 * 60 * 1000);
+                } else {
                     found.expiryTimestamp = 'Lifetime';
-                } else if(!found.expiryTimestamp) {
-                    found.expiryTimestamp = Math.floor(Date.now() / 1000) + (found.durationDays * 86400);
                 }
+
                 saveData();
-            } else if(found.hwid !== queryHwid) {
-                resultBox.innerHTML = `<span style="color: #f87171;">❌ Từ chối! Key này đã được kích hoạt trên thiết bị khác.</span>`;
-                currentCheckedKey = null;
+                resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Kích hoạt và đăng nhập thành công! (Thiết bị mới đã liên kết)</span>`;
+                renderLicenses();
                 return;
             }
 
-            currentCheckedKey = found.key;
-            updateCheckResultDisplay(found);
-            renderLicenses();
-        }
-
-        function updateCheckResultDisplay(found) {
-            const resultBox = document.getElementById('checkerResultBox');
-            if(!resultBox || resultBox.style.display === 'none') return;
-
-            let isExpired = false;
-            if(found.expiryTimestamp !== 'Lifetime' && found.expiryTimestamp && Math.floor(Date.now() / 1000) > found.expiryTimestamp) {
-                isExpired = true;
+            // Nếu key đã liên kết, kiểm tra hạn sử dụng
+            if(found.expiryTimestamp !== 'Lifetime' && found.expiryTimestamp && now > found.expiryTimestamp) {
+                resultBox.innerHTML = `<span style="color: #f87171;">Key đã hết hạn sử dụng!</span>`;
+                return;
             }
 
-            resultBox.innerHTML = `
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div><strong>Key:</strong> <span style="color: #38bdf8; cursor:pointer;" onclick="copyKey('${found.key}')">${found.key} (Click để copy)</span></div>
-                    <div><strong>Trạng thái:</strong> ${isExpired ? '<span class="badge badge-banned">Đã hết hạn</span>' : `<span class="badge badge-active">Hoạt động (Đã đồng bộ)</span>`}</div>
-                    <div><strong>HWID Thiết bị:</strong> <span style="color: #94a3b8;">${found.hwid}</span></div>
-                    <div><strong>Thời gian còn lại:</strong> <span style="color: #38bdf8; font-weight: 600;">${found.expiryTimestamp === 'Lifetime' ? 'Vĩnh viễn' : formatCountdown(found.expiryTimestamp)}</span></div>
-                </div>
-            `;
-        }
-
-        function closeModal() {
-            document.getElementById('globalModal').style.display = 'none';
-        }
-
-        function formatCountdown(expireTimestamp) {
-            if(!expireTimestamp || expireTimestamp === 'Lifetime') return "Vĩnh viễn";
-            const now = Math.floor(Date.now() / 1000);
-            const diff = expireTimestamp - now;
-            if (diff <= 0) return "Đã hết hạn";
-            let days = Math.floor(diff / 86400);
-            let hours = Math.floor((diff % 86400) / 3600);
-            let mins = Math.floor((diff % 3600) / 60);
-            let secs = diff % 60;
-            return `${days} ngày ${hours} giờ ${mins} phút ${secs} giây`;
-        }
-
-        setInterval(() => {
-            const activeTab = document.querySelector('.view-section.active');
-            if(activeTab && activeTab.id === 'view-licenses') {
-                renderLicenses();
+            // Kiểm tra khớp HWID
+            if(found.hwid === hwidVal) {
+                resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Đăng nhập thành công! (Thiết bị trùng khớp)</span>`;
+            } else {
+                // Khác thiết bị và chưa reset HWID trên web
+                resultBox.innerHTML = `<span style="color: #f87171; font-weight: bold;">Đăng nhập thất bại: Key đã được kích hoạt trên thiết bị khác! Vui lòng đặt lại HWID trên web.</span>`;
             }
-
-            if(currentCheckedKey) {
-                const found = db.licenses.find(l => l.key === currentCheckedKey);
-                if(found) {
-                    updateCheckResultDisplay(found);
-                }
-            }
-        }, 1000);
+        }
     </script>
 </body>
 </html>
