@@ -527,10 +527,7 @@
         <div class="main-content">
             <div class="header-top">
                 <div class="dashboard-title" id="pageTitle">Tổng quan</div>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div id="liveClock" style="color: #94a3b8; font-size: 14px; font-weight: 500; font-family: monospace; background: #131822; padding: 6px 12px; border-radius: 20px; border: 1px solid #1e293b;"></div>
-                    <div class="status-badge">Đã kết nối đám mây</div>
-                </div>
+                <div class="status-badge">Đã kết nối đám mây</div>
             </div>
 
             <!-- 1. TỔNG QUAN -->
@@ -605,9 +602,9 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 30%;">License Key</th>
-                                <th style="width: 25%;">Trạng thái & HWID</th>
-                                <th style="width: 20%;">Thời hạn / Hết hạn</th>
+                                <th style="width: 28%;">License Key</th>
+                                <th style="width: 24%;">Trạng thái & HWID</th>
+                                <th style="width: 23%;">Thời gian đếm ngược</th>
                                 <th style="width: 25%;">Thao tác</th>
                             </tr>
                         </thead>
@@ -664,26 +661,9 @@
 
         window.onload = function() {
             handleLogout();
-            updateLiveClock();
-            setInterval(updateLiveClock, 1000);
+            // Tự động cập nhật thời gian đếm ngược mỗi giây cho các key đang hoạt động
+            setInterval(updateCountdowns, 1000);
         };
-
-        // Hàm cập nhật đồng hồ thời gian thực
-        function updateLiveClock() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = String(now.getFullYear());
-
-            const timeString = `${hours}:${minutes}:${seconds} - ${day}/${month}/${year}`;
-            const clockElement = document.getElementById('liveClock');
-            if (clockElement) {
-                clockElement.innerText = timeString;
-            }
-        }
 
         function handleLogin() {
             const u = document.getElementById('loginUser').value.trim();
@@ -901,9 +881,6 @@
                     statusText = 'Đã khóa';
                 }
 
-                // Hiển thị thời hạn (đã bỏ chữ Đã lưu)
-                let timeStr = l.durationDays === 365 ? 'Vĩnh viễn' : `${l.durationDays} Ngày`;
-
                 return `
                     <tr>
                         <td><span class="key-code" onclick="copyKey('${l.key}')">${l.key}</span></td>
@@ -911,7 +888,7 @@
                             <span class="badge ${badgeClass}">${statusText}</span><br>
                             <small style="color: #64748b;">${l.hwid}</small>
                         </td>
-                        <td>${timeStr}</td>
+                        <td><span class="countdown-timer" data-expiry="${l.expiryTimestamp}" data-status="${l.status}" data-duration="${l.durationDays}">Đang tính toán...</span></td>
                         <td>
                             <div class="action-btns">
                                 <button class="btn-action btn-reset" onclick="resetHwid(${originalIdx})">Đặt lại HWID</button>
@@ -925,6 +902,45 @@
                     </tr>
                 `;
             }).join('');
+
+            updateCountdowns();
+        }
+
+        // Hàm cập nhật đồng hồ đếm ngược cho bảng quản lý key
+        function updateCountdowns() {
+            const timers = document.querySelectorAll('.countdown-timer');
+            const now = Date.now();
+
+            timers.forEach(timer => {
+                const expiry = timer.getAttribute('data-expiry');
+                const status = timer.getAttribute('data-status');
+                const duration = timer.getAttribute('data-duration');
+
+                if (status === 'Unactivated') {
+                    timer.innerText = duration === '365' ? 'Vĩnh viễn (Chưa kích hoạt)' : `${duration} Ngày (Chưa kích hoạt)`;
+                    timer.style.color = '#94a3b8';
+                } else if (expiry === 'Lifetime') {
+                    timer.innerText = 'Vĩnh viễn (Lifetime)';
+                    timer.style.color = '#34d399';
+                } else if (!expiry || expiry === 'null') {
+                    timer.innerText = 'Chưa bắt đầu';
+                    timer.style.color = '#94a3b8';
+                } else {
+                    const diff = parseInt(expiry) - now;
+                    if (diff <= 0) {
+                        timer.innerText = 'Đã hết hạn';
+                        timer.style.color = '#f87171';
+                    } else {
+                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                        timer.innerText = `${days} ngày ${hours}h ${minutes}m ${seconds}s`;
+                        timer.style.color = '#38bdf8';
+                    }
+                }
+            });
         }
 
         function resetHwid(idx) {
@@ -954,7 +970,6 @@
             }
         }
 
-        // Logic kiểm tra / kích hoạt và chặn HWID trái phép
         function verifyKeyWithHwid() {
             const keyVal = document.getElementById('checkKeyInput').value.trim();
             const hwidVal = document.getElementById('checkHwidInput').value.trim();
@@ -980,7 +995,6 @@
 
             const now = Date.now();
 
-            // Nếu key chưa kích hoạt (Chưa liên kết HWID)
             if(found.hwid === 'Chưa liên kết' || !found.hwid) {
                 found.hwid = hwidVal;
                 found.status = 'Active';
@@ -997,17 +1011,14 @@
                 return;
             }
 
-            // Nếu key đã liên kết, kiểm tra hạn sử dụng
             if(found.expiryTimestamp !== 'Lifetime' && found.expiryTimestamp && now > found.expiryTimestamp) {
                 resultBox.innerHTML = `<span style="color: #f87171;">Key đã hết hạn sử dụng!</span>`;
                 return;
             }
 
-            // Kiểm tra khớp HWID
             if(found.hwid === hwidVal) {
                 resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Đăng nhập thành công! (Thiết bị trùng khớp)</span>`;
             } else {
-                // Khác thiết bị và chưa reset HWID trên web
                 resultBox.innerHTML = `<span style="color: #f87171; font-weight: bold;">Đăng nhập thất bại: Key đã được kích hoạt trên thiết bị khác! Vui lòng đặt lại HWID trên web.</span>`;
             }
         }
