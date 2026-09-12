@@ -2,7 +2,7 @@
 const VALID_KEYS = [
   { key: "DOBI-VIP-1111", hwid: "", status: "Chưa kích hoạt" },
   { key: "DOBI-PRO-2222", hwid: "", status: "Chưa kích hoạt" },
-  { key: "DOBI-O0UKCX-AV2TRG", hwid: "", status: "Chưa kích hoạt" },
+  { key: "DOBI-WS9K-PEXX-HQUE", hwid: "", status: "Chưa kích hoạt" },
   { key: "DOBI-TEST-9999", hwid: "DEVICE_LOCKED_HWID", status: "banned" }
 ];
 
