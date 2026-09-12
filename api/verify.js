@@ -1,10 +1,9 @@
 // Danh sách kho key lưu trực tiếp trên Vercel (Bạn có thể thêm bớt key ở đây)
 const VALID_KEYS = [
-  { key: "DOBI-VIP-1111", hwid: "", status: "active" },
-  { key: "DOBI-PRO-2222", hwid: "", status: "active" },
-  { key: "DOBI-O0UKCX-AV2TRG", hwid: "", status: "active" },
-  { key: "DOBI-WS9K-PEXX-HQUE", hwid: "", status: "active" },
-  { key: "DOBI-TEST-9999", hwid: "DEVICE_LOCKED_HWID", status: "banned" } // Ví dụ key bị ban
+  { key: "DOBI-VIP-1111", hwid: "", status: "Chưa kích hoạt" },
+  { key: "DOBI-PRO-2222", hwid: "", status: "Chưa kích hoạt" },
+  { key: "DOBI-O0UKCX-AV2TRG", hwid: "", status: "Chưa kích hoạt" },
+  { key: "DOBI-TEST-9999", hwid: "DEVICE_LOCKED_HWID", status: "banned" }
 ];
 
 export default async function handler(req, res) {
@@ -27,17 +26,18 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "banned" });
     }
 
-    // Tự động gán HWID vào lần đăng nhập đầu tiên
-    if (!foundKey.hwid || foundKey.hwid === "none" || foundKey.hwid === "") {
+    // 1. Nếu key chưa có HWID (Chưa ai dùng) -> Gán HWID và đổi trạng thái thành Đã kích hoạt
+    if (!foundKey.hwid || foundKey.hwid === "") {
       foundKey.hwid = hwid || "default_hwid";
-      foundKey.status = 'active';
+      foundKey.status = "Đã kích hoạt"; // Cập nhật trạng thái hiển thị lên web
     } 
+    // 2. Nếu key đã có HWID nhưng khác với thiết bị đang gửi lên
     else if (hwid && foundKey.hwid !== hwid) {
-      // Nếu máy khác cố tình dùng chung key
-      return res.status(400).json({ message: "device_locked" });
+      // Chặn đăng nhập vì chưa reset HWID
+      return res.status(400).json({ message: "Key đã được kích hoạt trên thiết bị khác! Vui lòng đặt lại HWID." });
     }
 
-    // Trả về thành công
+    // Trả về thành công khi đúng HWID hoặc vừa kích hoạt xong
     return res.status(200).json({
       message: "Thành công",
       data: [foundKey]
@@ -47,3 +47,9 @@ export default async function handler(req, res) {
     return res.status(500).json({ message: "Lỗi Server: " + err.message });
   }
 }
+```[cite: 1]
+
+### Giải thích thay đổi:
+* Đổi giá trị mặc định của `status` thành `"Chưa kích hoạt"` cho khớp với giao diện web quản lý của bạn ở hình ảnh.
+* Khi một thiết bị mới kết nối và key chưa có HWID (`!foundKey.hwid`), hệ thống sẽ gán HWID của thiết bị đó vào và chuyển `status` thành `"Đã kích hoạt"`[cite: 1].
+* Nếu thiết bị thứ hai dùng lại key đó mà HWID không khớp với thiết bị đầu tiên, hệ thống sẽ chặn lại ngay lập tức và trả về thông báo lỗi mà không cho phép đăng nhập thành công[cite: 1].
