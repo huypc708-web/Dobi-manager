@@ -4,12 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AuthFusion Dashboard</title>
+    <!-- Import font Inter chuẩn từ Google Fonts để giống y hệt các nền tảng dashboard hiện đại -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         body {
             background-color: #0b0e14;
@@ -17,6 +21,7 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
+            letter-spacing: -0.01em;
         }
 
         /* Sidebar bên trái */
@@ -64,13 +69,6 @@
             flex-direction: column;
             gap: 2px;
         }
-        .nav-section-title {
-            font-size: 10px;
-            color: #475569;
-            text-transform: uppercase;
-            padding: 10px 12px 4px 12px;
-            letter-spacing: 0.5px;
-        }
         .nav-item {
             display: flex;
             align-items: center;
@@ -79,6 +77,7 @@
             color: #94a3b8;
             text-decoration: none;
             font-size: 13px;
+            font-weight: 500;
             border-radius: 6px;
             transition: 0.2s;
         }
@@ -89,7 +88,7 @@
         .nav-item.active {
             background: #1e2638;
             color: #fff;
-            font-weight: 500;
+            font-weight: 600;
         }
         .sidebar-bottom {
             border-top: 1px solid #1a2230;
@@ -121,7 +120,7 @@
         .dashboard-title {
             color: #ffffff;
             font-size: 22px;
-            font-weight: 600;
+            font-weight: 700;
         }
         .status-badge {
             background: rgba(16, 185, 129, 0.1);
@@ -130,7 +129,7 @@
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -151,7 +150,7 @@
         .section-title {
             color: #ffffff;
             font-size: 18px;
-            font-weight: 600;
+            font-weight: 700;
         }
         .btn-create {
             background-color: #ffffff;
@@ -223,17 +222,17 @@
             text-align: center;
             padding: 60px 20px;
             color: #64748b;
-            font-size: 14px;
+            font-size: 13px;
         }
         .badge {
             padding: 3px 8px;
             border-radius: 4px;
             font-size: 11px;
-            font-weight: 500;
+            font-weight: 600;
         }
         .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; }
         
-        /* Modal Popup Tạo License */
+        /* Modal Popup Tạo Key */
         .modal {
             display: none;
             position: fixed;
@@ -250,10 +249,10 @@
             width: 100%;
             max-width: 400px;
         }
-        .modal-content h3 { color: #fff; margin-bottom: 15px; font-size: 16px; }
+        .modal-content h3 { color: #fff; margin-bottom: 15px; font-size: 16px; font-weight: 600; }
         .modal-content select { width: 100%; margin-bottom: 12px; }
         .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
-        .btn-cancel { background: #334155; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+        .btn-cancel { background: #334155; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -261,7 +260,6 @@
     <!-- Sidebar Trái -->
     <div class="sidebar">
         <div>
-            <!-- Thông tin tài khoản User ở trên cùng sidebar -->
             <div class="user-profile">
                 <div class="avatar">A</div>
                 <div class="user-info">
@@ -270,7 +268,6 @@
                 </div>
             </div>
 
-            <!-- Menu chính -->
             <div class="nav-menu">
                 <a href="#" class="nav-item"> Overview</a>
                 <a href="#" class="nav-item"> Applications</a>
@@ -283,7 +280,6 @@
             </div>
         </div>
 
-        <!-- Menu phụ phía dưới sidebar -->
         <div class="sidebar-bottom">
             <a href="#" class="nav-item"> Customize UI</a>
             <a href="#" class="nav-item"> Logout</a>
@@ -407,11 +403,11 @@
                 let expiryText = item.expiry === "Lifetime" ? "Lifetime" : formatCountdown(item.expiry);
                 tbody.innerHTML += `
                     <tr>
-                        <td><code style="color: #38bdf8;">${item.key}</code></td>
+                        <td><code style="color: #38bdf8; font-family: monospace;">${item.key}</code></td>
                         <td><span class="badge badge-active">${item.status}</span> <span style="font-size: 12px; color: #64748b;">(${item.hwid})</span></td>
                         <td class="${item.expiry !== 'Lifetime' ? 'countdown-item' : ''}" data-time="${item.expiry}">${expiryText}</td>
                         <td>
-                            <button onclick="resetHwid(${index})" style="background:#1e293b; color:#38bdf8; border:1px solid #334155; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px;">Reset HWID</button>
+                            <button onclick="resetHwid(${index})" style="background:#1e293b; color:#38bdf8; border:1px solid #334155; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:500;">Reset HWID</button>
                         </td>
                     </tr>
                 `;
