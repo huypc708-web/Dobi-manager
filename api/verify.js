@@ -10,7 +10,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "Thiếu Key bản quyền!" });
     }
 
-    // Truy vấn vào cột 'license_keys' trong bảng 'license_keys'
+    // Truy vấn tìm chính xác key trong bảng license_keys (thay 'license_keys' bằng tên cột chứa key thực tế của bạn nếu cần)
     const { data, error } = await supabase
       .from('license_keys')
       .select('*')
@@ -20,6 +20,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ message: "Lỗi truy vấn Database: " + error.message });
     }
 
+    // Nếu không tìm thấy key trong database nghĩa là key này chưa được tạo hoặc không có thực
     if (!data || data.length === 0) {
       return res.status(404).json({ message: "Key không tồn tại trên hệ thống web!" });
     }
@@ -33,7 +34,7 @@ export default async function handler(req, res) {
 
     let currentHwid = keyData.hwid;
 
-    // Tự động gán HWID (Auto-bind) ngay lần đăng nhập đầu tiên
+    // Nếu key chưa có HWID (chưa ai sử dụng) -> Gán HWID hiện tại vào và kích hoạt
     if (!currentHwid || currentHwid === "none" || currentHwid === "" || currentHwid === null) {
       const { error: updateError } = await supabase
         .from('license_keys')
@@ -46,16 +47,13 @@ export default async function handler(req, res) {
       if (updateError) {
         return res.status(500).json({ message: "Lỗi cập nhật thiết bị: " + updateError.message });
       }
-
-      keyData.hwid = hwid;
-      keyData.status = 'active';
     } 
     else if (hwid && currentHwid !== hwid) {
-      // Nếu máy khác vào
+      // Nếu key đã được kích hoạt trên máy khác rồi
       return res.status(400).json({ message: "device_locked" });
     }
 
-    // Trả về thành công
+    // Trả về thành công khi key hợp lệ và chưa từng bị ai dùng sai máy
     return res.status(200).json({
       message: "Thành công",
       total_keys: 1,
