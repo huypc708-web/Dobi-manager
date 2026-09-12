@@ -1,4 +1,3 @@
-// URL cơ sở dữ liệu Firebase Realtime Database của bạn
 const FIREBASE_DB_URL = "https://dobi-manager-default-rtdb.firebaseio.com/dobimanager.json";
 
 export default async function handler(req, res) {
@@ -29,9 +28,19 @@ export default async function handler(req, res) {
 
     let foundKey = licenses[foundIndex];
 
-    // Kiểm tra trạng thái Banned
+    // 2. Kiểm tra trạng thái Banned
     if (foundKey.status === 'Banned' || foundKey.status === 'banned') {
       return res.status(400).json({ message: "banned" });
+    }
+
+    // 3. Kiểm tra thời gian hết hạn (Expiry Check)
+    const now = Date.now();
+    if (foundKey.expiryTimestamp && foundKey.expiryTimestamp !== 'Lifetime') {
+      const expiryTime = parseInt(foundKey.expiryTimestamp);
+      if (now > expiryTime) {
+        // Nếu đã quá hạn, trả về lỗi expired để C# nhận biết
+        return res.status(400).json({ message: "expired" });
+      }
     }
 
     // Khởi tạo các giá trị mặc định
@@ -40,23 +49,20 @@ export default async function handler(req, res) {
     }
     foundKey.maxDevices = 1; // Cố định tối đa 1 thiết bị
 
-    // 2. Kiểm tra logic HWID và giới hạn thiết bị
+    // 4. Kiểm tra logic HWID và giới hạn thiết bị
     if (!foundKey.hwid || foundKey.hwid === "" || foundKey.currentDevices === 0) {
-      // Chưa kích hoạt hoặc đã được Reset thiết bị về 0
       foundKey.hwid = hwid || "default_hwid";
       foundKey.status = "Active";
       foundKey.currentDevices = 1;
     } 
     else if (hwid && foundKey.hwid === hwid) {
-      // Đúng thiết bị cũ đăng nhập lại
       foundKey.currentDevices = 1;
     }
     else {
-      // Khác thiết bị -> Chặn vì đã đủ 1/1 thiết bị
       return res.status(400).json({ message: "device_locked" });
     }
 
-    // 3. Ghi đè trạng thái mới ngược lại vào Firebase để web hiển thị tức thì
+    // 5. Ghi đè trạng thái mới ngược lại vào Firebase
     licenses[foundIndex] = foundKey;
 
     await fetch(FIREBASE_DB_URL, {
