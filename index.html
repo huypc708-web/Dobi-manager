@@ -31,54 +31,71 @@
         }
         h1 {
             font-size: 22px;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             letter-spacing: 1px;
             color: #f1f1f1;
         }
         p {
             color: #888;
-            font-size: 14px;
-            margin-bottom: 25px;
+            font-size: 13px;
+            margin-bottom: 20px;
         }
         .status-box {
             background: #1f1f1f;
-            padding: 15px;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 6px;
             border-left: 4px solid #4CAF50;
-            font-size: 14px;
+            font-size: 13px;
             color: #ddd;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-        .btn-generate {
+        .section {
+            background: #1f1f1f;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 1px solid #333;
+        }
+        input {
+            width: 100%;
+            padding: 9px;
+            background: #111;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            text-align: center;
+        }
+        button {
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 12px 20px;
-            font-size: 15px;
+            padding: 10px;
+            font-size: 14px;
             font-weight: bold;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
             width: 100%;
             transition: 0.2s;
         }
-        .btn-generate:hover {
-            background-color: #45a049;
-        }
+        button:hover { background-color: #45a049; }
+        .btn-check { background-color: #2196F3; }
+        .btn-check:hover { background-color: #0b7dda; }
         .result-box {
-            margin-top: 20px;
-            background: #222;
-            padding: 12px;
-            border-radius: 6px;
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 5px;
             font-family: monospace;
-            font-size: 14px;
-            color: #4CAF50;
+            font-size: 12px;
             word-break: break-all;
             display: none;
-            border: 1px dashed #4CAF50;
         }
+        .success { background: #1b5e20; color: #a5d6a7; border: 1px solid #4CAF50; }
+        .error { background: #b71c1c; color: #ffcdd2; border: 1px solid #f44336; }
         .footer {
-            margin-top: 20px;
-            font-size: 12px;
+            margin-top: 15px;
+            font-size: 11px;
             color: #555;
         }
     </style>
@@ -87,23 +104,33 @@
 
     <div class="container">
         <h1>DOBI X MANAGER</h1>
-        <p>Hệ thống tạo và xác thực Key tự động</p>
+        <p>Hệ thống Quản lý & Xác thực Key</p>
         
         <div class="status-box">
-            Trạng thái API: <span style="color: #4CAF50; font-weight: bold;">Đang hoạt động (Online)</span>[cite: 2]
+            Trạng thái API: <span style="color: #4CAF50; font-weight: bold;">Đang hoạt động (Online)</span>[cite: 1, 2]
         </div>
 
-        <button class="btn-generate" onclick="createKey()">TẠO KEY MỚI NGAY</button>
+        <!-- Khung Tạo Key trên Web -->
+        <div class="section">
+            <button onclick="createKey()">TẠO KEY MỚI NGAY</button>
+            <div id="createResult" class="result-box"></div>
+        </div>
 
-        <div id="keyResult" class="result-box"></div>
+        <!-- Khung Kiểm Tra Key Ngay trên Web -->
+        <div class="section">
+            <input type="text" id="inputKeyToCheck" placeholder="Nhập key cần test trực tiếp...">
+            <button class="btn-check" onclick="verifyKeyOnWeb()">KIỂM TRA TRÊN WEB</button>
+            <div id="checkResult" class="result-box"></div>
+        </div>
 
         <div class="footer">
-            &copy; 2026 Dobi Project. All rights reserved.[cite: 2]
+            &copy; 2026 Dobi Project. All rights reserved.[cite: 1, 2]
         </div>
     </div>
 
     <script>
-        // Hàm thuật toán sinh key đồng bộ với server Vercel
+        const SECRET_SIGNATURE = "DOBI_SECRET_KEY_2026_PRO";
+
         function simpleHash(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
@@ -117,20 +144,47 @@
             const prefix = "DOBI";
             const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
             const rawString = prefix + "-" + randomPart;
-            
-            // Chữ ký bảo mật trùng khớp với file verify.js trên Vercel
-            const SECRET_SIGNATURE = "DOBI_SECRET_KEY_2026_PRO";
             const hashCheck = simpleHash(rawString + SECRET_SIGNATURE).substring(0, 6);
-
             const finalKey = `${rawString}-${hashCheck}`;
 
-            const resultBox = document.getElementById("keyResult");
+            const resultBox = document.getElementById("createResult");
             resultBox.style.display = "block";
-            resultBox.innerText = finalKey;
+            resultBox.className = "result-box success";
+            resultBox.innerText = "Đã tạo: " + finalKey;
             
-            // Tự động sao chép key vào clipboard
+            document.getElementById("inputKeyToCheck").value = finalKey;
             navigator.clipboard.writeText(finalKey);
-            alert("Đã tạo và sao chép Key thành công: " + finalKey);
+        }
+
+        function verifyKeyOnWeb() {
+            const key = document.getElementById("inputKeyToCheck").value.trim();
+            const resultBox = document.getElementById("checkResult");
+            resultBox.style.display = "block";
+
+            if (!key || !key.startsWith("DOBI-")) {
+                resultBox.className = "result-box error";
+                resultBox.innerText = "Key không hợp lệ hoặc sai định dạng!";
+                return;
+            }
+
+            const parts = key.split("-");
+            if (parts.length < 3) {
+                resultBox.className = "result-box error";
+                resultBox.innerText = "Key thiếu mã bảo mật!";
+                return;
+            }
+
+            const rawString = parts[0] + "-" + parts[1];
+            const clientSignature = parts[2];
+            const expectedSignature = simpleHash(rawString + SECRET_SIGNATURE).substring(0, 6);
+
+            if (clientSignature === expectedSignature) {
+                resultBox.className = "result-box success";
+                resultBox.innerText = "Hợp lệ! Key này chuẩn xác và dùng được ngay.";
+            } else {
+                resultBox.className = "result-box error";
+                resultBox.innerText = "Không hợp lệ! Key giả mạo hoặc chưa từng được tạo.";
+            }
         }
     </script>
 
