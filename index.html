@@ -365,8 +365,6 @@
         }
         .btn-edit { background: #3b82f6; color: #fff; }
         .btn-edit:hover { background: #2563eb; }
-        .btn-check { background: #8b5cf6; color: #fff; }
-        .btn-check:hover { background: #7c3aed; }
         .btn-ban { background: #f59e0b; color: #fff; }
         .btn-ban:hover { background: #d97706; }
         .btn-unban { background: #10b981; color: #fff; }
@@ -486,6 +484,10 @@
                         <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
                         Quản lý Key
                     </a>
+                    <a class="nav-item" onclick="switchTab('check-key', this)">
+                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        Kiểm tra Key
+                    </a>
                 </div>
             </div>
 
@@ -575,16 +577,37 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 26%;">License Key</th>
-                                <th style="width: 22%;">Trạng thái & HWID</th>
-                                <th style="width: 22%;">Thời gian đếm ngược</th>
-                                <th style="width: 30%;">Thao tác</th>
+                                <th style="width: 30%;">License Key</th>
+                                <th style="width: 25%;">Trạng thái & HWID</th>
+                                <th style="width: 25%;">Thời gian đếm ngược</th>
+                                <th style="width: 20%;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="licenseTableBody">
                             <tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- 4. KIỂM TRA KEY (TAB MỚI) -->
+            <div id="view-check-key" class="view-section">
+                <div class="section-title-row">
+                    <div class="section-title">Công cụ Kiểm tra Key (Key Lookup)</div>
+                </div>
+                
+                <div class="instruction-card" style="max-width: 650px; margin: 0 auto 20px auto;">
+                    <h3>Tra cứu thông tin chi tiết License Key</h3>
+                    <p>Nhập mã key bất kỳ để kiểm tra tình trạng hiệu lực, xem HWID đang liên kết hoặc thực hiện Reset HWID cho khách hàng.</p>
+                    <div style="display: flex; gap: 10px; margin-top: 16px;">
+                        <input type="text" id="lookupInputKey" placeholder="Dán mã key vào đây..." style="flex: 1; margin-bottom: 0;">
+                        <button class="btn-primary" onclick="lookupKeyInfo()">Kiểm tra</button>
+                    </div>
+                </div>
+
+                <div id="lookupResultBox" style="display: none; max-width: 650px; margin: 0 auto; background: #131822; border: 1px solid #1e293b; padding: 25px; border-radius: 8px;">
+                    <h3 style="color: #fff; margin-bottom: 15px; font-size: 16px;">Kết quả tra cứu:</h3>
+                    <div id="lookupResultContent" style="font-size: 14px; line-height: 1.6;"></div>
                 </div>
             </div>
         </div>
@@ -890,66 +913,66 @@
             showToast("Đã cập nhật thông tin key thành công!");
         }
 
-        // --- TÍNH NĂNG KIỂM TRA KEY ---
-        function openCheckKeyModal(originalIdx) {
-            const l = db.licenses[originalIdx];
-            document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Kiểm tra Trạng thái Key</h3>
-                <div style="background: #0b0e14; border: 1px solid #1e293b; padding: 14px; border-radius: 6px; margin-bottom: 14px; font-size: 13px;">
-                    <p style="margin-bottom: 6px;"><strong>Key đang test:</strong> <span style="color: #38bdf8; font-family: monospace;">${l.key}</span></p>
-                    <p style="margin-bottom: 6px;"><strong>Trạng thái hệ thống:</strong> <span style="color: ${l.status === 'Active' ? '#34d399' : '#f87171'}">${l.status}</span></p>
-                    <p><strong>HWID đăng ký:</strong> ${l.hwid}</p>
-                </div>
+        // --- HÀM TRA CỨU KEY TẠI TAB KIỂM TRA KEY ---
+        function lookupKeyInfo() {
+            const queryKey = document.getElementById('lookupInputKey').value.trim();
+            const resultBox = document.getElementById('lookupResultBox');
+            const resultContent = document.getElementById('lookupResultContent');
 
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Nhập HWID thiết bị client cần kiểm tra:</label>
-                <input type="text" id="checkClientHwid" value="${l.hwid}" placeholder="Nhập HWID...">
+            if (!queryKey) {
+                alert('Vui lòng nhập mã key cần tra cứu!');
+                return;
+            }
 
-                <div id="checkResultContainer" style="margin-top: 10px; display: none; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 600; text-align: center;"></div>
-
-                <div class="modal-btns">
-                    <button class="btn-cancel" onclick="closeModal()">Đóng</button>
-                    <button class="btn-primary" onclick="simulateCheckKey(${originalIdx})">Thực thi kiểm tra</button>
-                </div>
-            `;
-            document.getElementById('globalModal').style.display = 'flex';
-        }
-
-        function simulateCheckKey(idx) {
-            const l = db.licenses[idx];
-            const clientHwid = document.getElementById('checkClientHwid').value.trim();
-            const resultBox = document.getElementById('checkResultContainer');
-            const now = Date.now();
-
+            const foundIndex = db.licenses.findIndex(l => l.key.toLowerCase() === queryKey.toLowerCase());
             resultBox.style.display = 'block';
 
-            // Kiểm tra trạng thái Banned
-            if (l.status === 'Banned') {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ LỖI: Key này đã bị khóa (Banned) trên hệ thống!';
+            if (foundIndex === -1) {
+                resultContent.innerHTML = `<span style="color: #f87171;">❌ Không tìm thấy mã key này trên hệ thống!</span>`;
                 return;
             }
 
-            // Kiểm tra hết hạn
-            if (l.expiryTimestamp !== 'Lifetime' && now > parseInt(l.expiryTimestamp)) {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ LỖI: Key này đã hết hạn sử dụng!';
-                return;
+            const l = db.licenses[foundIndex];
+            const now = Date.now();
+            let isExpired = false;
+            let timeText = 'Vĩnh viễn';
+
+            if (l.expiryTimestamp !== 'Lifetime') {
+                const diff = parseInt(l.expiryTimestamp) - now;
+                if (diff <= 0) {
+                    isExpired = true;
+                    timeText = 'Đã hết hạn';
+                } else {
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    timeText = `${days} ngày ${hours} giờ ${minutes} phút`;
+                }
             }
 
-            // Kiểm tra HWID khớp hay không
-            if (l.hwid && l.hwid !== "Chưa liên kết" && l.hwid !== clientHwid) {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ LỖI: HWID không khớp với thiết bị đã đăng ký!';
-                return;
-            }
+            resultContent.innerHTML = `
+                <p style="margin-bottom: 8px;"><strong>Mã Key:</strong> <span style="color: #38bdf8; font-family: monospace;">${l.key}</span></p>
+                <p style="margin-bottom: 8px;"><strong>Trạng thái:</strong> <span style="color: ${l.status === 'Active' && !isExpired ? '#34d399' : '#f87171'}">${l.status === 'Banned' ? 'Đã khóa (Banned)' : (isExpired ? 'Hết hạn' : 'Đang hoạt động')}</span></p>
+                <p style="margin-bottom: 8px;"><strong>Thiết bị liên kết (HWID):</strong> <span style="color: #cbd5e1;">${l.hwid}</span></p>
+                <p style="margin-bottom: 15px;"><strong>Thời gian còn lại:</strong> <span style="color: #38bdf8;">${timeText}</span></p>
+                
+                <div style="display: flex; gap: 10px; border-top: 1px solid #1e293b; padding-top: 15px;">
+                    <button class="btn-action btn-edit" style="padding: 8px 14px;" onclick="resetHwidByLookup(${foundIndex})">Reset HWID</button>
+                    <button class="btn-action ${l.status === 'Banned' ? 'btn-unban' : 'btn-ban'}" style="padding: 8px 14px;" onclick="toggleBanByLookup(${foundIndex})">${l.status === 'Banned' ? 'Mở khóa Key' : 'Khóa Key'}</button>
+                </div>
+            `;
+        }
 
-            // Thành công hợp lệ
-            resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
-            resultBox.style.color = '#34d399';
-            resultBox.innerText = '✅ THÀNH CÔNG: Key hợp lệ, thiết bị được phép sử dụng!';
+        function resetHwidByLookup(idx) {
+            db.licenses[idx].hwid = 'Chưa liên kết';
+            saveData();
+            lookupKeyInfo();
+            showToast("Đã reset HWID thành công!");
+        }
+
+        function toggleBanByLookup(idx) {
+            toggleBan(idx);
+            lookupKeyInfo();
         }
 
         function renderLicenses() {
@@ -994,7 +1017,6 @@
                         <td>
                             <div class="action-btns">
                                 <button class="btn-action btn-edit" onclick="openEditLicenseModal(${originalIdx})">Sửa</button>
-                                <button class="btn-action btn-check" onclick="openCheckKeyModal(${originalIdx})">Kiểm tra</button>
                                 ${l.status === 'Banned' ? 
                                     `<button class="btn-action btn-unban" onclick="toggleBan(${originalIdx})">Mở</button>` : 
                                     `<button class="btn-action btn-ban" onclick="toggleBan(${originalIdx})">Khóa</button>`
