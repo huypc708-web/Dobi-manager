@@ -955,7 +955,7 @@
 
         function toggleBan(idx) {
             if(db.licenses[idx].status === 'Banned') {
-                db.licenses[idx].status = db.licenses[idx].hwid === 'Chưa liên kết' ? 'Unactivated' : 'Active';
+                db.licenses[idx].status = (!db.licenses[idx].hwid || db.licenses[idx].hwid === 'Chưa liên kết') ? 'Unactivated' : 'Active';
             } else {
                 db.licenses[idx].status = 'Banned';
             }
@@ -971,7 +971,7 @@
             }
         }
 
-        // FIX: Xử lý kích hoạt chuẩn xác, cập nhật trạng thái thành 'Active' và lưu ngay vào Firebase Realtime Database
+        // Xử lý kiểm tra và kích hoạt key ngay lập tức và đẩy lên Firebase
         function verifyKeyWithHwid() {
             const keyVal = document.getElementById('checkKeyInput').value.trim();
             const hwidVal = document.getElementById('checkHwidInput').value.trim();
@@ -997,10 +997,10 @@
 
             const now = Date.now();
 
-            // Nếu key chưa liên kết hoặc chưa kích hoạt
-            if(found.hwid === 'Chưa liên kết' || !found.hwid || found.status === 'Unactivated') {
+            // Nếu key chưa được liên kết hoặc đang ở trạng thái Unactivated
+            if(!found.hwid || found.hwid === 'Chưa liên kết' || found.status === 'Unactivated') {
                 found.hwid = hwidVal;
-                found.status = 'Active'; // Cập nhật đúng trạng thái Active để giao diện đổi thành Đã kích hoạt
+                found.status = 'Active'; // Ép buộc chuyển đổi trạng thái thành Active
                 
                 if(!found.expiryTimestamp) {
                     if(found.durationDays !== 365) {
@@ -1010,13 +1010,13 @@
                     }
                 }
 
-                saveData(); // Lưu ngay lập tức lên Firebase để đồng bộ giao diện quản lý Key
-                resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Kích hoạt và đăng nhập thành công! (Thiết bị mới đã liên kết)</span>`;
+                saveData(); // Ghi dữ liệu trực tiếp lên Firebase Realtime Database
+                resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Kích hoạt và đăng nhập thành công! (Trạng thái đã cập nhật thành Active)</span>`;
                 renderLicenses();
                 return;
             }
 
-            // Kiểm tra xem key đã hết hạn chưa
+            // Kiểm tra thời hạn
             if(found.expiryTimestamp !== 'Lifetime' && found.expiryTimestamp && now > found.expiryTimestamp) {
                 resultBox.innerHTML = `<span style="color: #f87171;">Key đã hết hạn sử dụng!</span>`;
                 return;
@@ -1025,7 +1025,7 @@
             if(found.hwid === hwidVal) {
                 resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Đăng nhập thành công! (Thiết bị trùng khớp)</span>`;
             } else {
-                resultBox.innerHTML = `<span style="color: #f87171; font-weight: bold;">Đăng nhập thất bại: Key đang được sử dụng ở thiết bị khác! Vui lòng yêu cầu Admin đặt lại HWID.</span>`;
+                resultBox.innerHTML = `<span style="color: #f87171; font-weight: bold;">Đăng nhập thất bại: Key đang được sử dụng ở thiết bị khác!</span>`;
             }
         }
     </script>
