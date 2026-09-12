@@ -84,6 +84,7 @@
         .nav-item {
             display: flex;
             align-items: center;
+            gap: 12px;
             padding: 13px 16px;
             color: #94a3b8;
             text-decoration: none;
@@ -92,6 +93,12 @@
             border-radius: 10px;
             cursor: pointer;
             transition: 0.2s;
+        }
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            flex-shrink: 0;
         }
         .nav-item:hover {
             background: rgba(255, 255, 255, 0.03);
@@ -247,7 +254,7 @@
         .badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block; }
         .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; }
         .badge-banned { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-        .badge-expired { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+        .badge-unactivated { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
 
         .action-btns {
             display: flex;
@@ -276,11 +283,8 @@
             color: #38bdf8;
             font-family: monospace;
             cursor: pointer;
-            position: relative;
         }
-        .key-code:hover {
-            text-decoration: underline;
-        }
+        .key-code:hover { text-decoration: underline; }
 
         .instruction-card {
             background: #131822;
@@ -291,22 +295,23 @@
         }
         .instruction-card h3 { color: #fff; margin-bottom: 8px; }
 
-        /* Key Checker UI */
+        /* Checker */
         .checker-wrapper {
             background: #131822;
             border: 1px solid #1e293b;
             padding: 30px;
             border-radius: 8px;
-            max-width: 600px;
+            max-width: 650px;
         }
-        .checker-input-group {
+        .checker-input-row {
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            margin-bottom: 15px;
         }
         .checker-result {
             margin-top: 20px;
-            padding: 15px;
+            padding: 18px;
             background: #0b0e14;
             border: 1px solid #1e293b;
             border-radius: 6px;
@@ -335,7 +340,6 @@
         .modal-btns { display: flex; gap: 12px; justify-content: flex-end; margin-top: 15px; }
         .btn-cancel { background: #334155; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
 
-        /* Toast Notification */
         #toast {
             visibility: hidden;
             min-width: 220px;
@@ -366,7 +370,7 @@
 </head>
 <body>
 
-    <!-- Sidebar -->
+    <!-- Sidebar với các Icon chuẩn -->
     <div class="sidebar">
         <div>
             <div class="user-profile">
@@ -378,17 +382,42 @@
             </div>
 
             <div class="nav-menu">
-                <a class="nav-item active" onclick="switchTab('overview', this)">Overview</a>
-                <a class="nav-item" onclick="switchTab('applications', this)">Applications</a>
-                <a class="nav-item" onclick="switchTab('licenses', this)">Licenses</a>
-                <a class="nav-item" onclick="switchTab('checkkey', this)">Check Key</a>
+                <!-- Overview Icon -->
+                <a class="nav-item active" onclick="switchTab('overview', this)">
+                    <svg viewBox="0 0 24 24"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v9h9c-.5-5.07-4.79-9-9-9zm0 11v9c5.07-.5 9-4.79 9-10h-9z"/></svg>
+                    Overview
+                </a>
+                <!-- Applications Icon -->
+                <a class="nav-item" onclick="switchTab('applications', this)">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    Applications
+                </a>
+                <!-- Licenses Icon -->
+                <a class="nav-item" onclick="switchTab('licenses', this)">
+                    <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                    Licenses
+                </a>
+                <!-- Check Key Icon -->
+                <a class="nav-item" onclick="switchTab('checkkey', this)">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    Check Key
+                </a>
             </div>
         </div>
 
         <div class="sidebar-bottom">
-            <a class="nav-item" onclick="switchTab('customize', this)">Customize UI</a>
-            <a class="nav-item" onclick="alert('Đã đăng xuất thành công!')">Logout</a>
-            <a class="nav-item danger" onclick="if(confirm('Bạn có chắc chắn muốn xóa dữ liệu?')) { localStorage.clear(); location.reload(); }">Delete Data</a>
+            <a class="nav-item" onclick="switchTab('customize', this)">
+                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                Customize UI
+            </a>
+            <a class="nav-item" onclick="alert('Đã đăng xuất thành công!')">
+                <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+                Logout
+            </a>
+            <a class="nav-item danger" onclick="if(confirm('Bạn có chắc chắn muốn xóa dữ liệu?')) { localStorage.clear(); location.reload(); }">
+                <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                Delete Data
+            </a>
         </div>
     </div>
 
@@ -421,7 +450,7 @@
             </div>
             <div class="instruction-card">
                 <h3>Welcome to Dobi Manager</h3>
-                <p>Quản lý Key bản quyền ứng dụng, hỗ trợ reset HWID, Band/Unband key và sao chép dễ dàng.</p>
+                <p>Hệ thống quản lý key chuyên nghiệp, chỉ bắt đầu tính thời gian khi thiết bị đầu tiên kích hoạt thành công (Giới hạn tối đa 1 thiết bị duy nhất).</p>
             </div>
         </div>
 
@@ -441,7 +470,7 @@
                         </tr>
                     </thead>
                     <tbody id="appTableBody">
-                        <tr><td colspan="3" class="empty-state">No applications found. Create one to begin.</td></tr>
+                        <tr><td colspan="3" class="empty-state">No applications found.</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -458,7 +487,8 @@
                 <input type="text" class="search-box" placeholder="Search licenses by key..." id="searchInput" onkeyup="renderLicenses()">
                 <select id="statusFilter" onchange="renderLicenses()">
                     <option value="">All Status</option>
-                    <option value="Active">Active</option>
+                    <option value="Active">Active / Activated</option>
+                    <option value="Unactivated">Unactivated</option>
                     <option value="Banned">Banned</option>
                 </select>
                 <select id="appSelectFilter" onchange="renderLicenses()">
@@ -471,7 +501,7 @@
                     <thead>
                         <tr>
                             <th style="width: 30%;">License Key</th>
-                            <th style="width: 25%;">Status ( HWID )</th>
+                            <th style="width: 25%;">Status & HWID</th>
                             <th style="width: 20%;">Expiry Countdown</th>
                             <th style="width: 25%;">Actions</th>
                         </tr>
@@ -487,11 +517,12 @@
         <div id="view-checkkey" class="view-section">
             <div class="section-title" style="margin-bottom: 15px;">License Key Verification</div>
             <div class="checker-wrapper">
-                <p style="color: #94a3b8; font-size: 14px;">Nhập mã License Key của bạn vào bên dưới để kiểm tra trạng thái và thông tin chi tiết:</p>
-                <div class="checker-input-group">
-                    <input type="text" id="checkKeyInput" class="search-box" placeholder="Nhập key cần kiểm tra...">
-                    <button class="btn-primary" onclick="verifyKey()">Kiểm tra</button>
+                <p style="color: #94a3b8; font-size: 14px;">Nhập mã License Key và mã thiết bị (HWID) của bạn để kiểm tra hoặc kích hoạt:</p>
+                <div class="checker-input-row" style="flex-direction: column; gap: 10px;">
+                    <input type="text" id="checkKeyInput" class="search-box" placeholder="Nhập License Key...">
+                    <input type="text" id="checkHwidInput" class="search-box" placeholder="Nhập mã thiết bị của bạn (HWID, ví dụ: PC_DEVICE_01)...">
                 </div>
+                <button class="btn-primary" onclick="verifyKeyWithHwid()">🔍 Kiểm tra / Kích hoạt Key</button>
                 <div id="checkerResultBox" class="checker-result"></div>
             </div>
         </div>
@@ -512,17 +543,17 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast">Đã copy key thành công!</div>
+    <div id="toast">Đã copy thành công!</div>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('dobimanager_db')) || {
+        let db = JSON.parse(localStorage.getItem('dobimanager_db_v2')) || {
             apps: [],
             licenses: [],
             users: []
         };
 
         function saveData() {
-            localStorage.setItem('dobimanager_db', JSON.stringify(db));
+            localStorage.setItem('dobimanager_db_v2', JSON.stringify(db));
             updateStats();
         }
 
@@ -577,7 +608,7 @@
         }
 
         function createApp() {
-            const name = document.getElementById('appNameInput').value.trim();
+            const name = document.getElementById('appNameInput'].value.trim();
             if(!name) return alert('Vui lòng nhập tên ứng dụng!');
             db.apps.push({ id: Date.now(), name: name, secret: 'sec_' + Math.random().toString(36).substring(7) });
             saveData();
@@ -616,7 +647,7 @@
             document.getElementById('modalBodyContent').innerHTML = `
                 <h3>Create New License</h3>
                 <select id="modalAppSelect">${db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('')}</select>
-                <select id="modalDuration">
+                <select id="modalDurationDays">
                     <option value="1">1 Day</option>
                     <option value="7" selected>7 Days</option>
                     <option value="30">30 Days</option>
@@ -632,16 +663,17 @@
 
         function generateLicense() {
             const appName = document.getElementById('modalAppSelect').value;
-            const days = parseInt(document.getElementById('modalDuration').value);
+            const days = parseInt(document.getElementById('modalDurationDays').value);
             const p1 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const p2 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const p3 = Math.random().toString(36).substring(2, 6).toUpperCase();
             
             db.licenses.push({
                 key: `${appName.substring(0,4).toUpperCase()}-${p1}-${p2}-${p3}`,
-                status: 'Active',
+                status: 'Unactivated', // Trạng thái ban đầu chưa kích hoạt, chưa tính thời gian
                 hwid: 'Unbound',
-                expiry: days === 365 ? 'Lifetime' : Math.floor(Date.now() / 1000) + (days * 86400)
+                durationDays: days,
+                expiryTimestamp: null // Thời gian hết hạn tính từ lúc kích hoạt thiết bị đầu tiên
             });
             saveData();
             closeModal();
@@ -664,19 +696,26 @@
             }
 
             tbody.innerHTML = filtered.map((item) => {
-                // Tìm index thực tế trong mảng gốc db.licenses
                 const realIndex = db.licenses.findIndex(l => l.key === item.key);
-                let expiryText = item.expiry === 'Lifetime' ? 'Lifetime' : formatCountdown(item.expiry);
-                let statusBadgeClass = item.status === 'Active' ? 'badge-active' : 'badge-banned';
                 
-                let banUnbanBtn = item.status === 'Active' 
-                    ? `<button class="btn-action btn-ban" onclick="toggleBan(${realIndex})">Ban</button>`
-                    : `<button class="btn-action btn-unban" onclick="toggleBan(${realIndex})">Unban</button>`;
+                let badgeClass = 'badge-unactivated';
+                if(item.status === 'Active') badgeClass = 'badge-active';
+                if(item.status === 'Banned') badgeClass = 'badge-banned';
+
+                let expiryText = 'Chưa kích hoạt';
+                if(item.status === 'Active') {
+                    if(item.durationDays === 365) expiryText = 'Lifetime';
+                    else expiryText = formatCountdown(item.expiryTimestamp);
+                }
+
+                let banUnbanBtn = item.status === 'Banned'
+                    ? `<button class="btn-action btn-unban" onclick="toggleBan(${realIndex})">Unban</button>`
+                    : `<button class="btn-action btn-ban" onclick="toggleBan(${realIndex})">Ban</button>`;
 
                 return `
                     <tr>
                         <td><span class="key-code" onclick="copyKey('${item.key}')" title="Click để copy">${item.key}</span></td>
-                        <td><span class="badge ${statusBadgeClass}">${item.status}</span> <span style="font-size: 13px; color: #64748b;">(${item.hwid})</span></td>
+                        <td><span class="badge ${badgeClass}">${item.status}</span> <span style="font-size: 13px; color: #64748b;">(${item.hwid})</span></td>
                         <td>${expiryText}</td>
                         <td>
                             <div class="action-btns">
@@ -691,15 +730,21 @@
         }
 
         function resetHwid(index) {
-            // Chỉ đổi HWID thành Unbound, KHÔNG làm thay đổi thời gian expiry ban đầu
+            // Reset HWID về Unbound và đưa trạng thái về Unactivated để sẵn sàng cho 1 thiết bị mới kích hoạt lại mà không mất thời gian gốc
             db.licenses[index].hwid = 'Unbound';
+            db.licenses[index].status = 'Unactivated';
+            db.licenses[index].expiryTimestamp = null;
             saveData();
             renderLicenses();
-            showToast('Đã reset HWID thành công (Giữ nguyên thời gian)');
+            showToast('Đã reset HWID và đưa key về trạng thái chờ kích hoạt!');
         }
 
         function toggleBan(index) {
-            db.licenses[index].status = db.licenses[index].status === 'Active' ? 'Banned' : 'Active';
+            if(db.licenses[index].status === 'Banned') {
+                db.licenses[index].status = db.licenses[index].hwid === 'Unbound' ? 'Unactivated' : 'Active';
+            } else {
+                db.licenses[index].status = 'Banned';
+            }
             saveData();
             renderLicenses();
         }
@@ -712,35 +757,59 @@
             }
         }
 
-        function verifyKey() {
-            const query = document.getElementById('checkKeyInput').value.trim();
+        function verifyKeyWithHwid() {
+            const queryKey = document.getElementById('checkKeyInput').value.trim();
+            const queryHwid = document.getElementById('checkHwidInput').value.trim();
             const resultBox = document.getElementById('checkerResultBox');
             resultBox.style.display = 'block';
 
-            if(!query) {
-                resultBox.innerHTML = `<span style="color: #f87171;">Vui lòng nhập License Key cần kiểm tra!</span>`;
+            if(!queryKey || !queryHwid) {
+                resultBox.innerHTML = `<span style="color: #f87171;">⚠️ Vui lòng nhập đầy đủ License Key và Mã thiết bị (HWID)!</span>`;
                 return;
             }
 
-            const found = db.licenses.find(l => l.key.toLowerCase() === query.toLowerCase());
+            const found = db.licenses.find(l => l.key.toLowerCase() === queryKey.toLowerCase());
             if(!found) {
                 resultBox.innerHTML = `<span style="color: #f87171;">❌ Không tìm thấy License Key này trong hệ thống!</span>`;
                 return;
             }
 
+            if(found.status === 'Banned') {
+                resultBox.innerHTML = `<span style="color: #f87171;">🚫 Key này đã bị khóa (Banned) bởi quản trị viên!</span>`;
+                return;
+            }
+
+            // Kiểm tra giới hạn tối đa 1 thiết bị duy nhất
+            if(found.hwid === 'Unbound') {
+                // Kích hoạt lần đầu cho thiết bị này và bắt đầu tính thời gian
+                found.hwid = queryHwid;
+                found.status = 'Active';
+                if(found.durationDays !== 365) {
+                    found.expiryTimestamp = Math.floor(Date.now() / 1000) + (found.durationDays * 86400);
+                } else {
+                    found.expiryTimestamp = 'Lifetime';
+                }
+                saveData();
+            } else if(found.hwid !== queryHwid) {
+                // Nếu thiết bị khác cố gắng dùng
+                resultBox.innerHTML = `<span style="color: #f87171;">❌ Từ chối! Key này đã được kích hoạt trên thiết bị khác tối đa (1 thiết bị duy nhất).</span>`;
+                return;
+            }
+
             let isExpired = false;
-            if(found.expiry !== 'Lifetime' && Math.floor(Date.now() / 1000) > found.expiry) {
+            if(found.expiryTimestamp !== 'Lifetime' && found.expiryTimestamp && Math.floor(Date.now() / 1000) > found.expiryTimestamp) {
                 isExpired = true;
             }
 
             resultBox.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                     <div><strong>Key:</strong> <span style="color: #38bdf8; cursor:pointer;" onclick="copyKey('${found.key}')">${found.key} (Click copy)</span></div>
-                    <div><strong>Trạng thái:</strong> ${isExpired ? '<span class="badge badge-expired">Expired</span>' : `<span class="badge ${found.status === 'Active' ? 'badge-active' : 'badge-banned'}">${found.status}</span>`}</div>
-                    <div><strong>HWID:</strong> <span style="color: #94a3b8;">${found.hwid}</span></div>
-                    <div><strong>Hạn sử dụng:</strong> ${found.expiry === 'Lifetime' ? 'Lifetime' : formatCountdown(found.expiry)}</div>
+                    <div><strong>Trạng thái:</strong> ${isExpired ? '<span class="badge badge-banned">Expired</span>' : `<span class="badge badge-active">Active (Đã liên kết 1 thiết bị)</span>`}</div>
+                    <div><strong>HWID Thiết bị:</strong> <span style="color: #94a3b8;">${found.hwid}</span></div>
+                    <div><strong>Thời gian còn lại:</strong> ${found.expiryTimestamp === 'Lifetime' ? 'Lifetime' : formatCountdown(found.expiryTimestamp)}</div>
                 </div>
             `;
+            renderLicenses();
         }
 
         function closeModal() {
@@ -748,6 +817,7 @@
         }
 
         function formatCountdown(expireTimestamp) {
+            if(!expireTimestamp) return "Chưa kích hoạt";
             const now = Math.floor(Date.now() / 1000);
             const diff = expireTimestamp - now;
             if (diff <= 0) return "Expired";
@@ -758,7 +828,6 @@
             return `${days}d ${hours}h ${mins}m ${secs}s`;
         }
 
-        // Tự động cập nhật thời gian đếm ngược mỗi giây mà không làm gián đoạn thao tác khác
         setInterval(() => {
             const activeTab = document.getElementById('view-licenses');
             if(activeTab && activeTab.classList.contains('active')) {
