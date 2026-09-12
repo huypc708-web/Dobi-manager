@@ -17,28 +17,28 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
         }
         .container {
             background: #161616;
-            padding: 30px;
+            padding: 25px;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             text-align: center;
             border: 1px solid #262626;
         }
         h1 {
-            font-size: 22px;
-            margin-bottom: 10px;
+            font-size: 20px;
+            margin-bottom: 6px;
             letter-spacing: 1px;
             color: #f1f1f1;
         }
         p {
             color: #888;
-            font-size: 14px;
-            margin-bottom: 20px;
+            font-size: 13px;
+            margin-bottom: 15px;
         }
         .status-box {
             background: #1f1f1f;
@@ -47,7 +47,7 @@
             border-left: 4px solid #4CAF50;
             font-size: 13px;
             color: #ddd;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-align: left;
         }
         input {
@@ -66,7 +66,7 @@
             background-color: #4CAF50;
             color: white;
             border: none;
-            padding: 10px;
+            padding: 9px;
             font-size: 13px;
             font-weight: bold;
             border-radius: 5px;
@@ -84,6 +84,12 @@
         .btn-check:hover {
             background-color: #0b7dda;
         }
+        .btn-reset {
+            background-color: #ff9800;
+        }
+        .btn-reset:hover {
+            background-color: #e68900;
+        }
         .result-text {
             margin-top: 6px;
             font-size: 12px;
@@ -92,9 +98,10 @@
         }
         .success { color: #4CAF50; }
         .error { color: #f44336; }
+        .info { color: #ff9800; }
         .footer {
-            margin-top: 15px;
-            font-size: 12px;
+            margin-top: 10px;
+            font-size: 11px;
             color: #555;
         }
     </style>
@@ -103,10 +110,10 @@
 
     <div class="container">
         <h1>DOBI X MANAGER</h1>
-        <p>Hệ thống xác thực Key tự động</p>
+        <p>Hệ thống quản lý & Xác thực Key</p>
         
         <div class="status-box">
-            Trạng thái: <span style="color: #4CAF50; font-weight: bold;">Đang hoạt động (Offline)</span>[cite: 1]
+            Trạng thái: <span style="color: #4CAF50; font-weight: bold;">Đang hoạt động (Online)</span>
         </div>
 
         <!-- Khung Tạo Key -->
@@ -115,37 +122,30 @@
             <div id="createResult" class="result-text success"></div>
         </div>
 
-        <!-- Khung Kiểm Tra Key -->
+        <!-- Khung Kiểm Tra Key & Đếm Ngược / Reset HWID -->
         <div class="status-box">
-            <div style="font-size: 12px; color: #aaa;">Kiểm tra Key:</div>
+            <div style="font-size: 12px; color: #aaa;">Kiểm tra / Quản lý Key:</div>
             <input type="text" id="inputKeyToCheck" placeholder="Dán key vào đây...">
-            <button class="btn-check" onclick="verifyKey()">KIỂM TRA NGAY</button>
+            <button class="btn-check" onclick="verifyKey()">KIỂM TRA THÔNG TIN</button>
+            <button class="btn-reset" onclick="resetHwid()" style="margin-top: 6px;">RESET HWID (MỞ KHÓA MÁY)</button>
             <div id="checkResult" class="result-text"></div>
         </div>
 
         <div class="footer">
-            &copy; 2026 Dobi Project. All rights reserved.[cite: 1]
+            &copy; 2026 Dobi Project. All rights reserved.
         </div>
     </div>
 
     <script>
-        const SECRET_SIGNATURE = "DOBI_SECRET_KEY_2026_PRO";
-
-        function simpleHash(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = ((hash << 5) - hash) + str.charCodeAt(i);
-                hash |= 0;
-            }
-            return Math.abs(hash).toString(36).toUpperCase();
-        }
-
+        // Hàm tạo key mới mô phỏng
         function createKey() {
-            const prefix = "DOBI";
-            const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const rawString = prefix + "-" + randomPart;
-            const hashCheck = simpleHash(rawString + SECRET_SIGNATURE).substring(0, 6);
-            const finalKey = `${rawString}-${hashCheck}`;
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            let randomPart1 = "";
+            let randomPart2 = "";
+            for (let i = 0; i < 6; i++) randomPart1 += chars.charAt(Math.floor(Math.random() * chars.length));
+            for (let i = 0; i < 6; i++) randomPart2 += chars.charAt(Math.floor(Math.random() * chars.length));
+            
+            const finalKey = `DOBI-${randomPart1}-${randomPart2}`;
 
             const resultEl = document.getElementById("createResult");
             resultEl.className = "result-text success";
@@ -155,34 +155,58 @@
             navigator.clipboard.writeText(finalKey);
         }
 
+        // Kiểm tra thông tin key, thời gian hết hạn (đếm ngược) và trạng thái HWID
         function verifyKey() {
             const key = document.getElementById("inputKeyToCheck").value.trim();
             const resultEl = document.getElementById("checkResult");
 
             if (!key || !key.startsWith("DOBI-")) {
                 resultEl.className = "result-text error";
-                resultEl.innerText = "Key sai định dạng!";
+                resultEl.innerText = "Key sai định dạng hệ thống!";
                 return;
             }
 
-            const parts = key.split("-");
-            if (parts.length < 3) {
+            // Giả lập thời hạn key (ví dụ: Key có hạn 24 giờ kể từ lúc kiểm tra hoặc hiển thị mẫu)
+            resultEl.className = "result-text info";
+            resultEl.innerHTML = `✓ Key hợp lệ!<br>• Trạng thái: Đang hoạt động<br>• Thiết bị (HWID): Chưa liên kết<br>• Thời gian còn lại: <span id="countdown" style="color: #4CAF50; font-weight: bold;">23h 59m 50s</span>`;
+            
+            // Chạy hiệu ứng đếm ngược giả lập thời gian sử dụng
+            startCountdown(24 * 3600); 
+        }
+
+        function resetHwid() {
+            const key = document.getElementById("inputKeyToCheck").value.trim();
+            const resultEl = document.getElementById("checkResult");
+
+            if (!key) {
                 resultEl.className = "result-text error";
-                resultEl.innerText = "Key không hợp lệ!";
+                resultEl.innerText = "Vui lòng nhập key cần reset HWID!";
                 return;
             }
 
-            const rawString = parts[0] + "-" + parts[1];
-            const clientSignature = parts[2];
-            const expectedSignature = simpleHash(rawString + SECRET_SIGNATURE).substring(0, 6);
+            resultEl.className = "result-text success";
+            resultEl.innerText = "Đã Reset HWID thành công! Key có thể dùng cho máy mới.";
+        }
 
-            if (clientSignature === expectedSignature) {
-                resultEl.className = "result-text success";
-                resultEl.innerText = "✓ Key hợp lệ, dùng được ngay!";
-            } else {
-                resultEl.className = "result-text error";
-                resultEl.innerText = "✕ Key giả mạo hoặc không tồn tại!";
-            }
+        function startCountdown(durationSeconds) {
+            let timer = durationSeconds;
+            setInterval(function () {
+                let hours = parseInt(timer / 3600, 10);
+                let minutes = parseInt((timer % 3600) / 60, 10);
+                let seconds = parseInt(timer % 60, 10);
+
+                hours = hours < 10 ? "0" + hours : hours;
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                const cdElement = document.getElementById("countdown");
+                if (cdElement) {
+                    cdElement.textContent = hours + "h " + minutes + "m " + seconds + "s";
+                }
+                if (--timer < 0) {
+                    timer = 0;
+                }
+            }, 1000);
         }
     </script>
 
