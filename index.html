@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AuthFusion Dashboard</title>
+    <title>Dobi Manager</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -22,15 +22,15 @@
             font-size: 15px;
         }
 
-        /* Sidebar chuẩn gốc có kèm User profile */
+        /* Sidebar */
         .sidebar {
-            width: 260px;
+            width: 270px;
             background-color: #11151c;
             border-right: 1px solid #1a2230;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 20px 12px;
+            padding: 20px 14px;
             overflow-y: auto;
         }
         .user-profile {
@@ -79,26 +79,19 @@
         .nav-menu {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 12px 14px;
+            padding: 13px 16px;
             color: #94a3b8;
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 17px;
+            font-weight: 600;
             border-radius: 10px;
             cursor: pointer;
             transition: 0.2s;
-        }
-        .nav-item svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
-            flex-shrink: 0;
         }
         .nav-item:hover {
             background: rgba(255, 255, 255, 0.03);
@@ -107,14 +100,14 @@
         .nav-item.active {
             background: #19202e;
             color: #fff;
-            font-weight: 600;
+            font-weight: 700;
         }
         .sidebar-bottom {
             border-top: 1px solid #1a2230;
             padding-top: 14px;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
         .nav-item.danger {
             color: #f87171;
@@ -248,11 +241,46 @@
             padding: 16px 18px;
             border-bottom: 1px solid #1e293b;
         }
-        td { padding: 20px 18px; border-bottom: 1px solid #1e293b; color: #cbd5e1; }
+        td { padding: 16px 18px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: middle; }
         .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
-        .badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block; }
         .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-        .badge-danger { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .badge-banned { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .badge-expired { background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-reset { background: #3b82f6; color: #fff; }
+        .btn-reset:hover { background: #2563eb; }
+        .btn-ban { background: #f59e0b; color: #fff; }
+        .btn-ban:hover { background: #d97706; }
+        .btn-unban { background: #10b981; color: #fff; }
+        .btn-unban:hover { background: #059669; }
+        .btn-delete { background: #ef4444; color: #fff; }
+        .btn-delete:hover { background: #dc2626; }
+
+        .key-code {
+            color: #38bdf8;
+            font-family: monospace;
+            cursor: pointer;
+            position: relative;
+        }
+        .key-code:hover {
+            text-decoration: underline;
+        }
 
         .instruction-card {
             background: #131822;
@@ -263,7 +291,7 @@
         }
         .instruction-card h3 { color: #fff; margin-bottom: 8px; }
 
-        /* Key Checker UI styling */
+        /* Key Checker UI */
         .checker-wrapper {
             background: #131822;
             border: 1px solid #1e293b;
@@ -306,6 +334,34 @@
         .modal-content select, .modal-content input { width: 100%; margin-bottom: 14px; }
         .modal-btns { display: flex; gap: 12px; justify-content: flex-end; margin-top: 15px; }
         .btn-cancel { background: #334155; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+
+        /* Toast Notification */
+        #toast {
+            visibility: hidden;
+            min-width: 220px;
+            background-color: #1e293b;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 12px;
+            position: fixed;
+            z-index: 2000;
+            right: 30px;
+            bottom: 30px;
+            font-size: 14px;
+            border: 1px solid #38bdf8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        #toast.show {
+            visibility: visible;
+            animation: fadeInOut 2.5s;
+        }
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(20px); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(20px); }
+        }
     </style>
 </head>
 <body>
@@ -313,41 +369,26 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div>
-            <!-- User Profile Section -->
             <div class="user-profile">
-                <div class="user-avatar">A</div>
+                <div class="user-avatar">D</div>
                 <div class="user-info">
-                    <span class="user-name">Free Developer</span>
-                    <span class="user-email">huypc708@gmail.com</span>
+                    <span class="user-name">Dobi Manager</span>
+                    <span class="user-email">admin@dobimanager.com</span>
                 </div>
             </div>
 
             <div class="nav-menu">
-                <a class="nav-item active" onclick="switchTab('overview', this)">
-                    <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg> Overview
-                </a>
-                <a class="nav-item" onclick="switchTab('applications', this)">
-                    <svg viewBox="0 0 24 24"><path d="M12 2l-10 6 10 6 10-6-10-6zm0 9l-7-4.2V15l7 4.2 7-4.2V6.8L12 11z"/></svg> Applications
-                </a>
-                <a class="nav-item" onclick="switchTab('licenses', this)">
-                    <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg> Licenses
-                </a>
-                <a class="nav-item" onclick="switchTab('checkkey', this)">
-                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg> Check Key
-                </a>
+                <a class="nav-item active" onclick="switchTab('overview', this)">Overview</a>
+                <a class="nav-item" onclick="switchTab('applications', this)">Applications</a>
+                <a class="nav-item" onclick="switchTab('licenses', this)">Licenses</a>
+                <a class="nav-item" onclick="switchTab('checkkey', this)">Check Key</a>
             </div>
         </div>
 
         <div class="sidebar-bottom">
-            <a class="nav-item" onclick="switchTab('customize', this)">
-                <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19h3.69C9.55 19.62 10.73 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg> Customize UI
-            </a>
-            <a class="nav-item" onclick="alert('Đã đăng xuất thành công!')">
-                <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg> Logout
-            </a>
-            <a class="nav-item danger" onclick="if(confirm('Bạn có chắc chắn muốn xóa tài khoản?')) { localStorage.clear(); location.reload(); }">
-                <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete Account
-            </a>
+            <a class="nav-item" onclick="switchTab('customize', this)">Customize UI</a>
+            <a class="nav-item" onclick="alert('Đã đăng xuất thành công!')">Logout</a>
+            <a class="nav-item danger" onclick="if(confirm('Bạn có chắc chắn muốn xóa dữ liệu?')) { localStorage.clear(); location.reload(); }">Delete Data</a>
         </div>
     </div>
 
@@ -379,8 +420,8 @@
                 </div>
             </div>
             <div class="instruction-card">
-                <h3>Welcome to AuthFusion System</h3>
-                <p>Use the sidebar menu to manage applications, licenses, and check key details easily.</p>
+                <h3>Welcome to Dobi Manager</h3>
+                <p>Quản lý Key bản quyền ứng dụng, hỗ trợ reset HWID, Band/Unband key và sao chép dễ dàng.</p>
             </div>
         </div>
 
@@ -429,10 +470,10 @@
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 35%;">License Key</th>
+                            <th style="width: 30%;">License Key</th>
                             <th style="width: 25%;">Status ( HWID )</th>
-                            <th style="width: 25%;">Expiry</th>
-                            <th style="width: 15%;">Actions</th>
+                            <th style="width: 20%;">Expiry Countdown</th>
+                            <th style="width: 25%;">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="licenseTableBody">
@@ -448,7 +489,7 @@
             <div class="checker-wrapper">
                 <p style="color: #94a3b8; font-size: 14px;">Nhập mã License Key của bạn vào bên dưới để kiểm tra trạng thái và thông tin chi tiết:</p>
                 <div class="checker-input-group">
-                    <input type="text" id="checkKeyInput" class="search-box" placeholder="Nhập key cần kiểm tra (Ví dụ: APPS-XXXX-XXXX)...">
+                    <input type="text" id="checkKeyInput" class="search-box" placeholder="Nhập key cần kiểm tra...">
                     <button class="btn-primary" onclick="verifyKey()">Kiểm tra</button>
                 </div>
                 <div id="checkerResultBox" class="checker-result"></div>
@@ -470,15 +511,18 @@
         <div class="modal-content" id="modalBodyContent"></div>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="toast">Đã copy key thành công!</div>
+
     <script>
-        let db = JSON.parse(localStorage.getItem('authfusion_db')) || {
+        let db = JSON.parse(localStorage.getItem('dobimanager_db')) || {
             apps: [],
             licenses: [],
             users: []
         };
 
         function saveData() {
-            localStorage.setItem('authfusion_db', JSON.stringify(db));
+            localStorage.setItem('dobimanager_db', JSON.stringify(db));
             updateStats();
         }
 
@@ -505,6 +549,19 @@
             document.getElementById('statLicenses').innerText = db.licenses.length;
             document.getElementById('statActive').innerText = db.licenses.filter(l => l.status === 'Active').length;
             document.getElementById('statUsers').innerText = db.users.length;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2500);
+        }
+
+        function copyKey(keyText) {
+            navigator.clipboard.writeText(keyText).then(() => {
+                showToast("Đã sao chép: " + keyText);
+            });
         }
 
         function openAppModal() {
@@ -538,7 +595,7 @@
                 <tr>
                     <td><strong>${app.name}</strong></td>
                     <td><code style="color: #38bdf8;">${app.secret}</code></td>
-                    <td><button class="btn-cancel" style="background:#ef4444;" onclick="deleteApp(${idx})">Delete</button></td>
+                    <td><button class="btn-action btn-delete" onclick="deleteApp(${idx})">Delete</button></td>
                 </tr>
             `).join('');
         }
@@ -595,28 +652,64 @@
             const tbody = document.getElementById('licenseTableBody');
             const keyword = document.getElementById('searchInput').value.toLowerCase();
             const statusVal = document.getElementById('statusFilter').value;
+            const appFilterVal = document.getElementById('appSelectFilter').value;
 
             let filtered = db.licenses.filter(l => l.key.toLowerCase().includes(keyword));
             if(statusVal) filtered = filtered.filter(l => l.status === statusVal);
+            if(appFilterVal) filtered = filtered.filter(l => l.key.startsWith(appFilterVal.substring(0,4).toUpperCase()));
 
             if(filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No licenses found.</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = filtered.map((item, index) => {
+            tbody.innerHTML = filtered.map((item) => {
+                // Tìm index thực tế trong mảng gốc db.licenses
+                const realIndex = db.licenses.findIndex(l => l.key === item.key);
                 let expiryText = item.expiry === 'Lifetime' ? 'Lifetime' : formatCountdown(item.expiry);
+                let statusBadgeClass = item.status === 'Active' ? 'badge-active' : 'badge-banned';
+                
+                let banUnbanBtn = item.status === 'Active' 
+                    ? `<button class="btn-action btn-ban" onclick="toggleBan(${realIndex})">Ban</button>`
+                    : `<button class="btn-action btn-unban" onclick="toggleBan(${realIndex})">Unban</button>`;
+
                 return `
                     <tr>
-                        <td><code style="color: #38bdf8; font-family: monospace;">${item.key}</code></td>
-                        <td><span class="badge badge-active">${item.status}</span> <span style="font-size: 13px; color: #64748b;">(${item.hwid})</span></td>
+                        <td><span class="key-code" onclick="copyKey('${item.key}')" title="Click để copy">${item.key}</span></td>
+                        <td><span class="badge ${statusBadgeClass}">${item.status}</span> <span style="font-size: 13px; color: #64748b;">(${item.hwid})</span></td>
                         <td>${expiryText}</td>
                         <td>
-                            <button onclick="resetHwid(${index})" class="btn-primary" style="padding:6px 12px; font-size:13px;">Reset HWID</button>
+                            <div class="action-btns">
+                                <button class="btn-action btn-reset" onclick="resetHwid(${realIndex})">Reset HWID</button>
+                                ${banUnbanBtn}
+                                <button class="btn-action btn-delete" onclick="deleteLicense(${realIndex})">Delete</button>
+                            </div>
                         </td>
                     </tr>
                 `;
             }).join('');
+        }
+
+        function resetHwid(index) {
+            // Chỉ đổi HWID thành Unbound, KHÔNG làm thay đổi thời gian expiry ban đầu
+            db.licenses[index].hwid = 'Unbound';
+            saveData();
+            renderLicenses();
+            showToast('Đã reset HWID thành công (Giữ nguyên thời gian)');
+        }
+
+        function toggleBan(index) {
+            db.licenses[index].status = db.licenses[index].status === 'Active' ? 'Banned' : 'Active';
+            saveData();
+            renderLicenses();
+        }
+
+        function deleteLicense(index) {
+            if(confirm('Bạn có chắc chắn muốn xóa key này?')) {
+                db.licenses.splice(index, 1);
+                saveData();
+                renderLicenses();
+            }
         }
 
         function verifyKey() {
@@ -642,19 +735,12 @@
 
             resultBox.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div><strong>Key:</strong> <span style="color: #38bdf8;">${found.key}</span></div>
-                    <div><strong>Trạng thái:</strong> ${isExpired ? '<span class="badge badge-danger">Expired</span>' : `<span class="badge badge-active">${found.status}</span>`}</div>
+                    <div><strong>Key:</strong> <span style="color: #38bdf8; cursor:pointer;" onclick="copyKey('${found.key}')">${found.key} (Click copy)</span></div>
+                    <div><strong>Trạng thái:</strong> ${isExpired ? '<span class="badge badge-expired">Expired</span>' : `<span class="badge ${found.status === 'Active' ? 'badge-active' : 'badge-banned'}">${found.status}</span>`}</div>
                     <div><strong>HWID:</strong> <span style="color: #94a3b8;">${found.hwid}</span></div>
                     <div><strong>Hạn sử dụng:</strong> ${found.expiry === 'Lifetime' ? 'Lifetime' : formatCountdown(found.expiry)}</div>
                 </div>
             `;
-        }
-
-        function resetHwid(index) {
-            db.licenses[index].hwid = 'Unbound';
-            saveData();
-            renderLicenses();
-            alert('HWID đã được reset thành công!');
         }
 
         function closeModal() {
@@ -668,8 +754,17 @@
             let days = Math.floor(diff / 86400);
             let hours = Math.floor((diff % 86400) / 3600);
             let mins = Math.floor((diff % 3600) / 60);
-            return `${days}d ${hours}h ${mins}m left`;
+            let secs = diff % 60;
+            return `${days}d ${hours}h ${mins}m ${secs}s`;
         }
+
+        // Tự động cập nhật thời gian đếm ngược mỗi giây mà không làm gián đoạn thao tác khác
+        setInterval(() => {
+            const activeTab = document.getElementById('view-licenses');
+            if(activeTab && activeTab.classList.contains('active')) {
+                renderLicenses();
+            }
+        }, 1000);
 
         updateStats();
     </script>
