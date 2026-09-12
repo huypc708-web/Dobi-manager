@@ -25,7 +25,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
             text-align: center;
             border: 1px solid #262626;
         }
@@ -47,6 +47,34 @@
             border-left: 4px solid #4CAF50;
             font-size: 14px;
             color: #ddd;
+            margin-bottom: 20px;
+        }
+        .btn-generate {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn-generate:hover {
+            background-color: #45a049;
+        }
+        .result-box {
+            margin-top: 20px;
+            background: #222;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            color: #4CAF50;
+            word-break: break-all;
+            display: none;
+            border: 1px dashed #4CAF50;
         }
         .footer {
             margin-top: 20px;
@@ -59,16 +87,52 @@
 
     <div class="container">
         <h1>DOBI X MANAGER</h1>
-        <p>Hệ thống xác thực Key tự động</p>
+        <p>Hệ thống tạo và xác thực Key tự động</p>
         
         <div class="status-box">
-            Trạng thái API: <span style="color: #4CAF50; font-weight: bold;">Đang hoạt động (Online)</span>
+            Trạng thái API: <span style="color: #4CAF50; font-weight: bold;">Đang hoạt động (Online)</span>[cite: 2]
         </div>
 
+        <button class="btn-generate" onclick="createKey()">TẠO KEY MỚI NGAY</button>
+
+        <div id="keyResult" class="result-box"></div>
+
         <div class="footer">
-            &copy; 2026 Dobi Project. All rights reserved.
+            &copy; 2026 Dobi Project. All rights reserved.[cite: 2]
         </div>
     </div>
+
+    <script>
+        // Hàm thuật toán sinh key đồng bộ với server Vercel
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return Math.abs(hash).toString(36).toUpperCase();
+        }
+
+        function createKey() {
+            const prefix = "DOBI";
+            const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+            const rawString = prefix + "-" + randomPart;
+            
+            // Chữ ký bảo mật trùng khớp với file verify.js trên Vercel
+            const SECRET_SIGNATURE = "DOBI_SECRET_KEY_2026_PRO";
+            const hashCheck = simpleHash(rawString + SECRET_SIGNATURE).substring(0, 6);
+
+            const finalKey = `${rawString}-${hashCheck}`;
+
+            const resultBox = document.getElementById("keyResult");
+            resultBox.style.display = "block";
+            resultBox.innerText = finalKey;
+            
+            // Tự động sao chép key vào clipboard
+            navigator.clipboard.writeText(finalKey);
+            alert("Đã tạo và sao chép Key thành công: " + finalKey);
+        }
+    </script>
 
 </body>
 </html>
