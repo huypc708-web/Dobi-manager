@@ -528,7 +528,7 @@
                 </div>
                 <div class="instruction-card">
                     <h3>Trạng thái đồng bộ đám mây</h3>
-                    <p>Hệ thống đã kết nối trực tiếp với <strong>Firebase Realtime Database</strong>. Mọi thao tác tạo key, kích hoạt hoặc quản lý của bạn sẽ tự động lưu lên mây và cập nhật tức thì trên mọi thiết bị.</p>
+                    <p>Hệ thống quản lý bản quyền không dùng HWID. Mỗi key sẽ quản lý giới hạn số lượng thiết bị kích hoạt đồng thời trực tiếp trên Firebase.</p>
                 </div>
             </div>
 
@@ -578,7 +578,7 @@
                         <thead>
                             <tr>
                                 <th style="width: 30%;">License Key</th>
-                                <th style="width: 25%;">Trạng thái & HWID</th>
+                                <th style="width: 25%;">Trạng thái & Thiết bị</th>
                                 <th style="width: 25%;">Thời gian đếm ngược</th>
                                 <th style="width: 20%;">Thao tác</th>
                             </tr>
@@ -590,7 +590,7 @@
                 </div>
             </div>
 
-            <!-- 4. MÔ PHỎNG CLIENT (TAB MỚI) -->
+            <!-- 4. MÔ PHỎNG CLIENT -->
             <div id="view-client-simulator" class="view-section">
                 <div class="section-title-row">
                     <div class="section-title">Mô phỏng Phần mềm Client Nhập Key</div>
@@ -599,12 +599,7 @@
                 <div style="max-width: 500px; margin: 0 auto; background: #131822; border: 1px solid #1e293b; padding: 30px; border-radius: 12px;">
                     <div style="text-align: center; margin-bottom: 25px;">
                         <h3 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 6px;">Đăng nhập Bản quyền</h3>
-                        <p style="color: #64748b; font-size: 13px;">Giao diện giả lập khi người dùng chạy tool/phần mềm của bạn</p>
-                    </div>
-
-                    <div class="login-input-group">
-                        <label>Mã Phần cứng Thiết bị (HWID tự sinh)</label>
-                        <input type="text" id="simHwid" readonly style="color: #38bdf8; font-family: monospace;">
+                        <p style="color: #64748b; font-size: 13px;">Giao diện giả lập khi người dùng chạy tool/phần mềm</p>
                     </div>
 
                     <div class="login-input-group">
@@ -651,9 +646,6 @@
         window.onload = function() {
             handleLogout();
             setInterval(updateCountdowns, 1000);
-            
-            // Tạo sẵn một HWID ngẫu nhiên cho máy client giả lập này
-            document.getElementById('simHwid').value = 'HWID_' + Math.random().toString(36).substring(2, 10).toUpperCase();
         };
 
         function handleLogin() {
@@ -804,11 +796,11 @@
         function openLicenseModal() {
             if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Ứng dụng trước khi tạo License Key!');
             document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Tạo License Key Tùy chỉnh (Test Phút/Giờ/Ngày)</h3>
+                <h3>Tạo License Key Mới</h3>
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Chọn ứng dụng:</label>
                 <select id="modalAppSelect">${db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('')}</select>
                 
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Thời lượng tùy chỉnh (Nhập số & Chọn đơn vị):</label>
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Thời lượng tùy chỉnh:</label>
                 <div style="display: flex; gap: 8px; margin-bottom: 14px;">
                     <input type="number" id="modalDurationValue" value="1" min="1" style="flex: 1; margin-bottom: 0;">
                     <select id="modalDurationUnit" style="flex: 1; margin-bottom: 0;">
@@ -819,8 +811,8 @@
                     </select>
                 </div>
 
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">HWID (Để trống để tự sinh):</label>
-                <input type="text" id="modalHwidInput" placeholder="Nhập HWID tùy chỉnh hoặc để trống...">
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Giới hạn số thiết bị cùng lúc:</label>
+                <input type="number" id="modalMaxDevices" value="1" min="1" style="margin-bottom: 14px;">
                 
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="closeModal()">Hủy</button>
@@ -834,14 +826,13 @@
             const appName = document.getElementById('modalAppSelect').value;
             const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
             const unit = document.getElementById('modalDurationUnit').value;
-            const customHwid = document.getElementById('modalHwidInput').value.trim();
+            const maxDevices = parseInt(document.getElementById('modalMaxDevices').value) || 1;
+            
             const p1 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const p2 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const p3 = Math.random().toString(36).substring(2, 6).toUpperCase();
             
             const now = Date.now();
-            const assignedHwid = customHwid !== "" ? customHwid : `HWID_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-            
             let expiry = 'Lifetime';
             let multiplier = 0;
             if (unit === 'minutes') multiplier = 60 * 1000;
@@ -855,9 +846,10 @@
             db.licenses.push({
                 key: `${appName.substring(0,4).toUpperCase()}-${p1}-${p2}-${p3}`,
                 status: 'Active',
-                hwid: assignedHwid,
                 durationValue: val,
                 durationUnit: unit,
+                maxDevices: maxDevices,
+                currentDevices: 0,
                 expiryTimestamp: expiry
             });
             saveData();
@@ -869,12 +861,14 @@
             const l = db.licenses[originalIdx];
             const currentVal = l.durationValue || 1;
             const currentUnit = l.durationUnit || 'days';
+            const currentMax = l.maxDevices || 1;
 
             document.getElementById('modalBodyContent').innerHTML = `
                 <h3>Tùy chỉnh Key: ${l.key}</h3>
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Mã thiết bị (HWID):</label>
-                <input type="text" id="editHwidInput" value="${l.hwid}">
                 
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Giới hạn thiết bị:</label>
+                <input type="number" id="editMaxDevices" value="${currentMax}" min="1" style="margin-bottom: 14px;">
+
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Thời hạn mới:</label>
                 <div style="display: flex; gap: 8px; margin-bottom: 14px;">
                     <input type="number" id="editDurationValue" value="${currentVal}" min="1" style="flex: 1; margin-bottom: 0;">
@@ -895,11 +889,11 @@
         }
 
         function saveEditedLicense(idx) {
-            const newHwid = document.getElementById('editHwidInput').value.trim();
+            const newMax = parseInt(document.getElementById('editMaxDevices').value) || 1;
             const newVal = parseInt(document.getElementById('editDurationValue').value) || 1;
             const newUnit = document.getElementById('editDurationUnit').value;
             
-            db.licenses[idx].hwid = newHwid !== "" ? newHwid : "Chưa liên kết";
+            db.licenses[idx].maxDevices = newMax;
             db.licenses[idx].durationValue = newVal;
             db.licenses[idx].durationUnit = newUnit;
             
@@ -923,9 +917,8 @@
             showToast("Đã cập nhật thông tin key thành công!");
         }
 
-        // --- MÔ PHỎNG CLIENT NHẬP KEY ---
+        // --- MÔ PHỎNG CLIENT NHẬP KEY (ĐÃ FIX LỖI GẠN LỌC SỐ THIẾT BỊ) ---
         function simulateClientLogin() {
-            const clientHwid = document.getElementById('simHwid').value.trim();
             const inputKey = document.getElementById('simKeyInput').value.trim();
             const resultBox = document.getElementById('simResultBox');
 
@@ -950,7 +943,7 @@
             if (l.status === 'Banned') {
                 resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Key này đã bị khóa (Banned)ởi quản trị viên!';
+                resultBox.innerText = '❌ Key này đã bị khóa (Banned) bởi quản trị viên!';
                 return;
             }
 
@@ -962,23 +955,25 @@
                 return;
             }
 
-            // Nếu key chưa có HWID hoặc "Chưa liên kết", gán luôn HWID của máy client giả lập này vào
-            if (!l.hwid || l.hwid === 'Chưa liên kết') {
-                l.hwid = clientHwid;
-                saveData();
-            }
+            // Khởi tạo biến đếm thiết bị nếu chưa có
+            if (l.currentDevices === undefined) l.currentDevices = 0;
+            if (l.maxDevices === undefined) l.maxDevices = 1;
 
-            if (l.hwid !== clientHwid) {
+            // Kiểm tra giới hạn số thiết bị đang đăng nhập đồng thời
+            if (l.currentDevices >= l.maxDevices) {
                 resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 resultBox.style.color = '#f87171';
-                resultBox.innerText = `❌ HWID không khớp! Key đang liên kết với máy khác: ${l.hwid}`;
+                resultBox.innerText = `❌ Key đã đạt giới hạn thiết bị đăng nhập đồng thời (${l.currentDevices}/${l.maxDevices})!`;
                 return;
             }
 
-            // Thành công
+            // Tăng số thiết bị đang sử dụng lên 1 khi đăng nhập thành công
+            l.currentDevices += 1;
+            saveData();
+
             resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
             resultBox.style.color = '#34d399';
-            resultBox.innerText = '✅ Xác thực thành công! Đang chuyển vào ứng dụng...';
+            resultBox.innerText = `✅ Xác thực thành công! (Đang dùng: ${l.currentDevices}/${l.maxDevices} thiết bị)`;
         }
 
         function renderLicenses() {
@@ -1012,12 +1007,15 @@
                     statusText = 'Đã khóa';
                 }
 
+                const currentDev = l.currentDevices || 0;
+                const maxDev = l.maxDevices || 1;
+
                 return `
                     <tr>
                         <td><span class="key-code" onclick="copyKey('${l.key}')">${l.key}</span></td>
                         <td>
                             <span class="badge ${badgeClass}">${statusText}</span><br>
-                            <small style="color: #38bdf8; cursor: pointer;" onclick="openEditLicenseModal(${originalIdx})">🔗 ${l.hwid} (Bấm để sửa)</small>
+                            <small style="color: #38bdf8;">🖥️ Thiết bị: ${currentDev} / ${maxDev} máy</small>
                         </td>
                         <td><span class="countdown-timer" data-index="${originalIdx}" data-expiry="${l.expiryTimestamp}" data-status="${l.status}">Đang tính toán...</span></td>
                         <td>
@@ -1046,9 +1044,10 @@
                 const status = timer.getAttribute('data-status');
                 const originalIdx = timer.getAttribute('data-index');
                 const l = db.licenses[originalIdx];
+                if (!l) return;
 
                 if (status === 'Banned') {
-                    if (l && l.remainingTimeBeforeBan) {
+                    if (l.remainingTimeBeforeBan) {
                         const diff = l.remainingTimeBeforeBan;
                         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -1105,6 +1104,7 @@
                     l.remainingTimeBeforeBan = timeLeft > 0 ? timeLeft : 0;
                 }
                 l.status = 'Banned';
+                l.currentDevices = 0; // Reset số thiết bị khi ban key
             }
             saveData();
             renderLicenses();
