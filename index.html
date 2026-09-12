@@ -710,8 +710,11 @@
 
                 let expiryText = 'Chưa kích hoạt';
                 if(item.status === 'Active') {
-                    if(item.durationDays === 365) expiryText = 'Lifetime';
+                    if(item.durationDays === 365 || item.expiryTimestamp === 'Lifetime') expiryText = 'Lifetime';
                     else expiryText = formatCountdown(item.expiryTimestamp);
+                } else if(item.status === 'Unactivated' && item.expiryTimestamp) {
+                    // Nếu đã từng kích hoạt và được reset HWID, hiển thị thời gian còn lại bảo lưu
+                    expiryText = (item.durationDays === 365 || item.expiryTimestamp === 'Lifetime') ? 'Lifetime' : formatCountdown(item.expiryTimestamp) + ' (Đã lưu)';
                 }
 
                 let banUnbanBtn = item.status === 'Banned'
@@ -736,12 +739,13 @@
         }
 
         function resetHwid(index) {
+            // SỬA LỖI: Chỉ gỡ liên kết thiết bị và chuyển về trạng thái sẵn sàng bind thiết bị mới, KHÔNG xóa mất mốc thời gian/hạn sử dụng của key
             db.licenses[index].hwid = 'Unbound';
             db.licenses[index].status = 'Unactivated';
-            db.licenses[index].expiryTimestamp = null;
+            // Không set expiryTimestamp = null ở đây để bảo lưu thời gian đếm ngược còn lại của key!
             saveData();
             renderLicenses();
-            showToast('Đã reset HWID và đưa key về trạng thái chờ kích hoạt!');
+            showToast('Đã reset HWID thành công và bảo lưu thời gian của key!');
         }
 
         function toggleBan(index) {
@@ -784,15 +788,17 @@
                 return;
             }
 
-            // Chỉ duy nhất 1 thiết bị dùng key này được kích hoạt và tính thời gian
+            // Xử lý khi kích hoạt lần đầu hoặc tái kích hoạt sau khi reset HWID
             if(found.hwid === 'Unbound') {
                 found.hwid = queryHwid;
                 found.status = 'Active';
-                if(found.durationDays !== 365) {
-                    found.expiryTimestamp = Math.floor(Date.now() / 1000) + (found.durationDays * 86400);
-                } else {
+                if(found.durationDays === 365) {
                     found.expiryTimestamp = 'Lifetime';
+                } else if(!found.expiryTimestamp) {
+                    // Kích hoạt mới hoàn toàn lần đầu
+                    found.expiryTimestamp = Math.floor(Date.now() / 1000) + (found.durationDays * 86400);
                 }
+                // Nếu đã có sẵn expiryTimestamp từ trước (do reset HWID trước đó), giữ nguyên thời gian còn lại để tiếp tục đếm!
                 saveData();
             } else if(found.hwid !== queryHwid) {
                 resultBox.innerHTML = `<span style="color: #f87171;">❌ Từ chối! Key này đã được kích hoạt trên thiết bị khác (Giới hạn tối đa 1 thiết bị).</span>`;
@@ -820,7 +826,7 @@
         }
 
         function formatCountdown(expireTimestamp) {
-            if(!expireTimestamp) return "Chưa kích hoạt";
+            if(!expireTimestamp || expireTimestamp === 'Lifetime') return "Lifetime";
             const now = Math.floor(Date.now() / 1000);
             const diff = expireTimestamp - now;
             if (diff <= 0) return "Expired";
