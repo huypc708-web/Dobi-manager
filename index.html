@@ -530,7 +530,7 @@
                 </div>
                 <div class="instruction-card">
                     <h3>Trạng thái đồng bộ đám mây</h3>
-                    <p>Hệ thống quản lý giới hạn thiết bị trực tiếp trên Firebase. Bạn có thể sử dụng nút "Reset" ở bảng quản lý Key để xóa sạch số lượng máy đang kết nối khi cần thiết.</p>
+                    <p>Hệ thống quản lý giới hạn thiết bị trực tiếp trên Firebase. Bạn có thể sử dụng nút "Reset" ở bảng quản lý Key hoặc tab mô phỏng Client để reset HWID khi cần thiết.</p>
                 </div>
             </div>
 
@@ -595,12 +595,12 @@
             <!-- 4. MÔ PHỎNG CLIENT -->
             <div id="view-client-simulator" class="view-section">
                 <div class="section-title-row">
-                    <div class="section-title">Mô phỏng Phần mềm Client Nhập Key</div>
+                    <div class="section-title">Mô phỏng Phần mềm Client Nhập Key & Reset HWID</div>
                 </div>
 
                 <div style="max-width: 500px; margin: 0 auto; background: #131822; border: 1px solid #1e293b; padding: 30px; border-radius: 12px;">
                     <div style="text-align: center; margin-bottom: 25px;">
-                        <h3 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 6px;">Đăng nhập Bản quyền</h3>
+                        <h3 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 6px;">Đăng nhập Bản quyền & Reset HWID</h3>
                         <p style="color: #64748b; font-size: 13px;">Giao diện giả lập khi người dùng chạy tool/phần mềm</p>
                     </div>
 
@@ -609,7 +609,10 @@
                         <input type="text" id="simKeyInput" placeholder="Ví dụ: APP1-XXXX-XXXX-XXXX">
                     </div>
 
-                    <button class="btn-login" style="background-color: #38bdf8; color: #0b0e14; margin-top: 5px;" onclick="simulateClientLogin()">Xác thực & Vào App</button>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <button class="btn-login" style="background-color: #38bdf8; color: #0b0e14; flex: 1;" onclick="simulateClientLogin()">Xác thực Key</button>
+                        <button class="btn-login" style="background-color: #8b5cf6; color: #fff; flex: 1;" onclick="simulateClientResetHWID()">Reset HWID</button>
+                    </div>
 
                     <div id="simResultBox" style="margin-top: 18px; padding: 12px; border-radius: 6px; font-size: 13px; font-weight: 600; text-align: center; display: none;"></div>
                 </div>
@@ -919,7 +922,7 @@
             showToast("Đã cập nhật thông tin key thành công!");
         }
 
-        // --- TÍNH NĂNG RESET THIẾT BỊ (RESET HWID) ---
+        // --- TÍNH NĂNG RESET THIẾT BỊ (RESET HWID) CHO ADMIN ---
         function resetDevices(idx) {
             if (confirm('Bạn có chắc chắn muốn reset số thiết bị đang đăng nhập của key này về 0?')) {
                 db.licenses[idx].currentDevices = 0;
@@ -973,7 +976,7 @@
             if (l.currentDevices >= l.maxDevices) {
                 resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 resultBox.style.color = '#f87171';
-                resultBox.innerText = `❌ Key đã đạt giới hạn thiết bị đăng nhập đồng thời (${l.currentDevices}/${l.maxDevices})!`;
+                resultBox.innerText = `❌ Key đã đạt giới hạn thiết bị đăng nhập đồng thời (${l.currentDevices}/${l.maxDevices})! Hãy dùng tính năng Reset HWID nếu đổi máy.`;
                 return;
             }
 
@@ -983,6 +986,37 @@
             resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
             resultBox.style.color = '#34d399';
             resultBox.innerText = `✅ Xác thực thành công! (Đang dùng: ${l.currentDevices}/${l.maxDevices} thiết bị)`;
+        }
+
+        // --- MÔ PHỎNG CLIENT RESET HWID ---
+        function simulateClientResetHWID() {
+            const inputKey = document.getElementById('simKeyInput').value.trim();
+            const resultBox = document.getElementById('simResultBox');
+
+            resultBox.style.display = 'block';
+
+            if (!inputKey) {
+                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                resultBox.style.color = '#f87171';
+                resultBox.innerText = '❌ Vui lòng nhập mã License Key cần reset HWID!';
+                return;
+            }
+
+            const l = db.licenses.find(item => item.key.toLowerCase() === inputKey.toLowerCase());
+
+            if (!l) {
+                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                resultBox.style.color = '#f87171';
+                resultBox.innerText = '❌ Mã Key không tồn tại trên hệ thống!';
+                return;
+            }
+
+            l.currentDevices = 0;
+            saveData();
+
+            resultBox.style.background = 'rgba(139, 92, 246, 0.15)';
+            resultBox.style.color = '#a78bfa';
+            resultBox.innerText = `🔄 Đã Reset HWID thành công! Số thiết bị đã về 0/ ${l.maxDevices}. Bạn có thể đăng nhập thiết bị mới.`;
         }
 
         function renderLicenses() {
@@ -1030,7 +1064,7 @@
                         <td>
                             <div class="action-btns">
                                 <button class="btn-action btn-edit" onclick="openEditLicenseModal(${originalIdx})">Sửa</button>
-                                <button class="btn-action btn-reset" onclick="resetDevices(${originalIdx})" title="Reset số thiết bị về 0">Reset</button>
+                                <button class="btn-action btn-reset" onclick="resetDevices(${originalIdx})" title="Reset số thiết bị về 0">Reset HWID</button>
                                 ${l.status === 'Banned' ? 
                                     `<button class="btn-action btn-unban" onclick="toggleBan(${originalIdx})">Mở</button>` : 
                                     `<button class="btn-action btn-ban" onclick="toggleBan(${originalIdx})">Khóa</button>`
