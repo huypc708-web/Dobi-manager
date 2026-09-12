@@ -1,30 +1,43 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Khởi tạo kết nối Supabase sử dụng biến môi trường trên Vercel
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+    const { key, hwid } = req.query;
 
-  try {
-    // Lấy toàn bộ dữ liệu trong bảng 'keys' để xem nó đang có cấu trúc thế nào
-    const { data, error } = await supabase
-      .from('keys')
-      .select('*');
-
-    if (error) {
-      return res.status(200).send("DB Error: " + JSON.stringify(error));
+    if (!key) {
+        return res.status(400).json({ message: "Thiếu Key!" });
     }
 
-    // Trả về danh sách dạng chữ để đọc trực tiếp trên web
-    return res.status(200).json({
-      message: "Ket noi Supabase thanh cong!",
-      total_keys: data.length,
-      data: data
-    });
+    try {
+        // 1. Truy vấn vào bảng chứa key trong Supabase
+        const { data, error } = await supabase
+            .from('ten_bang_key_cua_ban') // Thay tên bảng của bạn vào đây
+            .select('*')
+            .eq('key', key);
 
-  } catch (err) {
-    return res.status(200).send("Exception: " + err.message);
-  }
+        // 2. Không tìm thấy key trong database
+        if (error || !data || data.length === 0) {
+            return res.status(404).json({ message: "Key không tồn tại trên hệ thống!" });
+        }
+
+        const keyData = data[0];
+
+        // 3. Kiểm tra trạng thái của Key
+        if (keyData.status !== 'active') {
+            return res.status(400).json({ message: "Key đã bị khóa hoặc hết hạn!", status: keyData.status });
+        }
+
+        // 4. Phản hồi thành công về cho tool C#
+        return res.status(200).json({ 
+            message: "Ket noi Supabase thanh cong!", 
+            success: true,
+            total_keys: 1, 
+            data: [keyData] 
+        });
+
+    } catch (err) {
+        return res.status(500).json({ message: "Lỗi Server nội bộ", error: err.message });
+    }
 }
