@@ -527,7 +527,10 @@
         <div class="main-content">
             <div class="header-top">
                 <div class="dashboard-title" id="pageTitle">Tổng quan</div>
-                <div class="status-badge">Đã kết nối đám mây</div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div id="liveClock" style="color: #94a3b8; font-size: 14px; font-weight: 500; font-family: monospace; background: #131822; padding: 6px 12px; border-radius: 20px; border: 1px solid #1e293b;"></div>
+                    <div class="status-badge">Đã kết nối đám mây</div>
+                </div>
             </div>
 
             <!-- 1. TỔNG QUAN -->
@@ -661,7 +664,26 @@
 
         window.onload = function() {
             handleLogout();
+            updateLiveClock();
+            setInterval(updateLiveClock, 1000);
         };
+
+        // Hàm cập nhật đồng hồ thời gian thực
+        function updateLiveClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = String(now.getFullYear());
+
+            const timeString = `${hours}:${minutes}:${seconds} - ${day}/${month}/${year}`;
+            const clockElement = document.getElementById('liveClock');
+            if (clockElement) {
+                clockElement.innerText = timeString;
+            }
+        }
 
         function handleLogin() {
             const u = document.getElementById('loginUser').value.trim();
