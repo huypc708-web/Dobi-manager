@@ -27,7 +27,6 @@
             font-size: 15px;
         }
 
-        /* Màn hình Đăng nhập Admin */
         #loginOverlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -107,14 +106,12 @@
             display: none;
         }
 
-        /* App Layout */
         #appContainer {
             display: none;
             width: 100%;
             height: 100%;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 270px;
             background-color: #11151c;
@@ -217,7 +214,6 @@
             background: rgba(239, 68, 68, 0.1);
         }
 
-        /* Main Content */
         .main-content {
             flex: 1;
             padding: 35px 40px;
@@ -442,7 +438,6 @@
 </head>
 <body>
 
-    <!-- Màn hình Đăng nhập Admin -->
     <div id="loginOverlay">
         <div class="login-box">
             <h2>Đăng Nhập Quản Trị</h2>
@@ -460,9 +455,7 @@
         </div>
     </div>
 
-    <!-- Giao diện chính sau khi đăng nhập -->
     <div id="appContainer">
-        <!-- Sidebar -->
         <div class="sidebar">
             <div>
                 <div class="user-profile">
@@ -501,14 +494,12 @@
             </div>
         </div>
 
-        <!-- Main Content -->
         <div class="main-content">
             <div class="header-top">
                 <div class="dashboard-title" id="pageTitle">Tổng quan</div>
                 <div class="status-badge">Đã kết nối đám mây</div>
             </div>
 
-            <!-- 1. TỔNG QUAN -->
             <div id="view-overview" class="view-section active">
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -530,11 +521,10 @@
                 </div>
                 <div class="instruction-card">
                     <h3>Trạng thái đồng bộ đám mây</h3>
-                    <p>Hệ thống quản lý giới hạn thiết bị trực tiếp trên Firebase. Bạn có thể sử dụng nút "Reset" ở bảng quản lý Key hoặc tab mô phỏng Client để reset HWID khi cần thiết.</p>
+                    <p>Hệ thống quản lý giới hạn tối đa 1 thiết bị trực tiếp trên Firebase. Sử dụng nút "Reset HWID" để giải phóng thiết bị khi cần.</p>
                 </div>
             </div>
 
-            <!-- 2. ỨNG DỤNG -->
             <div id="view-applications" class="view-section">
                 <div class="section-title-row">
                     <div class="section-title">Quản lý Ứng dụng</div>
@@ -556,7 +546,6 @@
                 </div>
             </div>
 
-            <!-- 3. QUẢN LÝ KEY -->
             <div id="view-licenses" class="view-section">
                 <div class="section-title-row">
                     <div class="section-title">Quản lý License Key</div>
@@ -592,7 +581,6 @@
                 </div>
             </div>
 
-            <!-- 4. MÔ PHỎNG CLIENT -->
             <div id="view-client-simulator" class="view-section">
                 <div class="section-title-row">
                     <div class="section-title">Mô phỏng Phần mềm Client Nhập Key & Reset HWID</div>
@@ -620,12 +608,10 @@
         </div>
     </div>
 
-    <!-- MODAL -->
     <div class="modal" id="globalModal">
         <div class="modal-content" id="modalBodyContent"></div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast">Đã sao chép thành công!</div>
 
     <script>
@@ -816,8 +802,7 @@
                     </select>
                 </div>
 
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Giới hạn số thiết bị cùng lúc:</label>
-                <input type="number" id="modalMaxDevices" value="1" min="1" style="margin-bottom: 14px;">
+                <input type="hidden" id="modalMaxDevices" value="1">
                 
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="closeModal()">Hủy</button>
@@ -831,7 +816,7 @@
             const appName = document.getElementById('modalAppSelect').value;
             const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
             const unit = document.getElementById('modalDurationUnit').value;
-            const maxDevices = parseInt(document.getElementById('modalMaxDevices').value) || 1;
+            const maxDevices = 1; // Cố định tối đa 1 thiết bị
             
             const p1 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const p2 = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -866,14 +851,10 @@
             const l = db.licenses[originalIdx];
             const currentVal = l.durationValue || 1;
             const currentUnit = l.durationUnit || 'days';
-            const currentMax = l.maxDevices || 1;
 
             document.getElementById('modalBodyContent').innerHTML = `
                 <h3>Tùy chỉnh Key: ${l.key}</h3>
                 
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Giới hạn thiết bị:</label>
-                <input type="number" id="editMaxDevices" value="${currentMax}" min="1" style="margin-bottom: 14px;">
-
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Thời hạn mới:</label>
                 <div style="display: flex; gap: 8px; margin-bottom: 14px;">
                     <input type="number" id="editDurationValue" value="${currentVal}" min="1" style="flex: 1; margin-bottom: 0;">
@@ -894,11 +875,10 @@
         }
 
         function saveEditedLicense(idx) {
-            const newMax = parseInt(document.getElementById('editMaxDevices').value) || 1;
             const newVal = parseInt(document.getElementById('editDurationValue').value) || 1;
             const newUnit = document.getElementById('editDurationUnit').value;
             
-            db.licenses[idx].maxDevices = newMax;
+            db.licenses[idx].maxDevices = 1; // Luôn giữ tối đa 1 thiết bị
             db.licenses[idx].durationValue = newVal;
             db.licenses[idx].durationUnit = newUnit;
             
@@ -922,9 +902,8 @@
             showToast("Đã cập nhật thông tin key thành công!");
         }
 
-        // --- TÍNH NĂNG RESET THIẾT BỊ (RESET HWID) CHO ADMIN ---
         function resetDevices(idx) {
-            if (confirm('Bạn có chắc chắn muốn reset số thiết bị đang đăng nhập của key này về 0?')) {
+            if (confirm('Bạn có chắc chắn muốn reset thiết bị đang đăng nhập của key này về 0/1?')) {
                 db.licenses[idx].currentDevices = 0;
                 saveData();
                 renderLicenses();
@@ -932,7 +911,6 @@
             }
         }
 
-        // --- MÔ PHỎNG CLIENT NHẬP KEY ---
         function simulateClientLogin() {
             const inputKey = document.getElementById('simKeyInput').value.trim();
             const resultBox = document.getElementById('simResultBox');
@@ -970,25 +948,24 @@
                 return;
             }
 
+            l.maxDevices = 1;
             if (l.currentDevices === undefined) l.currentDevices = 0;
-            if (l.maxDevices === undefined) l.maxDevices = 1;
 
-            if (l.currentDevices >= l.maxDevices) {
+            if (l.currentDevices >= 1) {
                 resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 resultBox.style.color = '#f87171';
-                resultBox.innerText = `❌ Key đã đạt giới hạn thiết bị đăng nhập đồng thời (${l.currentDevices}/${l.maxDevices})! Hãy dùng tính năng Reset HWID nếu đổi máy.`;
+                resultBox.innerText = '❌ Key đã được kích hoạt trên 1/1 thiết bị khác! Hãy dùng tính năng Reset HWID.';
                 return;
             }
 
-            l.currentDevices += 1;
+            l.currentDevices = 1;
             saveData();
 
             resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
             resultBox.style.color = '#34d399';
-            resultBox.innerText = `✅ Xác thực thành công! (Đang dùng: ${l.currentDevices}/${l.maxDevices} thiết bị)`;
+            resultBox.innerText = '✅ Xác thực thành công! (Đang dùng: 1/1 thiết bị)';
         }
 
-        // --- MÔ PHỎNG CLIENT RESET HWID ---
         function simulateClientResetHWID() {
             const inputKey = document.getElementById('simKeyInput').value.trim();
             const resultBox = document.getElementById('simResultBox');
@@ -998,7 +975,7 @@
             if (!inputKey) {
                 resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Vui lòng nhập mã License Key cần reset HWID!';
+                resultBox.innerText = '❌ Vui lòng nhập mã License Key cần reset!';
                 return;
             }
 
@@ -1016,7 +993,7 @@
 
             resultBox.style.background = 'rgba(139, 92, 246, 0.15)';
             resultBox.style.color = '#a78bfa';
-            resultBox.innerText = `🔄 Đã Reset HWID thành công! Số thiết bị đã về 0/ ${l.maxDevices}. Bạn có thể đăng nhập thiết bị mới.`;
+            resultBox.innerText = '🔄 Đã Reset HWID thành công! Trạng thái hiện tại: 0/1 thiết bị.';
         }
 
         function renderLicenses() {
@@ -1051,14 +1028,13 @@
                 }
 
                 const currentDev = l.currentDevices || 0;
-                const maxDev = l.maxDevices || 1;
 
                 return `
                     <tr>
                         <td><span class="key-code" onclick="copyKey('${l.key}')">${l.key}</span></td>
                         <td>
                             <span class="badge ${badgeClass}">${statusText}</span><br>
-                            <small style="color: #38bdf8;">🖥️ Thiết bị: ${currentDev} / ${maxDev} máy</small>
+                            <small style="color: #38bdf8;">🖥️ Thiết bị: ${currentDev} / 1 máy</small>
                         </td>
                         <td><span class="countdown-timer" data-index="${originalIdx}" data-expiry="${l.expiryTimestamp}" data-status="${l.status}">Đang tính toán...</span></td>
                         <td>
