@@ -7,42 +7,33 @@ export default async function handler(req, res) {
     const { key, hwid } = req.query;
 
     if (!key) {
-      return res.status(400).json({ status: "error", message: "Thiếu Key bản quyền!" });
+      return res.status(400).json({ message: "Thiếu Key bản quyền!" });
     }
 
-    // 1. Lấy toàn bộ dữ liệu trong bảng license_keys
+    // Truy vấn vào cột 'license_keys' trong bảng 'license_keys'
     const { data, error } = await supabase
       .from('license_keys')
-      .select('*');
+      .select('*')
+      .eq('license_keys', key);
 
-    if (error || !data || data.length === 0) {
-      return res.status(404).json({ status: "error", message: "Không tìm thấy dữ liệu trên web!" });
+    if (error) {
+      return res.status(500).json({ message: "Lỗi truy vấn Database: " + error.message });
     }
 
-    // 2. Dò tìm key trong tất cả các cột của bảng
-    let matchedRow = null;
-    for (const row of data) {
-      for (const col in row) {
-        if (String(row[col]).trim() === String(key).trim()) {
-          matchedRow = row;
-          break;
-        }
-      }
-      if (matchedRow) break;
+    if (!data || data.length === 0) {
+      return res.status(404).json({ message: "Key không tồn tại trên hệ thống web!" });
     }
 
-    if (!matchedRow) {
-      return res.status(404).json({ status: "error", message: "Key không tồn tại trên hệ thống web!" });
+    const keyData = data[0];
+
+    // Kiểm tra trạng thái bị ban
+    if (keyData.status === 'banned') {
+      return res.status(400).json({ message: "banned" });
     }
 
-    // 3. Kiểm tra trạng thái
-    if (matchedRow.status === 'banned') {
-      return res.status(400).json({ status: "banned", message: "Key đã bị khóa!" });
-    }
+    let currentHwid = keyData.hwid;
 
-    let currentHwid = matchedRow.hwid;
-
-    // 4. Tự động gán HWID nếu chưa có
+    // Tự động gán HWID (Auto-bind) ngay lần đăng nhập đầu tiên
     if (!currentHwid || currentHwid === "none" || currentHwid === "" || currentHwid === null) {
       const { error: updateError } = await supabase
         .from('license_keys')
@@ -50,25 +41,28 @@ export default async function handler(req, res) {
           hwid: hwid || "default_hwid", 
           status: 'active' 
         })
-        .eq('id', matchedRow.id);
+        .eq('license_keys', key);
 
       if (updateError) {
-        return res.status(500).json({ status: "error", message: "Lỗi cập nhật HWID!" });
+        return res.status(500).json({ message: "Lỗi cập nhật thiết bị: " + updateError.message });
       }
+
+      keyData.hwid = hwid;
+      keyData.status = 'active';
     } 
     else if (hwid && currentHwid !== hwid) {
-      return res.status(400).json({ status: "device_locked", message: "Key đã được dùng ở máy khác!" });
+      // Nếu máy khác vào
+      return res.status(400).json({ message: "device_locked" });
     }
 
-    // 5. Trả về kết quả thành công hoàn toàn
+    // Trả về thành công
     return res.status(200).json({
-      status: "success",
-      message: "Đăng nhập thành công!",
+      message: "Thành công",
       total_keys: 1,
-      data: [matchedRow]
+      data: [keyData]
     });
 
   } catch (err) {
-    return res.status(500).json({ status: "error", message: "Lỗi Server: " + err.message });
+    return res.status(500).json({ message: "Lỗi Server: " + err.message });
   }
 }
