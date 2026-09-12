@@ -661,7 +661,6 @@
 
         window.onload = function() {
             handleLogout();
-            // Tự động cập nhật thời gian đếm ngược mỗi giây cho các key đang hoạt động
             setInterval(updateCountdowns, 1000);
         };
 
@@ -906,7 +905,7 @@
             updateCountdowns();
         }
 
-        // Hàm cập nhật đồng hồ đếm ngược cho bảng quản lý key
+        // Cập nhật đồng hồ đếm ngược
         function updateCountdowns() {
             const timers = document.querySelectorAll('.countdown-timer');
             const now = Date.now();
@@ -916,40 +915,43 @@
                 const status = timer.getAttribute('data-status');
                 const duration = timer.getAttribute('data-duration');
 
-                if (status === 'Unactivated') {
+                if (status === 'Banned') {
+                    timer.innerText = 'Đã bị khóa';
+                    timer.style.color = '#f87171';
+                } else if (expiry && expiry !== 'null' && expiry !== 'undefined') {
+                    if (expiry === 'Lifetime') {
+                        timer.innerText = 'Vĩnh viễn (Lifetime)';
+                        timer.style.color = '#34d399';
+                    } else {
+                        const diff = parseInt(expiry) - now;
+                        if (diff <= 0) {
+                            timer.innerText = 'Đã hết hạn';
+                            timer.style.color = '#f87171';
+                        } else {
+                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                            timer.innerText = `${days} ngày ${hours}h ${minutes}m ${seconds}s`;
+                            timer.style.color = '#38bdf8';
+                        }
+                    }
+                } else {
                     timer.innerText = duration === '365' ? 'Vĩnh viễn (Chưa kích hoạt)' : `${duration} Ngày (Chưa kích hoạt)`;
                     timer.style.color = '#94a3b8';
-                } else if (expiry === 'Lifetime') {
-                    timer.innerText = 'Vĩnh viễn (Lifetime)';
-                    timer.style.color = '#34d399';
-                } else if (!expiry || expiry === 'null') {
-                    timer.innerText = 'Chưa bắt đầu';
-                    timer.style.color = '#94a3b8';
-                } else {
-                    const diff = parseInt(expiry) - now;
-                    if (diff <= 0) {
-                        timer.innerText = 'Đã hết hạn';
-                        timer.style.color = '#f87171';
-                    } else {
-                        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-                        timer.innerText = `${days} ngày ${hours}h ${minutes}m ${seconds}s`;
-                        timer.style.color = '#38bdf8';
-                    }
                 }
             });
         }
 
+        // FIX: Đặt lại HWID nhưng giữ nguyên thời gian đếm ngược hiện tại
         function resetHwid(idx) {
             db.licenses[idx].hwid = 'Chưa liên kết';
             db.licenses[idx].status = 'Unactivated';
-            db.licenses[idx].expiryTimestamp = null;
+            // Không gán expiryTimestamp = null ở đây để giữ nguyên thời gian còn lại của key!
             saveData();
             renderLicenses();
-            showToast("Đã đặt lại HWID thành công!");
+            showToast("Đã đặt lại HWID thành công (Giữ nguyên thời gian)!");
         }
 
         function toggleBan(idx) {
@@ -970,6 +972,7 @@
             }
         }
 
+        // FIX: Kiểm tra hoặc kích hoạt key (nếu đã có expiryTimestamp trước đó thì không reset lại giờ)
         function verifyKeyWithHwid() {
             const keyVal = document.getElementById('checkKeyInput').value.trim();
             const hwidVal = document.getElementById('checkHwidInput').value.trim();
@@ -995,14 +998,18 @@
 
             const now = Date.now();
 
+            // Nếu key chưa liên kết hoặc vừa được reset HWID
             if(found.hwid === 'Chưa liên kết' || !found.hwid) {
                 found.hwid = hwidVal;
                 found.status = 'Active';
                 
-                if(found.durationDays !== 365) {
-                    found.expiryTimestamp = now + (found.durationDays * 24 * 60 * 60 * 1000);
-                } else {
-                    found.expiryTimestamp = 'Lifetime';
+                // Chỉ thiết lập thời hạn mới nếu key này CHƯA TỪNG được kích hoạt trước đó
+                if(!found.expiryTimestamp) {
+                    if(found.durationDays !== 365) {
+                        found.expiryTimestamp = now + (found.durationDays * 24 * 60 * 60 * 1000);
+                    } else {
+                        found.expiryTimestamp = 'Lifetime';
+                    }
                 }
 
                 saveData();
@@ -1011,6 +1018,7 @@
                 return;
             }
 
+            // Kiểm tra xem key đã hết hạn chưa (nếu không phải vĩnh viễn)
             if(found.expiryTimestamp !== 'Lifetime' && found.expiryTimestamp && now > found.expiryTimestamp) {
                 resultBox.innerHTML = `<span style="color: #f87171;">Key đã hết hạn sử dụng!</span>`;
                 return;
@@ -1019,7 +1027,7 @@
             if(found.hwid === hwidVal) {
                 resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Đăng nhập thành công! (Thiết bị trùng khớp)</span>`;
             } else {
-                resultBox.innerHTML = `<span style="color: #f87171; font-weight: bold;">Đăng nhập thất bại: Key đã được kích hoạt trên thiết bị khác! Vui lòng đặt lại HWID trên web.</span>`;
+                resultBox.innerHTML = `<span style="color: #f87171; font-weight: bold;">Đăng nhập thất bại: Key đang được sử dụng ở thiết bị khác! Vui lòng yêu cầu Admin đặt lại HWID.</span>`;
             }
         }
     </script>
