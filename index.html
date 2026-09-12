@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DOBI MANAGER - Key System</title>
+    <title>DOBI AUTH - License Manager</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,203 +12,280 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         body {
-            background-color: #0b0b0b;
-            color: #ffffff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 20px;
         }
         .container {
-            background: #161616;
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
-            width: 100%;
-            max-width: 420px;
-            text-align: center;
-            border: 1px solid #262626;
+            max-width: 1000px;
+            margin: 0 auto;
         }
-        h1 {
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+        header h1 {
+            font-size: 22px;
+            color: #38bdf8;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #1e293b;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            text-align: center;
+        }
+        .stat-card h3 {
+            font-size: 14px;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+        .stat-card p {
             font-size: 20px;
-            margin-bottom: 6px;
-            letter-spacing: 1px;
-            color: #f1f1f1;
+            font-weight: bold;
+            color: #f8fafc;
         }
-        p {
-            color: #888;
-            font-size: 13px;
+        .panel {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #334155;
+            margin-bottom: 20px;
+        }
+        .panel h2 {
+            font-size: 16px;
             margin-bottom: 15px;
+            color: #cbd5e1;
         }
-        .status-box {
-            background: #1f1f1f;
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 4px solid #4CAF50;
-            font-size: 13px;
-            color: #ddd;
-            margin-bottom: 12px;
-            text-align: left;
+        .form-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
-        input {
-            width: 100%;
-            padding: 8px;
-            background: #111;
-            border: 1px solid #444;
+        input, select {
+            flex: 1;
+            padding: 10px;
+            background: #0f172a;
+            border: 1px solid #475569;
             color: #fff;
-            border-radius: 5px;
-            margin-top: 6px;
-            margin-bottom: 6px;
-            font-size: 13px;
-            text-align: center;
+            border-radius: 6px;
+            font-size: 14px;
         }
         button {
-            background-color: #4CAF50;
+            background-color: #0ea5e9;
             color: white;
             border: none;
-            padding: 9px;
-            font-size: 13px;
+            padding: 10px 20px;
+            font-size: 14px;
             font-weight: bold;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            width: 100%;
-            margin-top: 4px;
             transition: 0.2s;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #0284c7;
         }
-        .btn-check {
-            background-color: #2196F3;
+        .btn-danger {
+            background-color: #ef4444;
         }
-        .btn-check:hover {
-            background-color: #0b7dda;
+        .btn-danger:hover {
+            background-color: dc2626;
         }
-        .btn-reset {
-            background-color: #ff9800;
-        }
-        .btn-reset:hover {
-            background-color: #e68900;
-        }
-        .result-text {
-            margin-top: 6px;
-            font-size: 12px;
-            font-family: monospace;
-            word-break: break-all;
-        }
-        .success { color: #4CAF50; }
-        .error { color: #f44336; }
-        .info { color: #ff9800; }
-        .footer {
+        table {
+            width: 100%;
+            border-collapse: collapse;
             margin-top: 10px;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #334155;
+        }
+        th {
+            background-color: #0f172a;
+            color: #94a3b8;
+        }
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
             font-size: 11px;
-            color: #555;
+            font-weight: bold;
+        }
+        .badge-active { background: #065f46; color: #34d399; }
+        .badge-banned { background: #7f1d1d; color: #f87171; }
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+        .action-btns button {
+            padding: 5px 10px;
+            font-size: 11px;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>DOBI X MANAGER</h1>
-        <p>Hệ thống quản lý & Xác thực Key</p>
-        
-        <div class="status-box">
-            Trạng thái: <span style="color: #4CAF50; font-weight: bold;">Đang hoạt động (Online)</span>
+        <!-- Header -->
+        <header>
+            <h1>⚡ DOBI AUTH DASHBOARD</h1>
+            <span style="font-size: 13px; color: #34d399;">● Hệ thống đang hoạt động</span>
+        </header>
+
+        <!-- Thống kê nhanh -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Tổng số Key</h3>
+                <p id="totalKeys">3</p>
+            </div>
+            <div class="stat-card">
+                <h3>Đang hoạt động</h3>
+                <p id="activeKeys" style="color: #34d399;">2</p>
+            </div>
+            <div class="stat-card">
+                <h3>Đã khóa (Banned)</h3>
+                <p id="bannedKeys" style="color: #f87171;">1</p>
+            </div>
         </div>
 
-        <!-- Khung Tạo Key -->
-        <div class="status-box">
-            <button onclick="createKey()">TẠO KEY MỚI NGAY</button>
-            <div id="createResult" class="result-text success"></div>
+        <!-- Bảng điều khiển tạo Key -->
+        <div class="panel">
+            <h2>Tạo Key Bản Quyền Mới</h2>
+            <div class="form-group">
+                <input type="text" id="keyPrefix" placeholder="Nhập tiền tố (Ví dụ: DOBI-VIP)" value="DOBI-PRO">
+                <select id="keyDuration">
+                    <option value="1">Thời hạn: 1 Ngày</option>
+                    <option value="7" selected>Thời hạn: 7 Ngày</option>
+                    <option value="30">Thời hạn: 30 Ngày</option>
+                    <option value="365">Thời hạn: Vĩnh viễn</option>
+                </select>
+                <button onclick="generateKey()">Tạo Key</button>
+            </div>
         </div>
 
-        <!-- Khung Kiểm Tra Key & Đếm Ngược / Reset HWID -->
-        <div class="status-box">
-            <div style="font-size: 12px; color: #aaa;">Kiểm tra / Quản lý Key:</div>
-            <input type="text" id="inputKeyToCheck" placeholder="Dán key vào đây...">
-            <button class="btn-check" onclick="verifyKey()">KIỂM TRA THÔNG TIN</button>
-            <button class="btn-reset" onclick="resetHwid()" style="margin-top: 6px;">RESET HWID (MỞ KHÓA MÁY)</button>
-            <div id="checkResult" class="result-text"></div>
-        </div>
-
-        <div class="footer">
-            &copy; 2026 Dobi Project. All rights reserved.
+        <!-- Danh sách Key quản lý -->
+        <div class="panel">
+            <h2>Danh Sách Key Quản Lý</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Key Bản Quyền</th>
+                        <th>Trạng thái</th>
+                        <th>Thiết bị (HWID)</th>
+                        <th>Thời gian còn lại</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="keyListTable">
+                    <tr>
+                        <td><code>DOBI-PRO-X9Z8-Y2W1</code></td>
+                        <td><span class="badge badge-active">Active</span></td>
+                        <td><code>PC-WIN11-89FA</code></td>
+                        <td class="countdown" data-expire="1775000000">Đang đếm ngược...</td>
+                        <td>
+                            <div class="action-btns">
+                                <button onclick="resetHwid(this)">Reset HWID</button>
+                                <button class="btn-danger" onclick="deleteKey(this)">Xóa</button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><code>DOBI-VIP-A1B2-C3D4</code></td>
+                        <td><span class="badge badge-banned">Banned</span></td>
+                        <td><code>Chưa liên kết</code></td>
+                        <td>Đã hết hạn</td>
+                        <td>
+                            <div class="action-btns">
+                                <button onclick="resetHwid(this)">Reset HWID</button>
+                                <button class="btn-danger" onclick="deleteKey(this)">Xóa</button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        // Hàm tạo key mới mô phỏng
-        function createKey() {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let randomPart1 = "";
-            let randomPart2 = "";
-            for (let i = 0; i < 6; i++) randomPart1 += chars.charAt(Math.floor(Math.random() * chars.length));
-            for (let i = 0; i < 6; i++) randomPart2 += chars.charAt(Math.floor(Math.random() * chars.length));
-            
-            const finalKey = `DOBI-${randomPart1}-${randomPart2}`;
+        // Tạo key mới thêm vào bảng
+        function generateKey() {
+            const prefix = document.getElementById("keyPrefix").value || "DOBI";
+            const rand1 = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const rand2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+            const newKey = `${prefix}-${rand1}-${rand2}`;
 
-            const resultEl = document.getElementById("createResult");
-            resultEl.className = "result-text success";
-            resultEl.innerText = "Đã tạo & copy: " + finalKey;
-            
-            document.getElementById("inputKeyToCheck").value = finalKey;
-            navigator.clipboard.writeText(finalKey);
+            const table = document.getElementById("keyListTable");
+            const row = table.insertRow(0);
+
+            row.innerHTML = `
+                <td><code>${newKey}</code></td>
+                <td><span class="badge badge-active">Active</span></td>
+                <td><code>Chưa liên kết</code></td>
+                <td class="countdown" data-expire="${Math.floor(Date.now() / 1000) + 86400 * 7}">7 Ngày 00h</td>
+                <td>
+                    <div class="action-btns">
+                        <button onclick="resetHwid(this)">Reset HWID</button>
+                        <button class="btn-danger" onclick="deleteKey(this)">Xóa</button>
+                    </div>
+                </td>
+            `;
+            updateStats();
+            alert("Đã tạo key thành công: " + newKey);
         }
 
-        // Kiểm tra thông tin key, thời gian hết hạn (đếm ngược) và trạng thái HWID
-        function verifyKey() {
-            const key = document.getElementById("inputKeyToCheck").value.trim();
-            const resultEl = document.getElementById("checkResult");
-
-            if (!key || !key.startsWith("DOBI-")) {
-                resultEl.className = "result-text error";
-                resultEl.innerText = "Key sai định dạng hệ thống!";
-                return;
-            }
-
-            // Giả lập thời hạn key (ví dụ: Key có hạn 24 giờ kể từ lúc kiểm tra hoặc hiển thị mẫu)
-            resultEl.className = "result-text info";
-            resultEl.innerHTML = `✓ Key hợp lệ!<br>• Trạng thái: Đang hoạt động<br>• Thiết bị (HWID): Chưa liên kết<br>• Thời gian còn lại: <span id="countdown" style="color: #4CAF50; font-weight: bold;">23h 59m 50s</span>`;
-            
-            // Chạy hiệu ứng đếm ngược giả lập thời gian sử dụng
-            startCountdown(24 * 3600); 
+        // Xóa key
+        function deleteKey(button) {
+            const row = button.closest("tr");
+            row.remove();
+            updateStats();
         }
 
-        function resetHwid() {
-            const key = document.getElementById("inputKeyToCheck").value.trim();
-            const resultEl = document.getElementById("checkResult");
-
-            if (!key) {
-                resultEl.className = "result-text error";
-                resultEl.innerText = "Vui lòng nhập key cần reset HWID!";
-                return;
-            }
-
-            resultEl.className = "result-text success";
-            resultEl.innerText = "Đã Reset HWID thành công! Key có thể dùng cho máy mới.";
+        // Reset HWID của key
+        function resetHwid(button) {
+            const row = button.closest("tr");
+            const hwidCell = row.cells[2];
+            hwidCell.innerHTML = "<code>Chưa liên kết</code>";
+            alert("Đã reset HWID thành công! Key đã sẵn sàng cho máy mới.");
         }
 
-        function startCountdown(durationSeconds) {
-            let timer = durationSeconds;
-            setInterval(function () {
-                let hours = parseInt(timer / 3600, 10);
-                let minutes = parseInt((timer % 3600) / 60, 10);
-                let seconds = parseInt(timer % 60, 10);
+        // Cập nhật bộ đếm thống kê
+        function updateStats() {
+            const rows = document.getElementById("keyListTable").rows.length;
+            document.getElementById("totalKeys").innerText = rows;
+        }
 
-                hours = hours < 10 ? "0" + hours : hours;
-                minutes = minutes < 10 ? "0" + minutes : minutes;
-                seconds = seconds < 10 ? "0" + seconds : seconds;
+        // Vòng lặp cập nhật thời gian đếm ngược trực quan
+        setInterval(() => {
+            const countdownElements = document.querySelectorAll(".countdown");
+            countdownElements.forEach(el => {
+                const expireTime = parseInt(el.getAttribute("data-expire"));
+                const now = Math.floor(Date.now() / 1000);
+                let diff = expireTime - now;
 
-                const cdElement = document.getElementById("countdown");
-                if (cdElement) {
-                    cdElement.textContent = hours + "h " + minutes + "m " + seconds + "s";
+                if (diff <= 0) {
+                    el.innerText = "Hết hạn";
+                    el.style.color = "#ef4444";
+                } else {
+                    let days = Math.floor(diff / 86400);
+                    let hours = Math.floor((diff % 86400) / 3600);
+                    let minutes = Math.floor((diff % 3600) / 60);
+                    el.innerText = `${days} ngày ${hours}h ${minutes}p`;
                 }
-                if (--timer < 0) {
-                    timer = 0;
-                }
-            }, 1000);
-        }
+            });
+        }, 1000);
     </script>
-
 </body>
 </html>
