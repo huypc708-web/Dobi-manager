@@ -1,9 +1,8 @@
-import crypto from 'crypto';
+import { createClient } from '@supabase/supabase-js'
 
-// Một chuỗi bí mật (Secret Key) dùng để ký và giải mã key. Hãy giữ bí mật chuỗi này!
-const SECRET_SIGNATURE = "DOBI_SECRET_KEY_2026_PRO";
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   try {
     const { key, hwid } = req.query;
 
@@ -11,36 +10,57 @@ export default function handler(req, res) {
       return res.status(400).json({ message: "Thiếu Key bản quyền!" });
     }
 
-    // Kiểm tra định dạng cơ bản (ví dụ phải bắt đầu bằng DOBI-)
-    if (!key.startsWith("DOBI-")) {
-      return res.status(404).json({ message: "Key không đúng định dạng hệ thống!" });
+    // Truy vấn vào bảng 'license_keys'
+    const { data, error } = await supabase
+      .from('license_keys')
+      .select('*')
+      .eq('license_keys', key);
+
+    if (error) {
+      return res.status(500).json({ message: "Lỗi truy vấn Database: " + error.message });
     }
 
-    // Giải mã và kiểm tra tính hợp lệ của key dựa trên thuật toán chữ ký
-    const parts = key.split("-");
-    if (parts.length < 3) {
-      return res.status(404).json({ message: "Key không hợp lệ!" });
+    if (!data || data.length === 0) {
+      return res.status(404).json({ message: "Key không tồn tại trên hệ thống web!" });
     }
 
-    // Thuật toán kiểm tra chữ ký ẩn bên trong Key
-    const hashCheck = crypto.createHmac('sha256', SECRET_SIGNATURE)
-                            .update(parts[0] + "-" + parts[1])
-                            .digest('hex')
-                            .substring(0, 6)
-                            .toUpperCase();
+    const keyData = data[0];
 
-    // Lấy phần đuôi của key để so sánh chữ ký bảo mật
-    const clientSignature = parts[2];
-
-    // Nếu chữ ký khớp hoàn toàn, nghĩa là key này do hệ thống tạo ra -> Cho phép đăng nhập ngay
-    if (clientSignature === hashCheck) {
-      return res.status(200).json({ 
-        message: "Thành công", 
-        hwid: hwid || "unknown" 
-      });
-    } else {
-      return res.status(404).json({ message: "Key giả mạo hoặc không tồn tại trên hệ thống!" });
+    // Kiểm tra trạng thái bị ban
+    if (keyData.status === 'banned') {
+      return res.status(400).json({ message: "banned" });
     }
+
+    let currentHwid = keyData.hwid;
+
+    // Tự động gán HWID (Auto-bind) ngay lần đăng nhập đầu tiên
+    if (!currentHwid || currentHwid === "none" || currentHwid === "" || currentHwid === null) {
+      const { error: updateError } = await supabase
+        .from('license_keys')
+        .update({ 
+          hwid: hwid || "default_hwid", 
+          status: 'active' 
+        })
+        .eq('license_keys', key);
+
+      if (updateError) {
+        return res.status(500).json({ message: "Lỗi cập nhật thiết bị: " + updateError.message });
+      }
+
+      keyData.hwid = hwid;
+      keyData.status = 'active';
+    } 
+    else if (hwid && currentHwid !== hwid) {
+      // Nếu máy khác vào
+      return res.status(400).json({ message: "device_locked" });
+    }
+
+    // Trả về thành công
+    return res.status(200).json({
+      message: "Thành công",
+      total_keys: 1,
+      data: [keyData]
+    });
 
   } catch (err) {
     return res.status(500).json({ message: "Lỗi Server: " + err.message });
