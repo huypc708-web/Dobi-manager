@@ -822,16 +822,8 @@
             const p2 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const p3 = Math.random().toString(36).substring(2, 6).toUpperCase();
             
-            const now = Date.now();
-            let expiry = 'Lifetime';
-            let multiplier = 0;
-            if (unit === 'minutes') multiplier = 60 * 1000;
-            else if (unit === 'hours') multiplier = 60 * 60 * 1000;
-            else if (unit === 'days') multiplier = 24 * 60 * 60 * 1000;
-
-            if (unit !== 'lifetime') {
-                expiry = now + (val * multiplier);
-            }
+            // Key mới tạo sẽ chưa kích hoạt nên thời hạn ban đầu là 'NotActivated'
+            let expiry = 'NotActivated';
 
             db.licenses.push({
                 key: `${appName.substring(0,4).toUpperCase()}-${p1}-${p2}-${p3}`,
@@ -878,7 +870,7 @@
             const newVal = parseInt(document.getElementById('editDurationValue').value) || 1;
             const newUnit = document.getElementById('editDurationUnit').value;
             
-            db.licenses[idx].maxDevices = 1; // Luôn giữ tối đa 1 thiết bị
+            db.licenses[idx].maxDevices = 1; 
             db.licenses[idx].durationValue = newVal;
             db.licenses[idx].durationUnit = newUnit;
             
@@ -889,7 +881,11 @@
                 let multiplier = 24 * 60 * 60 * 1000;
                 if (newUnit === 'minutes') multiplier = 60 * 1000;
                 else if (newUnit === 'hours') multiplier = 60 * 60 * 1000;
-                db.licenses[idx].expiryTimestamp = now + (newVal * multiplier);
+                
+                // Nếu key đã từng được kích hoạt rồi thì tính lại mốc mới từ hiện tại, ngược lại giữ nguyên NotActivated
+                if (db.licenses[idx].expiryTimestamp && db.licenses[idx].expiryTimestamp !== 'NotActivated') {
+                    db.licenses[idx].expiryTimestamp = now + (newVal * multiplier);
+                }
             }
 
             db.licenses[idx].status = 'Active';
@@ -941,11 +937,27 @@
             }
 
             const now = Date.now();
-            if (l.expiryTimestamp !== 'Lifetime' && now > parseInt(l.expiryTimestamp)) {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Key này đã hết hạn sử dụng!';
-                return;
+
+            // KIỂM TRA VÀ KÍCH HOẠT THỜI GIAN LẦN ĐẦU KHI CÓ THIẾT BỊ DÙNG
+            if (l.expiryTimestamp === 'NotActivated' || !l.expiryTimestamp) {
+                if (l.durationUnit === 'lifetime') {
+                    l.expiryTimestamp = 'Lifetime';
+                } else {
+                    let multiplier = 24 * 60 * 60 * 1000;
+                    if (l.durationUnit === 'minutes') multiplier = 60 * 1000;
+                    else if (l.durationUnit === 'hours') multiplier = 60 * 60 * 1000;
+                    
+                    // Bắt đầu tính giờ/ngày hết hạn từ thời điểm kích hoạt này
+                    l.expiryTimestamp = now + (l.durationValue * multiplier);
+                }
+            } else {
+                // Kiểm tra hết hạn thông thường nếu đã kích hoạt trước đó
+                if (l.expiryTimestamp !== 'Lifetime' && now > parseInt(l.expiryTimestamp)) {
+                    resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                    resultBox.style.color = '#f87171';
+                    resultBox.innerText = '❌ Key này đã hết hạn sử dụng!';
+                    return;
+                }
             }
 
             l.maxDevices = 1;
@@ -963,7 +975,7 @@
 
             resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
             resultBox.style.color = '#34d399';
-            resultBox.innerText = '✅ Xác thực thành công! (Đang dùng: 1/1 thiết bị)';
+            resultBox.innerText = '✅ Xác thực thành công! (Bắt đầu tính thời gian sử dụng)';
         }
 
         function simulateClientResetHWID() {
@@ -1079,6 +1091,9 @@
                         timer.innerText = 'Đã đóng băng';
                     }
                     timer.style.color = '#f87171';
+                } else if (expiry === 'NotActivated' || !expiry) {
+                    timer.innerText = 'Chưa kích hoạt';
+                    timer.style.color = '#94a3b8';
                 } else if (expiry && expiry !== 'null' && expiry !== 'undefined') {
                     if (expiry === 'Lifetime') {
                         timer.innerText = 'Vĩnh viễn';
@@ -1113,13 +1128,13 @@
             const now = Date.now();
 
             if (l.status === 'Banned') {
-                if (l.expiryTimestamp !== 'Lifetime' && l.remainingTimeBeforeBan) {
+                if (l.expiryTimestamp !== 'Lifetime' && l.expiryTimestamp !== 'NotActivated' && l.remainingTimeBeforeBan) {
                     l.expiryTimestamp = now + l.remainingTimeBeforeBan;
                     delete l.remainingTimeBeforeBan;
                 }
                 l.status = 'Active';
             } else {
-                if (l.expiryTimestamp !== 'Lifetime') {
+                if (l.expiryTimestamp !== 'Lifetime' && l.expiryTimestamp !== 'NotActivated') {
                     const timeLeft = parseInt(l.expiryTimestamp) - now;
                     l.remainingTimeBeforeBan = timeLeft > 0 ? timeLeft : 0;
                 }
