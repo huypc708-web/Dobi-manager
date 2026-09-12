@@ -348,7 +348,6 @@
         .badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block; }
         .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; }
         .badge-banned { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-        .badge-unactivated { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
 
         .action-btns {
             display: flex;
@@ -364,8 +363,8 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .btn-reset { background: #3b82f6; color: #fff; }
-        .btn-reset:hover { background: #2563eb; }
+        .btn-edit { background: #3b82f6; color: #fff; }
+        .btn-edit:hover { background: #2563eb; }
         .btn-ban { background: #f59e0b; color: #fff; }
         .btn-ban:hover { background: #d97706; }
         .btn-unban { background: #10b981; color: #fff; }
@@ -590,7 +589,6 @@
                     <select id="statusFilter" onchange="renderLicenses()">
                         <option value="">Tất cả trạng thái</option>
                         <option value="Active">Đang hoạt động (Active)</option>
-                        <option value="Unactivated">Chưa kích hoạt</option>
                         <option value="Banned">Đã khóa (Banned)</option>
                     </select>
                     <select id="appSelectFilter" onchange="renderLicenses()">
@@ -812,7 +810,7 @@
         function openLicenseModal() {
             if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Ứng dụng trước khi tạo License Key!');
             document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Tạo License Key Mới</h3>
+                <h3>Tạo License Key Mới (Tự động tính giờ)</h3>
                 <select id="modalAppSelect">${db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('')}</select>
                 <select id="modalDurationDays">
                     <option value="1">1 Ngày</option>
@@ -820,6 +818,7 @@
                     <option value="30">30 Ngày</option>
                     <option value="365">Vĩnh viễn (Lifetime)</option>
                 </select>
+                <input type="text" id="modalHwidInput" placeholder="Nhập HWID tùy chỉnh (hoặc để trống tự động nhận)">
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="closeModal()">Hủy</button>
                     <button class="btn-primary" onclick="generateLicense()">Tạo Key</button>
@@ -831,20 +830,74 @@
         function generateLicense() {
             const appName = document.getElementById('modalAppSelect').value;
             const days = parseInt(document.getElementById('modalDurationDays').value);
+            const customHwid = document.getElementById('modalHwidInput').value.trim();
             const p1 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const p2 = Math.random().toString(36).substring(2, 6).toUpperCase();
             const p3 = Math.random().toString(36).substring(2, 6).toUpperCase();
             
+            const now = Date.now();
+            const assignedHwid = customHwid !== "" ? customHwid : `HWID_${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+            
+            let expiry = 'Lifetime';
+            if (days !== 365) {
+                expiry = now + (days * 24 * 60 * 60 * 1000);
+            }
+
             db.licenses.push({
                 key: `${appName.substring(0,4).toUpperCase()}-${p1}-${p2}-${p3}`,
-                status: 'Unactivated',
-                hwid: 'Chưa liên kết',
+                status: 'Active', // Mặc định luôn là Active ngay khi tạo
+                hwid: assignedHwid, // Cho phép tùy chỉnh HWID ngay từ lúc tạo
                 durationDays: days,
-                expiryTimestamp: null
+                expiryTimestamp: expiry // Bắt đầu tính thời gian ngay lập tức
             });
             saveData();
             closeModal();
             renderLicenses();
+        }
+
+        // Mở Modal Chỉnh sửa HWID hoặc Thời gian của Key
+        function openEditLicenseModal(originalIdx) {
+            const l = db.licenses[originalIdx];
+            document.getElementById('modalBodyContent').innerHTML = `
+                <h3>Tùy chỉnh Key: ${l.key}</h3>
+                <label style="font-size: 12px; color: #94a3b8;">Mã thiết bị (HWID):</label>
+                <input type="text" id="editHwidInput" value="${l.hwid}">
+                
+                <label style="font-size: 12px; color: #94a3b8;">Thời hạn mới:</label>
+                <select id="editDurationDays">
+                    <option value="1" ${l.durationDays === 1 ? 'selected' : ''}>1 Ngày</option>
+                    <option value="7" ${l.durationDays === 7 ? 'selected' : ''}>7 Ngày</option>
+                    <option value="30" ${l.durationDays === 30 ? 'selected' : ''}>30 Ngày</option>
+                    <option value="365" ${l.durationDays === 365 ? 'selected' : ''}>Vĩnh viễn (Lifetime)</option>
+                </select>
+                <div class="modal-btns">
+                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                    <button class="btn-primary" onclick="saveEditedLicense(${originalIdx})">Lưu thay đổi</button>
+                </div>
+            `;
+            document.getElementById('globalModal').style.display = 'flex';
+        }
+
+        function saveEditedLicense(idx) {
+            const newHwid = document.getElementById('editHwidInput').value.trim();
+            const newDays = parseInt(document.getElementById('editDurationDays').value);
+            
+            db.licenses[idx].hwid = newHwid !== "" ? newHwid : "Chưa liên kết";
+            db.licenses[idx].durationDays = newDays;
+            
+            const now = Date.now();
+            if (newDays === 365) {
+                db.licenses[idx].expiryTimestamp = 'Lifetime';
+            } else {
+                // Đặt lại thời gian bắt đầu tính từ thời điểm chỉnh sửa hiện tại hoặc giữ mốc cũ tùy ý
+                db.licenses[idx].expiryTimestamp = now + (newDays * 24 * 60 * 60 * 1000);
+            }
+
+            db.licenses[idx].status = 'Active';
+            saveData();
+            closeModal();
+            renderLicenses();
+            showToast("Đã cập nhật thông tin key thành công!");
         }
 
         function renderLicenses() {
@@ -870,12 +923,10 @@
 
             tbody.innerHTML = filtered.map((l) => {
                 const originalIdx = db.licenses.findIndex(item => item.key === l.key);
-                let badgeClass = 'badge-unactivated';
-                let statusText = 'Chưa kích hoạt';
-                if(l.status === 'Active') {
-                    badgeClass = 'badge-active';
-                    statusText = 'Đã kích hoạt';
-                } else if(l.status === 'Banned') {
+                let badgeClass = 'badge-active';
+                let statusText = 'Đang hoạt động';
+                
+                if(l.status === 'Bans' || l.status === 'Banned') {
                     badgeClass = 'badge-banned';
                     statusText = 'Đã khóa';
                 }
@@ -885,12 +936,12 @@
                         <td><span class="key-code" onclick="copyKey('${l.key}')">${l.key}</span></td>
                         <td>
                             <span class="badge ${badgeClass}">${statusText}</span><br>
-                            <small style="color: #64748b;">${l.hwid}</small>
+                            <small style="color: #38bdf8; cursor: pointer;" onclick="openEditLicenseModal(${originalIdx})">🔗 ${l.hwid} (Bấm để sửa)</small>
                         </td>
                         <td><span class="countdown-timer" data-expiry="${l.expiryTimestamp}" data-status="${l.status}" data-duration="${l.durationDays}">Đang tính toán...</span></td>
                         <td>
                             <div class="action-btns">
-                                <button class="btn-action btn-reset" onclick="resetHwid(${originalIdx})">Đặt lại HWID</button>
+                                <button class="btn-action btn-edit" onclick="openEditLicenseModal(${originalIdx})">Sửa HWID/Giờ</button>
                                 ${l.status === 'Banned' ? 
                                     `<button class="btn-action btn-unban" onclick="toggleBan(${originalIdx})">Mở khóa</button>` : 
                                     `<button class="btn-action btn-ban" onclick="toggleBan(${originalIdx})">Khóa</button>`
@@ -905,7 +956,7 @@
             updateCountdowns();
         }
 
-        // Cập nhật đồng hồ đếm ngược
+        // Cập nhật đồng hồ đếm ngược thời gian thực
         function updateCountdowns() {
             const timers = document.querySelectorAll('.countdown-timer');
             const now = Date.now();
@@ -913,7 +964,6 @@
             timers.forEach(timer => {
                 const expiry = timer.getAttribute('data-expiry');
                 const status = timer.getAttribute('data-status');
-                const duration = timer.getAttribute('data-duration');
 
                 if (status === 'Banned') {
                     timer.innerText = 'Đã bị khóa';
@@ -937,25 +987,13 @@
                             timer.style.color = '#38bdf8';
                         }
                     }
-                } else {
-                    timer.innerText = duration === '365' ? 'Vĩnh viễn (Chưa kích hoạt)' : `${duration} Ngày (Chưa kích hoạt)`;
-                    timer.style.color = '#94a3b8';
                 }
             });
         }
 
-        // Đặt lại HWID và trả trạng thái về Unactivated
-        function resetHwid(idx) {
-            db.licenses[idx].hwid = 'Chưa liên kết';
-            db.licenses[idx].status = 'Unactivated';
-            saveData();
-            renderLicenses();
-            showToast("Đã đặt lại HWID thành công!");
-        }
-
         function toggleBan(idx) {
             if(db.licenses[idx].status === 'Banned') {
-                db.licenses[idx].status = (!db.licenses[idx].hwid || db.licenses[idx].hwid === 'Chưa liên kết') ? 'Unactivated' : 'Active';
+                db.licenses[idx].status = 'Active';
             } else {
                 db.licenses[idx].status = 'Banned';
             }
@@ -971,7 +1009,7 @@
             }
         }
 
-        // Xử lý kiểm tra và kích hoạt key ngay lập tức và đẩy lên Firebase
+        // Xử lý kiểm tra/kích hoạt trực tiếp
         function verifyKeyWithHwid() {
             const keyVal = document.getElementById('checkKeyInput').value.trim();
             const hwidVal = document.getElementById('checkHwidInput').value.trim();
@@ -997,26 +1035,24 @@
 
             const now = Date.now();
 
-            // Nếu key chưa được liên kết hoặc đang ở trạng thái Unactivated
-            if(!found.hwid || found.hwid === 'Chưa liên kết' || found.status === 'Unactivated') {
+            // Nếu key chưa có HWID hoặc cho phép ghi đè tự động bắt đầu tính thời gian
+            if(!found.hwid || found.hwid === 'Chưa liên kết') {
                 found.hwid = hwidVal;
-                found.status = 'Active'; // Ép buộc chuyển đổi trạng thái thành Active
+                found.status = 'Active';
                 
-                if(!found.expiryTimestamp) {
-                    if(found.durationDays !== 365) {
-                        found.expiryTimestamp = now + (found.durationDays * 24 * 60 * 60 * 1000);
-                    } else {
-                        found.expiryTimestamp = 'Lifetime';
-                    }
+                if(found.durationDays !== 365) {
+                    found.expiryTimestamp = now + (found.durationDays * 24 * 60 * 60 * 1000);
+                } else {
+                    found.expiryTimestamp = 'Lifetime';
                 }
 
-                saveData(); // Ghi dữ liệu trực tiếp lên Firebase Realtime Database
-                resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Kích hoạt và đăng nhập thành công! (Trạng thái đã cập nhật thành Active)</span>`;
+                saveData();
+                resultBox.innerHTML = `<span style="color: #34d399; font-weight: bold;">Kích hoạt và bắt đầu tính thời gian thành công!</span>`;
                 renderLicenses();
                 return;
             }
 
-            // Kiểm tra thời hạn
+            // Kiểm tra hết hạn
             if(found.expiryTimestamp !== 'Lifetime' && found.expiryTimestamp && now > found.expiryTimestamp) {
                 resultBox.innerHTML = `<span style="color: #f87171;">Key đã hết hạn sử dụng!</span>`;
                 return;
