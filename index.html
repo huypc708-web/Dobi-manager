@@ -19,28 +19,63 @@
             overflow: hidden;
         }
 
-        /* Sidebar bên trái (Đã bỏ phần User) */
+        /* Sidebar bên trái */
         .sidebar {
             width: 260px;
-            background-color: #131822;
-            border-right: 1px solid #1e293b;
+            background-color: #11151c;
+            border-right: 1px solid #1a2230;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding-top: 20px;
+            padding: 15px 10px;
+            overflow-y: auto;
+        }
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 10px 15px 10px;
+            border-bottom: 1px solid #1a2230;
+            margin-bottom: 10px;
+        }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            background: #2563eb;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .user-info .name {
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .user-info .email {
+            color: #64748b;
+            font-size: 11px;
         }
         .nav-menu {
-            padding: 0 10px;
-            flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
+        }
+        .nav-section-title {
+            font-size: 10px;
+            color: #475569;
+            text-transform: uppercase;
+            padding: 10px 12px 4px 12px;
+            letter-spacing: 0.5px;
         }
         .nav-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 14px;
+            padding: 9px 12px;
             color: #94a3b8;
             text-decoration: none;
             font-size: 13px;
@@ -52,9 +87,22 @@
             color: #fff;
         }
         .nav-item.active {
-            background: #1e293b;
+            background: #1e2638;
             color: #fff;
             font-weight: 500;
+        }
+        .sidebar-bottom {
+            border-top: 1px solid #1a2230;
+            padding-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .nav-item.danger {
+            color: #f87171;
+        }
+        .nav-item.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
         }
 
         /* Main Content bên phải */
@@ -62,6 +110,7 @@
             flex: 1;
             padding: 30px;
             overflow-y: auto;
+            background-color: #0b0e14;
         }
         .header-top {
             display: flex;
@@ -209,13 +258,36 @@
 </head>
 <body>
 
-    <!-- Sidebar Trái (Đã xóa thông tin User) -->
+    <!-- Sidebar Trái -->
     <div class="sidebar">
-        <div class="nav-menu">
-            <a href="#" class="nav-item"> Overview</a>
-            <a href="#" class="nav-item"> Applications</a>
-            <a href="#" class="nav-item"> Users</a>
-            <a href="#" class="nav-item active"> Licenses</a>
+        <div>
+            <!-- Thông tin tài khoản User ở trên cùng sidebar -->
+            <div class="user-profile">
+                <div class="avatar">A</div>
+                <div class="user-info">
+                    <div class="name">Free Developer</div>
+                    <div class="email">huypc708@gmail.com</div>
+                </div>
+            </div>
+
+            <!-- Menu chính -->
+            <div class="nav-menu">
+                <a href="#" class="nav-item"> Overview</a>
+                <a href="#" class="nav-item"> Applications</a>
+                <a href="#" class="nav-item"> Users</a>
+                <a href="#" class="nav-item active"> Licenses</a>
+                <a href="#" class="nav-item"> Client Integration</a>
+                <a href="#" class="nav-item"> Instructions</a>
+                <a href="#" class="nav-item"> Webhooks</a>
+                <a href="#" class="nav-item"> Resellers</a>
+            </div>
+        </div>
+
+        <!-- Menu phụ phía dưới sidebar -->
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-item"> Customize UI</a>
+            <a href="#" class="nav-item"> Logout</a>
+            <a href="#" class="nav-item danger"> Delete Account</a>
         </div>
     </div>
 
