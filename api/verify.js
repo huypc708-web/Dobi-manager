@@ -10,10 +10,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "Thiếu Key bản quyền!" });
     }
 
-    // 1. Truy vấn vào bảng chứa key trong Supabase
-    // LƯU Ý: Nếu bảng của bạn tên khác 'licenses', hãy đổi lại tên bảng cho đúng bên dưới
+    // 1. Truy vấn vào đúng bảng license_keys trên Supabase
     const { data, error } = await supabase
-      .from('licenses')
+      .from('license_keys')
       .select('*')
       .eq('key', key);
 
@@ -34,10 +33,10 @@ export default async function handler(req, res) {
 
     let currentHwid = keyData.hwid;
 
-    // 3. Xử lý tự động gán HWID nếu key chưa có thiết bị liên kết
+    // 3. Xử lý tự động gán HWID nếu key chưa liên kết thiết bị
     if (!currentHwid || currentHwid === "none" || currentHwid === "" || currentHwid === null) {
       const { error: updateError } = await supabase
-        .from('licenses')
+        .from('license_keys')
         .update({ 
           hwid: hwid || "default_hwid", 
           status: 'active' 
