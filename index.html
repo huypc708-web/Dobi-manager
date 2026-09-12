@@ -351,7 +351,7 @@
 
         .action-btns {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
         }
         .btn-action {
@@ -365,6 +365,8 @@
         }
         .btn-edit { background: #3b82f6; color: #fff; }
         .btn-edit:hover { background: #2563eb; }
+        .btn-check { background: #8b5cf6; color: #fff; }
+        .btn-check:hover { background: #7c3aed; }
         .btn-ban { background: #f59e0b; color: #fff; }
         .btn-ban:hover { background: #d97706; }
         .btn-unban { background: #10b981; color: #fff; }
@@ -524,7 +526,7 @@
                 </div>
                 <div class="instruction-card">
                     <h3>Trạng thái đồng bộ đám mây</h3>
-                    <p>Hệ thống đã kết nối trực tiếp với <strong>Firebase Realtime Database</strong>[cite: 5]. Mọi thao tác tạo key, kích hoạt hoặc quản lý của bạn sẽ tự động lưu lên mây và cập nhật tức thì trên mọi thiết bị.</p>
+                    <p>Hệ thống đã kết nối trực tiếp với <strong>Firebase Realtime Database</strong>. Mọi thao tác tạo key, kích hoạt hoặc quản lý của bạn sẽ tự động lưu lên mây và cập nhật tức thì trên mọi thiết bị.</p>
                 </div>
             </div>
 
@@ -573,10 +575,10 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 28%;">License Key</th>
-                                <th style="width: 24%;">Trạng thái & HWID</th>
-                                <th style="width: 23%;">Thời gian đếm ngược</th>
-                                <th style="width: 25%;">Thao tác</th>
+                                <th style="width: 26%;">License Key</th>
+                                <th style="width: 22%;">Trạng thái & HWID</th>
+                                <th style="width: 22%;">Thời gian đếm ngược</th>
+                                <th style="width: 30%;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="licenseTableBody">
@@ -888,6 +890,68 @@
             showToast("Đã cập nhật thông tin key thành công!");
         }
 
+        // --- TÍNH NĂNG KIỂM TRA KEY ---
+        function openCheckKeyModal(originalIdx) {
+            const l = db.licenses[originalIdx];
+            document.getElementById('modalBodyContent').innerHTML = `
+                <h3>Kiểm tra Trạng thái Key</h3>
+                <div style="background: #0b0e14; border: 1px solid #1e293b; padding: 14px; border-radius: 6px; margin-bottom: 14px; font-size: 13px;">
+                    <p style="margin-bottom: 6px;"><strong>Key đang test:</strong> <span style="color: #38bdf8; font-family: monospace;">${l.key}</span></p>
+                    <p style="margin-bottom: 6px;"><strong>Trạng thái hệ thống:</strong> <span style="color: ${l.status === 'Active' ? '#34d399' : '#f87171'}">${l.status}</span></p>
+                    <p><strong>HWID đăng ký:</strong> ${l.hwid}</p>
+                </div>
+
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Nhập HWID thiết bị client cần kiểm tra:</label>
+                <input type="text" id="checkClientHwid" value="${l.hwid}" placeholder="Nhập HWID...">
+
+                <div id="checkResultContainer" style="margin-top: 10px; display: none; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 600; text-align: center;"></div>
+
+                <div class="modal-btns">
+                    <button class="btn-cancel" onclick="closeModal()">Đóng</button>
+                    <button class="btn-primary" onclick="simulateCheckKey(${originalIdx})">Thực thi kiểm tra</button>
+                </div>
+            `;
+            document.getElementById('globalModal').style.display = 'flex';
+        }
+
+        function simulateCheckKey(idx) {
+            const l = db.licenses[idx];
+            const clientHwid = document.getElementById('checkClientHwid').value.trim();
+            const resultBox = document.getElementById('checkResultContainer');
+            const now = Date.now();
+
+            resultBox.style.display = 'block';
+
+            // Kiểm tra trạng thái Banned
+            if (l.status === 'Banned') {
+                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                resultBox.style.color = '#f87171';
+                resultBox.innerText = '❌ LỖI: Key này đã bị khóa (Banned) trên hệ thống!';
+                return;
+            }
+
+            // Kiểm tra hết hạn
+            if (l.expiryTimestamp !== 'Lifetime' && now > parseInt(l.expiryTimestamp)) {
+                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                resultBox.style.color = '#f87171';
+                resultBox.innerText = '❌ LỖI: Key này đã hết hạn sử dụng!';
+                return;
+            }
+
+            // Kiểm tra HWID khớp hay không
+            if (l.hwid && l.hwid !== "Chưa liên kết" && l.hwid !== clientHwid) {
+                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
+                resultBox.style.color = '#f87171';
+                resultBox.innerText = '❌ LỖI: HWID không khớp với thiết bị đã đăng ký!';
+                return;
+            }
+
+            // Thành công hợp lệ
+            resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
+            resultBox.style.color = '#34d399';
+            resultBox.innerText = '✅ THÀNH CÔNG: Key hợp lệ, thiết bị được phép sử dụng!';
+        }
+
         function renderLicenses() {
             const tbody = document.getElementById('licenseTableBody');
             const searchInputEl = document.getElementById('searchInput');
@@ -929,9 +993,10 @@
                         <td><span class="countdown-timer" data-index="${originalIdx}" data-expiry="${l.expiryTimestamp}" data-status="${l.status}">Đang tính toán...</span></td>
                         <td>
                             <div class="action-btns">
-                                <button class="btn-action btn-edit" onclick="openEditLicenseModal(${originalIdx})">Sửa HWID/Giờ</button>
+                                <button class="btn-action btn-edit" onclick="openEditLicenseModal(${originalIdx})">Sửa</button>
+                                <button class="btn-action btn-check" onclick="openCheckKeyModal(${originalIdx})">Kiểm tra</button>
                                 ${l.status === 'Banned' ? 
-                                    `<button class="btn-action btn-unban" onclick="toggleBan(${originalIdx})">Mở khóa</button>` : 
+                                    `<button class="btn-action btn-unban" onclick="toggleBan(${originalIdx})">Mở</button>` : 
                                     `<button class="btn-action btn-ban" onclick="toggleBan(${originalIdx})">Khóa</button>`
                                 }
                                 <button class="btn-action btn-delete" onclick="deleteLicense(${originalIdx})">Xóa</button>
@@ -962,14 +1027,14 @@
                         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
                         
-                        timer.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s (Đã đóng băng)`;
+                        timer.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s (Đóng băng)`;
                     } else {
                         timer.innerText = 'Đã đóng băng';
                     }
                     timer.style.color = '#f87171';
                 } else if (expiry && expiry !== 'null' && expiry !== 'undefined') {
                     if (expiry === 'Lifetime') {
-                        timer.innerText = 'Vĩnh viễn (Lifetime)';
+                        timer.innerText = 'Vĩnh viễn';
                         timer.style.color = '#34d399';
                     } else {
                         const diff = parseInt(expiry) - now;
