@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - License Management</title>
+    <title>AuthFusion Dashboard</title>
     <style>
         * {
             box-sizing: border-box;
@@ -14,11 +14,54 @@
         body {
             background-color: #0b0e14;
             color: #94a3b8;
-            padding: 30px;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+
+        /* Sidebar bên trái (Đã bỏ phần User) */
+        .sidebar {
+            width: 260px;
+            background-color: #131822;
+            border-right: 1px solid #1e293b;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-top: 20px;
+        }
+        .nav-menu {
+            padding: 0 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13px;
+            border-radius: 6px;
+            transition: 0.2s;
+        }
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+            color: #fff;
+        }
+        .nav-item.active {
+            background: #1e293b;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* Main Content bên phải */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
         }
         .header-top {
             display: flex;
@@ -140,9 +183,8 @@
             font-weight: 500;
         }
         .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-        .badge-banned { background: rgba(239, 68, 68, 0.15); color: #f87171; }
         
-        /* Modal Popup tạo key phong cách AuthFusion */
+        /* Modal Popup Tạo License */
         .modal {
             display: none;
             position: fixed;
@@ -160,27 +202,36 @@
             max-width: 400px;
         }
         .modal-content h3 { color: #fff; margin-bottom: 15px; font-size: 16px; }
-        .modal-content input, .modal-content select { width: 100%; margin-bottom: 12px; }
+        .modal-content select { width: 100%; margin-bottom: 12px; }
         .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
         .btn-cancel { background: #334155; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- Top Header -->
+    <!-- Sidebar Trái (Đã xóa thông tin User) -->
+    <div class="sidebar">
+        <div class="nav-menu">
+            <a href="#" class="nav-item"> Overview</a>
+            <a href="#" class="nav-item"> Applications</a>
+            <a href="#" class="nav-item"> Users</a>
+            <a href="#" class="nav-item active"> Licenses</a>
+        </div>
+    </div>
+
+    <!-- Main Content Phải -->
+    <div class="main-content">
         <div class="header-top">
             <div class="dashboard-title">Dashboard</div>
             <div class="status-badge">Online</div>
         </div>
 
-        <!-- Section Title & Create Button -->
         <div class="section-title-row">
             <div class="section-title">License Management</div>
             <button class="btn-create" onclick="openModal()">+ Create License</button>
         </div>
 
-        <!-- Filters Bar -->
+        <!-- Bộ lọc -->
         <div class="filters-bar">
             <input type="text" class="search-box" placeholder="Search licenses by key..." id="searchInput" onkeyup="filterTable()">
             <select id="statusFilter" onchange="filterTable()">
@@ -190,8 +241,8 @@
             </select>
             <select id="hwidFilter" onchange="filterTable()">
                 <option value="">All HWID</option>
-                <option value="bound">Bound</option>
-                <option value="unbound">Unbound</option>
+                <option value="Bound">Bound</option>
+                <option value="Unbound">Unbound</option>
             </select>
             <select>
                 <option>Select Application</option>
@@ -199,7 +250,7 @@
             </select>
         </div>
 
-        <!-- License Table -->
+        <!-- Bảng danh sách License -->
         <div class="table-container">
             <table>
                 <thead>
@@ -212,7 +263,7 @@
                 </thead>
                 <tbody id="licenseTableBody">
                     <tr>
-                        <td colspan="4" class="empty-state" id="emptyRow">Select an application to view licenses.</td>
+                        <td colspan="4" class="empty-state">Select an application to view licenses.</td>
                     </tr>
                 </tbody>
             </table>
@@ -223,7 +274,7 @@
     <div class="modal" id="createModal">
         <div class="modal-content">
             <h3>Create New License</h3>
-            <select id="newApp">
+            <select>
                 <option>DOBI AIMBOT v1</option>
             </select>
             <select id="newDuration">
@@ -252,12 +303,12 @@
 
         function createNewKey() {
             const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            let part1 = "", part2 = "", part3 = "";
-            for (let i = 0; i < 4; i++) part1 += chars.charAt(Math.floor(Math.random() * chars.length));
-            for (let i = 0; i < 4; i++) part2 += chars.charAt(Math.floor(Math.random() * chars.length));
-            for (let i = 0; i < 4; i++) part3 += chars.charAt(Math.floor(Math.random() * chars.length));
+            let p1 = "", p2 = "", p3 = "";
+            for (let i = 0; i < 4; i++) p1 += chars.charAt(Math.floor(Math.random() * chars.length));
+            for (let i = 0; i < 4; i++) p2 += chars.charAt(Math.floor(Math.random() * chars.length));
+            for (let i = 0; i < 4; i++) p3 += chars.charAt(Math.floor(Math.random() * chars.length));
             
-            const keyString = `DOBI-${part1}-${part2}-${part3}`;
+            const keyString = `DOBI-${p1}-${p2}-${p3}`;
             const days = parseInt(document.getElementById("newDuration").value);
             const expireAt = days === 365 ? "Lifetime" : Math.floor(Date.now() / 1000) + (days * 86400);
 
@@ -317,7 +368,6 @@
             return `${days}d ${hours}h ${mins}m left`;
         }
 
-        // Cập nhật bộ đếm thời gian thực mỗi giây
         setInterval(() => {
             document.querySelectorAll(".countdown-item").forEach(el => {
                 const timestamp = parseInt(el.getAttribute("data-time"));
