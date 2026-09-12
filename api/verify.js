@@ -1,9 +1,9 @@
-// Danh sách kho key lưu trực tiếp trên Vercel (Bạn có thể thêm bớt key ở đây)
+// Danh sách kho key lưu trực tiếp trên Vercel
 const VALID_KEYS = [
-  { key: "DOBI-VIP-1111", hwid: "", status: "Chưa kích hoạt" },
-  { key: "DOBI-PRO-2222", hwid: "", status: "Chưa kích hoạt" },
-  { key: "DOBI-RLVZ-6A12-WGYW", hwid: "", status: "Chưa kích hoạt" },
-  { key: "DOBI-TEST-9999", hwid: "DEVICE_LOCKED_HWID", status: "banned" }
+  { key: "DOBI-VIP-1111", hwid: "", status: "Chưa kích hoạt", maxDevices: 1, currentDevices: 0 },
+  { key: "DOBI-PRO-2222", hwid: "", status: "Chưa kích hoạt", maxDevices: 1, currentDevices: 0 },
+  { key: "DOBI-RLVZ-6A12-WGYW", hwid: "", status: "Chưa kích hoạt", maxDevices: 1, currentDevices: 0 },
+  { key: "DOBI-TEST-9999", hwid: "DEVICE_LOCKED_HWID", status: "banned", maxDevices: 1, currentDevices: 1 }
 ];
 
 export default async function handler(req, res) {
@@ -14,30 +14,31 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "Thiếu Key bản quyền!" });
     }
 
-    // Tìm key trong danh sách trên Vercel
     const foundKey = VALID_KEYS.find(k => k.key === key);
 
     if (!foundKey) {
       return res.status(404).json({ message: "Key không tồn tại trên hệ thống!" });
     }
 
-    // Kiểm tra trạng thái bị ban
     if (foundKey.status === 'banned') {
       return res.status(400).json({ message: "banned" });
     }
 
-    // 1. Nếu key chưa có HWID (Chưa ai dùng) -> Gán HWID và đổi trạng thái thành Đã kích hoạt
+    // Nếu key chưa có HWID hoặc chưa có thiết bị nào sử dụng
     if (!foundKey.hwid || foundKey.hwid === "") {
       foundKey.hwid = hwid || "default_hwid";
-      foundKey.status = "Đã kích hoạt"; // Cập nhật trạng thái hiển thị lên web
+      foundKey.status = "Đã kích hoạt";
+      foundKey.currentDevices = 1;
     } 
-    // 2. Nếu key đã có HWID nhưng khác với thiết bị đang gửi lên
-    else if (hwid && foundKey.hwid !== hwid) {
-      // Chặn đăng nhập vì chưa reset HWID
-      return res.status(400).json({ message: "Key đã được kích hoạt trên thiết bị khác! Vui lòng đặt lại HWID." });
+    // Nếu HWID gửi lên khớp với HWID đã lưu (thiết bị cũ đăng nhập lại)
+    else if (foundKey.hwid === hwid) {
+      foundKey.currentDevices = 1;
+    }
+    // Nếu khác thiết bị -> Chặn vì đã tối đa 1 thiết bị
+    else {
+      return res.status(400).json({ message: "device_locked" });
     }
 
-    // Trả về thành công khi đúng HWID hoặc vừa kích hoạt xong
     return res.status(200).json({
       message: "Thành công",
       data: [foundKey]
