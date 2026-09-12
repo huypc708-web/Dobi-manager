@@ -10,11 +10,31 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "Thiếu Key bản quyền!" });
     }
 
-    // 1. Truy vấn vào đúng bảng license_keys trên Supabase
-    const { data, error } = await supabase
+    // Thử tìm theo cột 'key'
+    let { data, error } = await supabase
       .from('license_keys')
       .select('*')
       .eq('key', key);
+
+    // Nếu không thấy, thử tìm theo cột 'license_key'
+    if (!data || data.length === 0) {
+      let resAlt = await supabase
+        .from('license_keys')
+        .select('*')
+        .eq('license_key', key);
+      data = resAlt.data;
+      error = resAlt.error;
+    }
+
+    // Nếu vẫn không thấy, thử tìm theo cột 'key_code'
+    if (!data || data.length === 0) {
+      let resAlt2 = await supabase
+        .from('license_keys')
+        .select('*')
+        .eq('key_code', key);
+      data = resAlt2.data;
+      error = resAlt2.error;
+    }
 
     if (error) {
       return res.status(500).json({ message: "Lỗi truy vấn Database: " + error.message });
@@ -25,15 +45,14 @@ export default async function handler(req, res) {
     }
 
     const keyData = data[0];
+    const actualKeyField = keyData.key !== undefined ? 'key' : (keyData.license_key !== undefined ? 'license_key' : 'key_code');
 
-    // 2. Kiểm tra trạng thái bị ban
     if (keyData.status === 'banned') {
       return res.status(400).json({ message: "banned" });
     }
 
     let currentHwid = keyData.hwid;
 
-    // 3. Xử lý tự động gán HWID nếu key chưa liên kết thiết bị
     if (!currentHwid || currentHwid === "none" || currentHwid === "" || currentHwid === null) {
       const { error: updateError } = await supabase
         .from('license_keys')
@@ -41,7 +60,7 @@ export default async function handler(req, res) {
           hwid: hwid || "default_hwid", 
           status: 'active' 
         })
-        .eq('key', key);
+        .eq(actualKeyField, key);
 
       if (updateError) {
         return res.status(500).json({ message: "Lỗi cập nhật thiết bị: " + updateError.message });
@@ -51,11 +70,9 @@ export default async function handler(req, res) {
       keyData.status = 'active';
     } 
     else if (hwid && currentHwid !== hwid) {
-      // 4. Nếu khác máy
       return res.status(400).json({ message: "device_locked" });
     }
 
-    // 5. Trả về thành công
     return res.status(200).json({
       message: "Thành công",
       total_keys: 1,
