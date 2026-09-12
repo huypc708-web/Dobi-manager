@@ -1,6 +1,9 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY)
+// Danh sách kho key lưu trực tiếp trên Vercel (Bạn có thể thêm bớt key ở đây)
+const VALID_KEYS = [
+  { key: "DOBI-VIP-1111", hwid: "", status: "active" },
+  { key: "DOBI-PRO-2222", hwid: "", status: "active" },
+  { key: "DOBI-TEST-9999", hwid: "DEVICE_LOCKED_HWID", status: "banned" } // Ví dụ key bị ban
+];
 
 export default async function handler(req, res) {
   try {
@@ -10,56 +13,32 @@ export default async function handler(req, res) {
       return res.status(400).json({ message: "Thiếu Key bản quyền!" });
     }
 
-    // Truy vấn vào bảng 'license_keys'
-    const { data, error } = await supabase
-      .from('license_keys')
-      .select('*')
-      .eq('license_keys', key);
+    // Tìm key trong danh sách trên Vercel
+    const foundKey = VALID_KEYS.find(k => k.key === key);
 
-    if (error) {
-      return res.status(500).json({ message: "Lỗi truy vấn Database: " + error.message });
+    if (!foundKey) {
+      return res.status(404).json({ message: "Key không tồn tại trên hệ thống!" });
     }
-
-    if (!data || data.length === 0) {
-      return res.status(404).json({ message: "Key không tồn tại trên hệ thống web!" });
-    }
-
-    const keyData = data[0];
 
     // Kiểm tra trạng thái bị ban
-    if (keyData.status === 'banned') {
+    if (foundKey.status === 'banned') {
       return res.status(400).json({ message: "banned" });
     }
 
-    let currentHwid = keyData.hwid;
-
-    // Tự động gán HWID (Auto-bind) ngay lần đăng nhập đầu tiên
-    if (!currentHwid || currentHwid === "none" || currentHwid === "" || currentHwid === null) {
-      const { error: updateError } = await supabase
-        .from('license_keys')
-        .update({ 
-          hwid: hwid || "default_hwid", 
-          status: 'active' 
-        })
-        .eq('license_keys', key);
-
-      if (updateError) {
-        return res.status(500).json({ message: "Lỗi cập nhật thiết bị: " + updateError.message });
-      }
-
-      keyData.hwid = hwid;
-      keyData.status = 'active';
+    // Tự động gán HWID vào lần đăng nhập đầu tiên
+    if (!foundKey.hwid || foundKey.hwid === "none" || foundKey.hwid === "") {
+      foundKey.hwid = hwid || "default_hwid";
+      foundKey.status = 'active';
     } 
-    else if (hwid && currentHwid !== hwid) {
-      // Nếu máy khác vào
+    else if (hwid && foundKey.hwid !== hwid) {
+      // Nếu máy khác cố tình dùng chung key
       return res.status(400).json({ message: "device_locked" });
     }
 
     // Trả về thành công
     return res.status(200).json({
       message: "Thành công",
-      total_keys: 1,
-      data: [keyData]
+      data: [foundKey]
     });
 
   } catch (err) {
