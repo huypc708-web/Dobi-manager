@@ -3,8 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dobi Manager</title>
+    <title>Dobi Manager - Hệ thống Quản lý Đám mây</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <style>
         * {
             box-sizing: border-box;
@@ -20,6 +25,93 @@
             height: 100vh;
             overflow: hidden;
             font-size: 15px;
+        }
+
+        /* Màn hình Đăng nhập Admin */
+        #loginOverlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #0b0e14;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .login-box {
+            background-color: #131822;
+            border: 1px solid #1e293b;
+            padding: 40px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        .login-box h2 {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .login-box p {
+            color: #64748b;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .login-input-group {
+            margin-bottom: 16px;
+        }
+        .login-input-group label {
+            display: block;
+            color: #94a3b8;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .login-input-group input {
+            width: 100%;
+            background-color: #0b0e14;
+            border: 1px solid #1e293b;
+            color: #ffffff;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .login-input-group input:focus {
+            border-color: #38bdf8;
+        }
+        .btn-login {
+            width: 100%;
+            background-color: #ffffff;
+            color: #0b0e14;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        .btn-login:hover {
+            background-color: #e2e8f0;
+        }
+        .login-error {
+            color: #f87171;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 12px;
+            display: none;
+        }
+
+        /* App Layout */
+        #appContainer {
+            display: none;
+            width: 100%;
+            height: 100%;
         }
 
         /* Sidebar */
@@ -88,7 +180,7 @@
             padding: 13px 16px;
             color: #94a3b8;
             text-decoration: none;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             border-radius: 10px;
             cursor: pointer;
@@ -109,13 +201,15 @@
             color: #fff;
             font-weight: 700;
         }
+
         .sidebar-bottom {
             border-top: 1px solid #1a2230;
             padding-top: 14px;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 10px;
         }
+
         .nav-item.danger {
             color: #f87171;
         }
@@ -220,7 +314,7 @@
             margin-bottom: 22px;
             flex-wrap: wrap;
         }
-        .search-box, select, input[type="text"], input[type="password"] {
+        .search-box, select, input[type="text"] {
             background-color: #131822;
             border: 1px solid #1e293b;
             color: #ffffff;
@@ -370,169 +464,169 @@
 </head>
 <body>
 
-    <!-- Sidebar với các Icon chuẩn theo yêu cầu -->
-    <div class="sidebar">
-        <div>
-            <div class="user-profile">
-                <div class="user-avatar">D</div>
-                <div class="user-info">
-                    <span class="user-name">Dobi Manager</span>
-                    <span class="user-email">admin@dobimanager.com</span>
-                </div>
+    <!-- Màn hình Đăng nhập Admin -->
+    <div id="loginOverlay">
+        <div class="login-box">
+            <h2>Đăng Nhập Quản Trị</h2>
+            <p>Hệ thống Đồng bộ Đám mây - Dobi Manager</p>
+            <div class="login-input-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="loginUser" placeholder="Nhập tên đăng nhập...">
             </div>
-
-            <div class="nav-menu">
-                <!-- Overview Icon -->
-                <a class="nav-item active" onclick="switchTab('overview', this)">
-                    <svg viewBox="0 0 24 24"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v9h9c-.5-5.07-4.79-9-9-9zm0 11v9c5.07-.5 9-4.79 9-10h-9z"/></svg>
-                    Overview
-                </a>
-                <!-- Applications Icon -->
-                <a class="nav-item" onclick="switchTab('applications', this)">
-                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                    Applications
-                </a>
-                <!-- Licenses Icon -->
-                <a class="nav-item" onclick="switchTab('licenses', this)">
-                    <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
-                    Licenses
-                </a>
-                <!-- Check Key Icon -->
-                <a class="nav-item" onclick="switchTab('checkkey', this)">
-                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    Check Key
-                </a>
+            <div class="login-input-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="loginPass" placeholder="Nhập mật khẩu...">
             </div>
-        </div>
-
-        <div class="sidebar-bottom">
-            <a class="nav-item" onclick="switchTab('customize', this)">
-                <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-                Customize UI
-            </a>
-            <a class="nav-item" onclick="alert('Đã đăng xuất thành công!')">
-                <svg viewBox="0 0 24 24"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
-                Logout
-            </a>
-            <a class="nav-item danger" onclick="if(confirm('Bạn có chắc chắn muốn xóa dữ liệu?')) { localStorage.clear(); location.reload(); }">
-                <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-                Delete Data
-            </a>
+            <button class="btn-login" onclick="handleLogin()">Đăng nhập</button>
+            <div id="loginError" class="login-error">Sai tên đăng nhập hoặc mật khẩu!</div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="header-top">
-            <div class="dashboard-title" id="pageTitle">Overview</div>
-            <div class="status-badge">Online</div>
-        </div>
+    <!-- Giao diện chính sau khi đăng nhập -->
+    <div id="appContainer">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div>
+                <div class="user-profile">
+                    <div class="user-avatar">D</div>
+                    <div class="user-info">
+                        <span class="user-name">dobi</span>
+                        <span class="user-email">Đã xác thực Admin</span>
+                    </div>
+                </div>
 
-        <!-- 1. OVERVIEW -->
-        <div id="view-overview" class="view-section active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h4>Total Applications</h4>
-                    <div class="number" id="statApps">0</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Total Licenses</h4>
-                    <div class="number" id="statLicenses">0</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Active Licenses</h4>
-                    <div class="number" id="statActive">0</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Total Users</h4>
-                    <div class="number" id="statUsers">0</div>
+                <div class="nav-menu">
+                    <a class="nav-item active" onclick="switchTab('overview', this)">
+                        <svg viewBox="0 0 24 24"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v9h9c-.5-5.07-4.79-9-9-9zm0 11v9c5.07-.5 9-4.79 9-10h-9z"/></svg>
+                        Tổng quan
+                    </a>
+                    <a class="nav-item" onclick="switchTab('applications', this)">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                        Ứng dụng
+                    </a>
+                    <a class="nav-item" onclick="switchTab('licenses', this)">
+                        <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                        Quản lý Key
+                    </a>
+                    <a class="nav-item" onclick="switchTab('checkkey', this)">
+                        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        Kiểm tra Key
+                    </a>
                 </div>
             </div>
-            <div class="instruction-card">
-                <h3>Welcome to Dobi Manager</h3>
-                <p>Hệ thống quản lý key chuyên nghiệp. Thời gian chỉ bắt đầu đếm ngược từ lần kích hoạt đầu tiên trên thiết bị và giới hạn tối đa chỉ 1 thiết bị duy nhất sử dụng key.</p>
-            </div>
-        </div>
 
-        <!-- 2. APPLICATIONS -->
-        <div id="view-applications" class="view-section">
-            <div class="section-title-row">
-                <div class="section-title">Application Management</div>
-                <button class="btn-primary" onclick="openAppModal()">+ Create Application</button>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>App Name</th>
-                            <th>Secret Key</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="appTableBody">
-                        <tr><td colspan="3" class="empty-state">No applications found.</td></tr>
-                    </tbody>
-                </table>
+            <div class="sidebar-bottom">
+                <a class="nav-item danger" onclick="handleLogout()">
+                    <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                    Đăng xuất
+                </a>
             </div>
         </div>
 
-        <!-- 3. LICENSES -->
-        <div id="view-licenses" class="view-section">
-            <div class="section-title-row">
-                <div class="section-title">License Management</div>
-                <button class="btn-primary" onclick="openLicenseModal()">+ Create License</button>
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header-top">
+                <div class="dashboard-title" id="pageTitle">Tổng quan</div>
+                <div class="status-badge">Đã kết nối đám mây</div>
             </div>
 
-            <div class="filters-bar">
-                <input type="text" class="search-box" placeholder="Search licenses by key..." id="searchInput" onkeyup="renderLicenses()">
-                <select id="statusFilter" onchange="renderLicenses()">
-                    <option value="">All Status</option>
-                    <option value="Active">Active / Activated</option>
-                    <option value="Unactivated">Unactivated</option>
-                    <option value="Banned">Banned</option>
-                </select>
-                <select id="appSelectFilter" onchange="renderLicenses()">
-                    <option value="">All Applications</option>
-                </select>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 30%;">License Key</th>
-                            <th style="width: 25%;">Status & HWID</th>
-                            <th style="width: 20%;">Expiry Countdown</th>
-                            <th style="width: 25%;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="licenseTableBody">
-                        <tr><td colspan="4" class="empty-state">No licenses found.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 4. CHECK KEY -->
-        <div id="view-checkkey" class="view-section">
-            <div class="section-title" style="margin-bottom: 15px;">License Key Verification</div>
-            <div class="checker-wrapper">
-                <p style="color: #94a3b8; font-size: 14px;">Nhập mã License Key và mã thiết bị (HWID) để kích hoạt và sử dụng (Tối đa 1 thiết bị duy nhất):</p>
-                <div class="checker-input-row" style="flex-direction: column; gap: 10px;">
-                    <input type="text" id="checkKeyInput" class="search-box" placeholder="Nhập License Key...">
-                    <input type="text" id="checkHwidInput" class="search-box" placeholder="Nhập mã thiết bị của bạn (HWID)...">
+            <!-- 1. TỔNG QUAN -->
+            <div id="view-overview" class="view-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Tổng số Ứng dụng</h4>
+                        <div class="number" id="statApps">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Tổng số Key</h4>
+                        <div class="number" id="statLicenses">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Key đang Hoạt động</h4>
+                        <div class="number" id="statActive">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Tổng số Người dùng</h4>
+                        <div class="number" id="statUsers">0</div>
+                    </div>
                 </div>
-                <button class="btn-primary" onclick="verifyKeyWithHwid()">🔍 Kiểm tra / Kích hoạt Key</button>
-                <div id="checkerResultBox" class="checker-result"></div>
+                <div class="instruction-card">
+                    <h3>Trạng thái đồng bộ đám mây</h3>
+                    <p>Hệ thống đã kết nối trực tiếp với <strong>Firebase Realtime Database</strong>. Mọi thao tác tạo key, kích hoạt hoặc quản lý của bạn sẽ tự động lưu lên mây và cập nhật tức thì trên mọi thiết bị.</p>
+                </div>
             </div>
-        </div>
 
-        <!-- 5. CUSTOMIZE UI -->
-        <div id="view-customize" class="view-section">
-            <div class="section-title" style="margin-bottom: 15px;">Customize User Interface</div>
-            <div class="instruction-card">
-                <h3>Accent Color</h3>
-                <input type="color" value="#38bdf8" style="margin-top: 10px; height: 40px; width: 100px; border:none; cursor:pointer;" onchange="alert('Đã đổi màu giao diện hệ thống!')">
+            <!-- 2. ỨNG DỤNG -->
+            <div id="view-applications" class="view-section">
+                <div class="section-title-row">
+                    <div class="section-title">Quản lý Ứng dụng</div>
+                    <button class="btn-primary" onclick="openAppModal()">+ Thêm Ứng dụng</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tên Ứng dụng</th>
+                                <th>Mã Bí mật (Secret Key)</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appTableBody">
+                            <tr><td colspan="3" class="empty-state">Không tìm thấy ứng dụng nào.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. QUẢN LÝ KEY -->
+            <div id="view-licenses" class="view-section">
+                <div class="section-title-row">
+                    <div class="section-title">Quản lý License Key</div>
+                    <button class="btn-primary" onclick="openLicenseModal()">+ Tạo Key Mới</button>
+                </div>
+
+                <div class="filters-bar">
+                    <input type="text" class="search-box" placeholder="Tìm kiếm theo mã key..." id="searchInput" onkeyup="renderLicenses()">
+                    <select id="statusFilter" onchange="renderLicenses()">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Active">Đang hoạt động (Active)</option>
+                        <option value="Unactivated">Chưa kích hoạt</option>
+                        <option value="Banned">Đã khóa (Banned)</option>
+                    </select>
+                    <select id="appSelectFilter" onchange="renderLicenses()">
+                        <option value="">Tất cả Ứng dụng</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 30%;">License Key</th>
+                                <th style="width: 25%;">Trạng thái & HWID</th>
+                                <th style="width: 20%;">Thời hạn / Hết hạn</th>
+                                <th style="width: 25%;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="licenseTableBody">
+                            <tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. KIỂM TRA KEY -->
+            <div id="view-checkkey" class="view-section">
+                <div class="section-title" style="margin-bottom: 15px;">Xác thực & Kích hoạt Key</div>
+                <div class="checker-wrapper">
+                    <p style="color: #94a3b8; font-size: 14px;">Nhập mã License Key và mã thiết bị (HWID) để tiến hành kiểm tra hoặc kích hoạt trực tuyến:</p>
+                    <div class="checker-input-row" style="flex-direction: column; gap: 10px;">
+                        <input type="text" id="checkKeyInput" class="search-box" placeholder="Nhập License Key...">
+                        <input type="text" id="checkHwidInput" class="search-box" placeholder="Nhập mã thiết bị (HWID)...">
+                    </div>
+                    <button class="btn-primary" onclick="verifyKeyWithHwid()">🔍 Kiểm tra / Kích hoạt Key</button>
+                    <div id="checkerResultBox" class="checker-result"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -543,18 +637,85 @@
     </div>
 
     <!-- Toast Notification -->
-    <div id="toast">Đã copy thành công!</div>
+    <div id="toast">Đã sao chép thành công!</div>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('dobimanager_db_v2')) || {
+        // Cấu hình Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyC9bzr6Jgn1W3aMtrV_ndwPB-npr5lSzk",
+            authDomain: "dobi-manager.firebaseapp.com",
+            projectId: "dobi-manager",
+            storageBucket: "dobi-manager.firebasestorage.app",
+            messagingSenderId: "637080746223",
+            appId: "1:637080746223:web:293995d7b0eb5c44e6c31a",
+            measurementId: "G-V5WQ1X21Y9"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let db = {
             apps: [],
             licenses: [],
             users: []
         };
 
+        let currentCheckedKey = null;
+
+        // Bắt buộc đăng nhập lại từ đầu mỗi khi load trang (F5 hoặc mở tab mới)
+        window.onload = function() {
+            handleLogout();
+        };
+
+        function handleLogin() {
+            const u = document.getElementById('loginUser').value.trim();
+            const p = document.getElementById('loginPass').value.trim();
+            const err = document.getElementById('loginError');
+
+            if(u === 'dobi' && p === 'Giahui12@') {
+                showApp();
+            } else {
+                err.style.display = 'block';
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('loginUser').value = '';
+            document.getElementById('loginPass').value = '';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        function showApp() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'flex';
+            initFirebaseListener();
+        }
+
+        function initFirebaseListener() {
+            database.ref('dobimanager').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    db = {
+                        apps: data.apps || [],
+                        licenses: data.licenses || [],
+                        users: data.users || []
+                    };
+                } else {
+                    database.ref('dobimanager').set({ apps: [], licenses: [], users: [] });
+                }
+                updateStats();
+                const activeTab = document.querySelector('.view-section.active');
+                if(activeTab) {
+                    if(activeTab.id === 'view-licenses') renderLicenses();
+                    if(activeTab.id === 'view-applications') renderApps();
+                }
+            });
+        }
+
         function saveData() {
-            localStorage.setItem('dobimanager_db_v2', JSON.stringify(db));
-            updateStats();
+            database.ref('dobimanager').set(db);
         }
 
         function switchTab(tabId, el) {
@@ -576,6 +737,7 @@
         }
 
         function updateStats() {
+            if(!document.getElementById('statApps')) return;
             document.getElementById('statApps').innerText = db.apps.length;
             document.getElementById('statLicenses').innerText = db.licenses.length;
             document.getElementById('statActive').innerText = db.licenses.filter(l => l.status === 'Active').length;
@@ -597,11 +759,11 @@
 
         function openAppModal() {
             document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Create Application</h3>
-                <input type="text" id="appNameInput" placeholder="Application Name...">
+                <h3>Thêm Ứng dụng mới</h3>
+                <input type="text" id="appNameInput" placeholder="Tên ứng dụng...">
                 <div class="modal-btns">
-                    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button class="btn-primary" onclick="createApp()">Create</button>
+                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                    <button class="btn-primary" onclick="createApp()">Tạo</button>
                 </div>
             `;
             document.getElementById('globalModal').style.display = 'flex';
@@ -618,44 +780,48 @@
 
         function renderApps() {
             const tbody = document.getElementById('appTableBody');
+            if(!tbody) return;
             if(db.apps.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="empty-state">No applications found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" class="empty-state">Không tìm thấy ứng dụng nào.</td></tr>`;
                 return;
             }
             tbody.innerHTML = db.apps.map((app, idx) => `
                 <tr>
                     <td><strong>${app.name}</strong></td>
                     <td><code style="color: #38bdf8;">${app.secret}</code></td>
-                    <td><button class="btn-action btn-delete" onclick="deleteApp(${idx})">Delete</button></td>
+                    <td><button class="btn-action btn-delete" onclick="deleteApp(${idx})">Xóa</button></td>
                 </tr>
             `).join('');
         }
 
         function deleteApp(idx) {
-            db.apps.splice(idx, 1);
-            saveData();
-            renderApps();
+            if(confirm('Bạn có chắc chắn muốn xóa ứng dụng này?')) {
+                db.apps.splice(idx, 1);
+                saveData();
+                renderApps();
+            }
         }
 
         function populateAppDropdowns() {
             const select = document.getElementById('appSelectFilter');
-            select.innerHTML = '<option value="">All Applications</option>' + db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+            if(!select) return;
+            select.innerHTML = '<option value="">Tất cả Ứng dụng</option>' + db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
         }
 
         function openLicenseModal() {
-            if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Application trước khi tạo License!');
+            if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Ứng dụng trước khi tạo License Key!');
             document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Create New License</h3>
+                <h3>Tạo License Key Mới</h3>
                 <select id="modalAppSelect">${db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('')}</select>
                 <select id="modalDurationDays">
-                    <option value="1">1 Day</option>
-                    <option value="7" selected>7 Days</option>
-                    <option value="30">30 Days</option>
-                    <option value="365">Lifetime / Permanent</option>
+                    <option value="1">1 Ngày</option>
+                    <option value="7" selected>7 Ngày</option>
+                    <option value="30">30 Ngày</option>
+                    <option value="365">Vĩnh viễn (Lifetime)</option>
                 </select>
                 <div class="modal-btns">
-                    <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button class="btn-primary" onclick="generateLicense()">Generate</button>
+                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                    <button class="btn-primary" onclick="generateLicense()">Tạo Key</button>
                 </div>
             `;
             document.getElementById('globalModal').style.display = 'flex';
@@ -671,7 +837,7 @@
             db.licenses.push({
                 key: `${appName.substring(0,4).toUpperCase()}-${p1}-${p2}-${p3}`,
                 status: 'Unactivated',
-                hwid: 'Unbound',
+                hwid: 'Chưa liên kết',
                 durationDays: days,
                 expiryTimestamp: null
             });
@@ -697,7 +863,7 @@
             if(appFilterVal) filtered = filtered.filter(l => l.key.startsWith(appFilterVal.substring(0,4).toUpperCase()));
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No licenses found.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>`;
                 return;
             }
 
@@ -705,32 +871,32 @@
                 const realIndex = db.licenses.findIndex(l => l.key === item.key);
                 
                 let badgeClass = 'badge-unactivated';
-                if(item.status === 'Active') badgeClass = 'badge-active';
-                if(item.status === 'Banned') badgeClass = 'badge-banned';
+                let statusName = 'Chưa kích hoạt';
+                if(item.status === 'Active') { badgeClass = 'badge-active'; statusName = 'Đang hoạt động'; }
+                if(item.status === 'Banned') { badgeClass = 'badge-banned'; statusName = 'Đã khóa'; }
 
                 let expiryText = 'Chưa kích hoạt';
                 if(item.status === 'Active') {
-                    if(item.durationDays === 365 || item.expiryTimestamp === 'Lifetime') expiryText = 'Lifetime';
+                    if(item.durationDays === 365 || item.expiryTimestamp === 'Lifetime') expiryText = 'Vĩnh viễn';
                     else expiryText = formatCountdown(item.expiryTimestamp);
                 } else if(item.status === 'Unactivated' && item.expiryTimestamp) {
-                    // Nếu đã từng kích hoạt và được reset HWID, hiển thị thời gian còn lại bảo lưu
-                    expiryText = (item.durationDays === 365 || item.expiryTimestamp === 'Lifetime') ? 'Lifetime' : formatCountdown(item.expiryTimestamp) + ' (Đã lưu)';
+                    expiryText = (item.durationDays === 365 || item.expiryTimestamp === 'Lifetime') ? 'Vĩnh viễn' : formatCountdown(item.expiryTimestamp) + ' (Đã lưu)';
                 }
 
                 let banUnbanBtn = item.status === 'Banned'
-                    ? `<button class="btn-action btn-unban" onclick="toggleBan(${realIndex})">Unban</button>`
-                    : `<button class="btn-action btn-ban" onclick="toggleBan(${realIndex})">Ban</button>`;
+                    ? `<button class="btn-action btn-unban" onclick="toggleBan(${realIndex})">Mở khóa</button>`
+                    : `<button class="btn-action btn-ban" onclick="toggleBan(${realIndex})">Khóa</button>`;
 
                 return `
                     <tr>
-                        <td><span class="key-code" onclick="copyKey('${item.key}')" title="Click để copy">${item.key}</span></td>
-                        <td><span class="badge ${badgeClass}">${item.status}</span> <span style="font-size: 13px; color: #64748b;">(${item.hwid})</span></td>
+                        <td><span class="key-code" onclick="copyKey('${item.key}')" title="Click để sao chép">${item.key}</span></td>
+                        <td><span class="badge ${badgeClass}">${statusName}</span> <span style="font-size: 13px; color: #64748b;">(${item.hwid})</span></td>
                         <td>${expiryText}</td>
                         <td>
                             <div class="action-btns">
-                                <button class="btn-action btn-reset" onclick="resetHwid(${realIndex})">Reset HWID</button>
+                                <button class="btn-action btn-reset" onclick="resetHwid(${realIndex})">Đặt lại HWID</button>
                                 ${banUnbanBtn}
-                                <button class="btn-action btn-delete" onclick="deleteLicense(${realIndex})">Delete</button>
+                                <button class="btn-action btn-delete" onclick="deleteLicense(${realIndex})">Xóa</button>
                             </div>
                         </td>
                     </tr>
@@ -739,18 +905,16 @@
         }
 
         function resetHwid(index) {
-            // SỬA LỖI: Chỉ gỡ liên kết thiết bị và chuyển về trạng thái sẵn sàng bind thiết bị mới, KHÔNG xóa mất mốc thời gian/hạn sử dụng của key
-            db.licenses[index].hwid = 'Unbound';
+            db.licenses[index].hwid = 'Chưa liên kết';
             db.licenses[index].status = 'Unactivated';
-            // Không set expiryTimestamp = null ở đây để bảo lưu thời gian đếm ngược còn lại của key!
             saveData();
             renderLicenses();
-            showToast('Đã reset HWID thành công và bảo lưu thời gian của key!');
+            showToast('Đã đặt lại HWID thành công trên Cloud!');
         }
 
         function toggleBan(index) {
             if(db.licenses[index].status === 'Banned') {
-                db.licenses[index].status = db.licenses[index].hwid === 'Unbound' ? 'Unactivated' : 'Active';
+                db.licenses[index].status = db.licenses[index].hwid === 'Chưa liên kết' ? 'Unactivated' : 'Active';
             } else {
                 db.licenses[index].status = 'Banned';
             }
@@ -774,36 +938,46 @@
 
             if(!queryKey || !queryHwid) {
                 resultBox.innerHTML = `<span style="color: #f87171;">⚠️ Vui lòng nhập đầy đủ License Key và Mã thiết bị (HWID)!</span>`;
+                currentCheckedKey = null;
                 return;
             }
 
             const found = db.licenses.find(l => l.key.toLowerCase() === queryKey.toLowerCase());
             if(!found) {
-                resultBox.innerHTML = `<span style="color: #f87171;">❌ Không tìm thấy License Key này trong hệ thống!</span>`;
+                resultBox.innerHTML = `<span style="color: #f87171;">❌ Không tìm thấy License Key này trên hệ thống Cloud!</span>`;
+                currentCheckedKey = null;
                 return;
             }
 
             if(found.status === 'Banned') {
-                resultBox.innerHTML = `<span style="color: #f87171;">🚫 Key này đã bị khóa (Banned) bởi quản trị viên!</span>`;
+                resultBox.innerHTML = `<span style="color: #f87171;">🚫 Key này đã bị khóa (Banned)!</span>`;
+                currentCheckedKey = null;
                 return;
             }
 
-            // Xử lý khi kích hoạt lần đầu hoặc tái kích hoạt sau khi reset HWID
-            if(found.hwid === 'Unbound') {
+            if(found.hwid === 'Chưa liên kết') {
                 found.hwid = queryHwid;
                 found.status = 'Active';
                 if(found.durationDays === 365) {
                     found.expiryTimestamp = 'Lifetime';
                 } else if(!found.expiryTimestamp) {
-                    // Kích hoạt mới hoàn toàn lần đầu
                     found.expiryTimestamp = Math.floor(Date.now() / 1000) + (found.durationDays * 86400);
                 }
-                // Nếu đã có sẵn expiryTimestamp từ trước (do reset HWID trước đó), giữ nguyên thời gian còn lại để tiếp tục đếm!
                 saveData();
             } else if(found.hwid !== queryHwid) {
-                resultBox.innerHTML = `<span style="color: #f87171;">❌ Từ chối! Key này đã được kích hoạt trên thiết bị khác (Giới hạn tối đa 1 thiết bị).</span>`;
+                resultBox.innerHTML = `<span style="color: #f87171;">❌ Từ chối! Key này đã được kích hoạt trên thiết bị khác.</span>`;
+                currentCheckedKey = null;
                 return;
             }
+
+            currentCheckedKey = found.key;
+            updateCheckResultDisplay(found);
+            renderLicenses();
+        }
+
+        function updateCheckResultDisplay(found) {
+            const resultBox = document.getElementById('checkerResultBox');
+            if(!resultBox || resultBox.style.display === 'none') return;
 
             let isExpired = false;
             if(found.expiryTimestamp !== 'Lifetime' && found.expiryTimestamp && Math.floor(Date.now() / 1000) > found.expiryTimestamp) {
@@ -812,13 +986,12 @@
 
             resultBox.innerHTML = `
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <div><strong>Key:</strong> <span style="color: #38bdf8; cursor:pointer;" onclick="copyKey('${found.key}')">${found.key} (Click copy)</span></div>
-                    <div><strong>Trạng thái:</strong> ${isExpired ? '<span class="badge badge-banned">Expired</span>' : `<span class="badge badge-active">Active (Đã liên kết 1 thiết bị)</span>`}</div>
+                    <div><strong>Key:</strong> <span style="color: #38bdf8; cursor:pointer;" onclick="copyKey('${found.key}')">${found.key} (Click để copy)</span></div>
+                    <div><strong>Trạng thái:</strong> ${isExpired ? '<span class="badge badge-banned">Đã hết hạn</span>' : `<span class="badge badge-active">Hoạt động (Đã đồng bộ)</span>`}</div>
                     <div><strong>HWID Thiết bị:</strong> <span style="color: #94a3b8;">${found.hwid}</span></div>
-                    <div><strong>Thời gian còn lại:</strong> ${found.expiryTimestamp === 'Lifetime' ? 'Lifetime' : formatCountdown(found.expiryTimestamp)}</div>
+                    <div><strong>Thời gian còn lại:</strong> <span style="color: #38bdf8; font-weight: 600;">${found.expiryTimestamp === 'Lifetime' ? 'Vĩnh viễn' : formatCountdown(found.expiryTimestamp)}</span></div>
                 </div>
             `;
-            renderLicenses();
         }
 
         function closeModal() {
@@ -826,25 +999,30 @@
         }
 
         function formatCountdown(expireTimestamp) {
-            if(!expireTimestamp || expireTimestamp === 'Lifetime') return "Lifetime";
+            if(!expireTimestamp || expireTimestamp === 'Lifetime') return "Vĩnh viễn";
             const now = Math.floor(Date.now() / 1000);
             const diff = expireTimestamp - now;
-            if (diff <= 0) return "Expired";
+            if (diff <= 0) return "Đã hết hạn";
             let days = Math.floor(diff / 86400);
             let hours = Math.floor((diff % 86400) / 3600);
             let mins = Math.floor((diff % 3600) / 60);
             let secs = diff % 60;
-            return `${days}d ${hours}h ${mins}m ${secs}s`;
+            return `${days} ngày ${hours} giờ ${mins} phút ${secs} giây`;
         }
 
         setInterval(() => {
-            const activeTab = document.getElementById('view-licenses');
-            if(activeTab && activeTab.classList.contains('active')) {
+            const activeTab = document.querySelector('.view-section.active');
+            if(activeTab && activeTab.id === 'view-licenses') {
                 renderLicenses();
             }
-        }, 1000);
 
-        updateStats();
+            if(currentCheckedKey) {
+                const found = db.licenses.find(l => l.key === currentCheckedKey);
+                if(found) {
+                    updateCheckResultDisplay(found);
+                }
+            }
+        }, 1000);
     </script>
 </body>
 </html>
