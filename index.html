@@ -365,6 +365,8 @@
         }
         .btn-edit { background: #3b82f6; color: #fff; }
         .btn-edit:hover { background: #2563eb; }
+        .btn-reset { background: #8b5cf6; color: #fff; }
+        .btn-reset:hover { background: #7c3aed; }
         .btn-ban { background: #f59e0b; color: #fff; }
         .btn-ban:hover { background: #d97706; }
         .btn-unban { background: #10b981; color: #fff; }
@@ -528,7 +530,7 @@
                 </div>
                 <div class="instruction-card">
                     <h3>Trạng thái đồng bộ đám mây</h3>
-                    <p>Hệ thống quản lý bản quyền không dùng HWID. Mỗi key sẽ quản lý giới hạn số lượng thiết bị kích hoạt đồng thời trực tiếp trên Firebase.</p>
+                    <p>Hệ thống quản lý giới hạn thiết bị trực tiếp trên Firebase. Bạn có thể sử dụng nút "Reset" ở bảng quản lý Key để xóa sạch số lượng máy đang kết nối khi cần thiết.</p>
                 </div>
             </div>
 
@@ -577,10 +579,10 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 30%;">License Key</th>
+                                <th style="width: 25%;">License Key</th>
                                 <th style="width: 25%;">Trạng thái & Thiết bị</th>
                                 <th style="width: 25%;">Thời gian đếm ngược</th>
-                                <th style="width: 20%;">Thao tác</th>
+                                <th style="width: 25%;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="licenseTableBody">
@@ -917,7 +919,17 @@
             showToast("Đã cập nhật thông tin key thành công!");
         }
 
-        // --- MÔ PHỎNG CLIENT NHẬP KEY (ĐÃ FIX LỖI GẠN LỌC SỐ THIẾT BỊ) ---
+        // --- TÍNH NĂNG RESET THIẾT BỊ (RESET HWID) ---
+        function resetDevices(idx) {
+            if (confirm('Bạn có chắc chắn muốn reset số thiết bị đang đăng nhập của key này về 0?')) {
+                db.licenses[idx].currentDevices = 0;
+                saveData();
+                renderLicenses();
+                showToast("Đã reset thiết bị thành công!");
+            }
+        }
+
+        // --- MÔ PHỎNG CLIENT NHẬP KEY ---
         function simulateClientLogin() {
             const inputKey = document.getElementById('simKeyInput').value.trim();
             const resultBox = document.getElementById('simResultBox');
@@ -955,11 +967,9 @@
                 return;
             }
 
-            // Khởi tạo biến đếm thiết bị nếu chưa có
             if (l.currentDevices === undefined) l.currentDevices = 0;
             if (l.maxDevices === undefined) l.maxDevices = 1;
 
-            // Kiểm tra giới hạn số thiết bị đang đăng nhập đồng thời
             if (l.currentDevices >= l.maxDevices) {
                 resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
                 resultBox.style.color = '#f87171';
@@ -967,7 +977,6 @@
                 return;
             }
 
-            // Tăng số thiết bị đang sử dụng lên 1 khi đăng nhập thành công
             l.currentDevices += 1;
             saveData();
 
@@ -1021,6 +1030,7 @@
                         <td>
                             <div class="action-btns">
                                 <button class="btn-action btn-edit" onclick="openEditLicenseModal(${originalIdx})">Sửa</button>
+                                <button class="btn-action btn-reset" onclick="resetDevices(${originalIdx})" title="Reset số thiết bị về 0">Reset</button>
                                 ${l.status === 'Banned' ? 
                                     `<button class="btn-action btn-unban" onclick="toggleBan(${originalIdx})">Mở</button>` : 
                                     `<button class="btn-action btn-ban" onclick="toggleBan(${originalIdx})">Khóa</button>`
@@ -1104,7 +1114,7 @@
                     l.remainingTimeBeforeBan = timeLeft > 0 ? timeLeft : 0;
                 }
                 l.status = 'Banned';
-                l.currentDevices = 0; // Reset số thiết bị khi ban key
+                l.currentDevices = 0;
             }
             saveData();
             renderLicenses();
