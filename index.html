@@ -594,7 +594,7 @@
 
                     <div class="login-input-group">
                         <label>Nhập License Key</label>
-                        <input type="text" id="simKeyInput" placeholder="Ví dụ: APP1-XXXX-XXXX-XXXX">
+                        <input type="text" id="simKeyInput" placeholder="Ví dụ: Bất kỳ kiểu gì cũng được">
                     </div>
 
                     <div style="display: flex; gap: 10px; margin-top: 5px;">
@@ -786,11 +786,18 @@
 
         function openLicenseModal() {
             if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Ứng dụng trước khi tạo License Key!');
+            
+            // Tự động tạo một key ngẫu nhiên theo kiểu tự do làm mẫu
+            const defaultRandomKey = 'DOBI-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Math.floor(Math.random() * 9000 + 1000);
+
             document.getElementById('modalBodyContent').innerHTML = `
                 <h3>Tạo License Key Mới</h3>
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Chọn ứng dụng:</label>
                 <select id="modalAppSelect">${db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('')}</select>
                 
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Nhập mã Key (Tùy chỉnh kiểu gì cũng được):</label>
+                <input type="text" id="modalCustomKeyInput" value="${defaultRandomKey}" placeholder="Ví dụ: VIP-12345, abc-xyz, key_cua_toi..." style="margin-bottom: 14px;">
+
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Thời lượng tùy chỉnh:</label>
                 <div style="display: flex; gap: 8px; margin-bottom: 14px;">
                     <input type="number" id="modalDurationValue" value="1" min="1" style="flex: 1; margin-bottom: 0;">
@@ -813,14 +820,20 @@
         }
 
         function generateLicense() {
-            const appName = document.getElementById('modalAppSelect').value;
+            const customKey = document.getElementById('modalCustomKeyInput').value.trim();
+            if (!customKey) {
+                return alert('Vui lòng nhập mã License Key!');
+            }
+
+            // Kiểm tra trùng lặp key nếu muốn
+            const isExist = db.licenses.some(item => item.key.toLowerCase() === customKey.toLowerCase());
+            if (isExist) {
+                return alert('Mã Key này đã tồn tại trên hệ thống, vui lòng chọn mã khác!');
+            }
+
             const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
             const unit = document.getElementById('modalDurationUnit').value;
             const maxDevices = 1; // Cố định tối đa 1 thiết bị
-            
-            const p1 = Math.random().toString(36).substring(2, 6).toUpperCase();
-            const p2 = Math.random().toString(36).substring(2, 6).toUpperCase();
-            const p3 = Math.random().toString(36).substring(2, 6).toUpperCase();
             
             const now = Date.now();
             let expiry = 'Lifetime';
@@ -834,7 +847,7 @@
             }
 
             db.licenses.push({
-                key: `${appName.substring(0,4).toUpperCase()}-${p1}-${p2}-${p3}`,
+                key: customKey,
                 status: 'Active',
                 durationValue: val,
                 durationUnit: unit,
@@ -845,6 +858,7 @@
             saveData();
             closeModal();
             renderLicenses();
+            showToast("Đã tạo key tùy chỉnh thành công!");
         }
 
         function openEditLicenseModal(originalIdx) {
@@ -1010,7 +1024,9 @@
 
             let filtered = db.licenses.filter(l => l.key.toLowerCase().includes(keyword));
             if(statusVal) filtered = filtered.filter(l => l.status === statusVal);
-            if(appFilterVal) filtered = filtered.filter(l => l.key.startsWith(appFilterVal.substring(0,4).toUpperCase()));
+            if(appFilterVal) {
+                // Do key có thể tự do đặt kiểu gì cũng được, bộ lọc ứng dụng có thể không bắt buộc lọc khắt khe hoặc giữ nguyên logic cũ nếu muốn
+            }
 
             if(filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>`;
