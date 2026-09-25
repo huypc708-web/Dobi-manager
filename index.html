@@ -344,6 +344,7 @@
         .badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block; }
         .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; }
         .badge-banned { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .badge-type { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
 
         .action-btns {
             display: flex;
@@ -370,12 +371,12 @@
         .btn-delete { background: #ef4444; color: #fff; }
         .btn-delete:hover { background: #dc2626; }
 
-        .key-code {
+        .key-code, .account-text {
             color: #38bdf8;
             font-family: monospace;
             cursor: pointer;
         }
-        .key-code:hover { text-decoration: underline; }
+        .key-code:hover, .account-text:hover { text-decoration: underline; }
 
         .instruction-card {
             background: #131822;
@@ -479,6 +480,10 @@
                         <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
                         Quản lý Key
                     </a>
+                    <a class="nav-item" onclick="switchTab('game-accounts', this)">
+                        <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h18v8zM6 10h2v2H6v-2zm3 0h2v2H9v-2zm3 0h2v2h-2v-2z"/></svg>
+                        Kho Acc Game
+                    </a>
                     <a class="nav-item" onclick="switchTab('client-simulator', this)">
                         <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
                         Mô phỏng Client (App)
@@ -515,8 +520,8 @@
                         <div class="number" id="statActive">0</div>
                     </div>
                     <div class="stat-card">
-                        <h4>Tổng số Người dùng</h4>
-                        <div class="number" id="statUsers">0</div>
+                        <h4>Tổng số Acc Game</h4>
+                        <div class="number" id="statGameAccounts">0</div>
                     </div>
                 </div>
                 <div class="instruction-card">
@@ -581,6 +586,40 @@
                 </div>
             </div>
 
+            <!-- Tab: Kho Acc Game -->
+            <div id="view-game-accounts" class="view-section">
+                <div class="section-title-row">
+                    <div class="section-title">Quản lý Kho Acc Game</div>
+                    <button class="btn-primary" onclick="openGameAccountModal()">+ Thêm Acc Game</button>
+                </div>
+
+                <div class="filters-bar">
+                    <input type="text" class="search-box" placeholder="Tìm kiếm SĐT/Gmail hoặc loại acc..." id="searchGameInput" onkeyup="renderGameAccounts()">
+                    <select id="statusGameFilter" onchange="renderGameAccounts()">
+                        <option value="">Tất cả trạng thái</option>
+                        <option value="Active">Không Ban (Active)</option>
+                        <option value="Banned">Đã Ban (Banned)</option>
+                    </select>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 20%;">Loại Acc</th>
+                                <th style="width: 25%;">SĐT/Gmail</th>
+                                <th style="width: 20%;">Mật khẩu</th>
+                                <th style="width: 15%;">Trạng thái</th>
+                                <th style="width: 20%;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gameAccountTableBody">
+                            <tr><td colspan="5" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div id="view-client-simulator" class="view-section">
                 <div class="section-title-row">
                     <div class="section-title">Mô phỏng Phần mềm Client Nhập Key & Reset HWID</div>
@@ -631,7 +670,8 @@
         let db = {
             apps: [],
             licenses: [],
-            users: []
+            users: [],
+            gameAccounts: []
         };
 
         window.onload = function() {
@@ -672,16 +712,18 @@
                     db = {
                         apps: data.apps || [],
                         licenses: data.licenses || [],
-                        users: data.users || []
+                        users: data.users || [],
+                        gameAccounts: data.gameAccounts || []
                     };
                 } else {
-                    database.ref('dobimanager').set({ apps: [], licenses: [], users: [] });
+                    database.ref('dobimanager').set({ apps: [], licenses: [], users: [], gameAccounts: [] });
                 }
                 updateStats();
                 const activeTab = document.querySelector('.view-section.active');
                 if(activeTab) {
                     if(activeTab.id === 'view-licenses') renderLicenses();
                     if(activeTab.id === 'view-applications') renderApps();
+                    if(activeTab.id === 'view-game-accounts') renderGameAccounts();
                 }
             });
         }
@@ -703,6 +745,8 @@
                 renderLicenses();
             } else if(tabId === 'applications') {
                 renderApps();
+            } else if(tabId === 'game-accounts') {
+                renderGameAccounts();
             } else if(tabId === 'overview') {
                 updateStats();
             }
@@ -713,7 +757,9 @@
             document.getElementById('statApps').innerText = db.apps.length;
             document.getElementById('statLicenses').innerText = db.licenses.length;
             document.getElementById('statActive').innerText = db.licenses.filter(l => l.status === 'Active').length;
-            document.getElementById('statUsers').innerText = db.users.length;
+            if(document.getElementById('statGameAccounts')) {
+                document.getElementById('statGameAccounts').innerText = db.gameAccounts.length;
+            }
         }
 
         function showToast(message) {
@@ -787,7 +833,6 @@
         function openLicenseModal() {
             if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Ứng dụng trước khi tạo License Key!');
             
-            // Tự động tạo một key ngẫu nhiên theo kiểu tự do làm mẫu
             const defaultRandomKey = 'DOBI-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Math.floor(Math.random() * 9000 + 1000);
 
             document.getElementById('modalBodyContent').innerHTML = `
@@ -825,7 +870,6 @@
                 return alert('Vui lòng nhập mã License Key!');
             }
 
-            // Kiểm tra trùng lặp key nếu muốn
             const isExist = db.licenses.some(item => item.key.toLowerCase() === customKey.toLowerCase());
             if (isExist) {
                 return alert('Mã Key này đã tồn tại trên hệ thống, vui lòng chọn mã khác!');
@@ -833,7 +877,7 @@
 
             const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
             const unit = document.getElementById('modalDurationUnit').value;
-            const maxDevices = 1; // Cố định tối đa 1 thiết bị
+            const maxDevices = 1; 
             
             const now = Date.now();
             let expiry = 'Lifetime';
@@ -892,7 +936,7 @@
             const newVal = parseInt(document.getElementById('editDurationValue').value) || 1;
             const newUnit = document.getElementById('editDurationUnit').value;
             
-            db.licenses[idx].maxDevices = 1; // Luôn giữ tối đa 1 thiết bị
+            db.licenses[idx].maxDevices = 1; 
             db.licenses[idx].durationValue = newVal;
             db.licenses[idx].durationUnit = newUnit;
             
@@ -924,6 +968,194 @@
                 showToast("Đã reset thiết bị thành công!");
             }
         }
+
+        /* --- Quản lý Kho Acc Game --- */
+        function openGameAccountModal() {
+            document.getElementById('modalBodyContent').innerHTML = `
+                <h3>Thêm Acc Game Mới</h3>
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Loại Acc:</label>
+                <select id="modalGameType">
+                    <option value="Garena">Garena</option>
+                    <option value="X">X</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Google">Google</option>
+                    <option value="Vk">Vk</option>
+                </select>
+
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">SĐT/Gmail:</label>
+                <input type="text" id="modalGameUsername" placeholder="Nhập SĐT hoặc Gmail...">
+                
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Mật khẩu / Password:</label>
+                <input type="text" id="modalGamePassword" placeholder="Nhập mật khẩu...">
+
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Trạng thái:</label>
+                <select id="modalGameStatus">
+                    <option value="Active">Không Ban (Active)</option>
+                    <option value="Banned">Đã Ban (Banned)</option>
+                </select>
+
+                <div class="modal-btns">
+                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                    <button class="btn-primary" onclick="createGameAccount()">Lưu Acc</button>
+                </div>
+            `;
+            document.getElementById('globalModal').style.display = 'flex';
+        }
+
+        function createGameAccount() {
+            const gameType = document.getElementById('modalGameType').value;
+            const username = document.getElementById('modalGameUsername').value.trim();
+            const password = document.getElementById('modalGamePassword').value.trim();
+            const status = document.getElementById('modalGameStatus').value;
+
+            if(!username || !password) {
+                return alert('Vui lòng nhập đầy đủ SĐT/Gmail và mật khẩu!');
+            }
+
+            if (!db.gameAccounts) db.gameAccounts = [];
+            db.gameAccounts.push({
+                id: Date.now(),
+                gameType: gameType,
+                username: username,
+                password: password,
+                status: status
+            });
+
+            saveData();
+            closeModal();
+            renderGameAccounts();
+            showToast("Thêm tài khoản game thành công!");
+        }
+
+        function openEditGameAccountModal(idx) {
+            const acc = db.gameAccounts[idx];
+            const currentType = acc.gameType || 'Garena';
+
+            document.getElementById('modalBodyContent').innerHTML = `
+                <h3>Chỉnh sửa Acc Game</h3>
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Loại Acc:</label>
+                <select id="editGameType">
+                    <option value="Garena" ${currentType === 'Garena' ? 'selected' : ''}>Garena</option>
+                    <option value="X" ${currentType === 'X' ? 'selected' : ''}>X</option>
+                    <option value="Facebook" ${currentType === 'Facebook' ? 'selected' : ''}>Facebook</option>
+                    <option value="Google" ${currentType === 'Google' ? 'selected' : ''}>Google</option>
+                    <option value="Vk" ${currentType === 'Vk' ? 'selected' : ''}>Vk</option>
+                </select>
+
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">SĐT/Gmail:</label>
+                <input type="text" id="editGameUsername" value="${acc.username}" placeholder="Nhập SĐT hoặc Gmail...">
+                
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Mật khẩu / Password:</label>
+                <input type="text" id="editGamePassword" value="${acc.password}">
+
+                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Trạng thái:</label>
+                <select id="editGameStatus">
+                    <option value="Active" ${acc.status === 'Active' ? 'selected' : ''}>Không Ban (Active)</option>
+                    <option value="Banned" ${acc.status === 'Banned' ? 'selected' : ''}>Đã Ban (Banned)</option>
+                </select>
+
+                <div class="modal-btns">
+                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                    <button class="btn-primary" onclick="saveEditedGameAccount(${idx})">Cập nhật</button>
+                </div>
+            `;
+            document.getElementById('globalModal').style.display = 'flex';
+        }
+
+        function saveEditedGameAccount(idx) {
+            const gameType = document.getElementById('editGameType').value;
+            const username = document.getElementById('editGameUsername').value.trim();
+            const password = document.getElementById('editGamePassword').value.trim();
+            const status = document.getElementById('editGameStatus').value;
+
+            if(!username || !password) {
+                return alert('Vui lòng không để trống thông tin!');
+            }
+
+            db.gameAccounts[idx].gameType = gameType;
+            db.gameAccounts[idx].username = username;
+            db.gameAccounts[idx].password = password;
+            db.gameAccounts[idx].status = status;
+
+            saveData();
+            closeModal();
+            renderGameAccounts();
+            showToast("Cập nhật thành công!");
+        }
+
+        function toggleBanGameAccount(idx) {
+            const acc = db.gameAccounts[idx];
+            acc.status = acc.status === 'Banned' ? 'Active' : 'Banned';
+            saveData();
+            renderGameAccounts();
+        }
+
+        function deleteGameAccount(idx) {
+            if(confirm('Bạn có chắc chắn muốn xóa tài khoản này khỏi kho?')) {
+                db.gameAccounts.splice(idx, 1);
+                saveData();
+                renderGameAccounts();
+            }
+        }
+
+        function renderGameAccounts() {
+            const tbody = document.getElementById('gameAccountTableBody');
+            const searchInputEl = document.getElementById('searchGameInput');
+            const statusFilterEl = document.getElementById('statusGameFilter');
+
+            if (!tbody) return;
+            if (!db.gameAccounts) db.gameAccounts = [];
+
+            const keyword = searchInputEl ? searchInputEl.value.toLowerCase() : '';
+            const statusVal = statusFilterEl ? statusFilterEl.value : '';
+
+            let filtered = db.gameAccounts.filter(a => 
+                a.username.toLowerCase().includes(keyword) || 
+                (a.gameType && a.gameType.toLowerCase().includes(keyword))
+            );
+            
+            if(statusVal) {
+                filtered = filtered.filter(a => a.status === statusVal);
+            }
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = filtered.map((acc) => {
+                const originalIdx = db.gameAccounts.findIndex(item => item.id === acc.id);
+                let badgeClass = 'badge-active';
+                let statusText = 'Không Ban';
+                
+                if(acc.status === 'Banned') {
+                    badgeClass = 'badge-banned';
+                    statusText = 'Đã Ban';
+                }
+
+                const typeName = acc.gameType || 'Garena';
+
+                return `
+                    <tr>
+                        <td><span class="badge badge-type">${typeName}</span></td>
+                        <td><span class="account-text" onclick="copyKey('${acc.username}')" title="Nhấn để copy">${acc.username}</span></td>
+                        <td><span class="account-text" onclick="copyKey('${acc.password}')" title="Nhấn để copy">•••••••• (Nhấn copy)</span></td>
+                        <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                        <td>
+                            <div class="action-btns">
+                                <button class="btn-action btn-edit" onclick="openEditGameAccountModal(${originalIdx})">Sửa</button>
+                                ${acc.status === 'Banned' ? 
+                                    `<button class="btn-action btn-unban" onclick="toggleBanGameAccount(${originalIdx})">Bỏ Ban</button>` : 
+                                    `<button class="btn-action btn-ban" onclick="toggleBanGameAccount(${originalIdx})">Ban</button>`
+                                }
+                                <button class="btn-action btn-delete" onclick="deleteGameAccount(${originalIdx})">Xóa</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        /* --- Kết thúc phần Acc Game --- */
 
         function simulateClientLogin() {
             const inputKey = document.getElementById('simKeyInput').value.trim();
@@ -1024,9 +1256,6 @@
 
             let filtered = db.licenses.filter(l => l.key.toLowerCase().includes(keyword));
             if(statusVal) filtered = filtered.filter(l => l.status === statusVal);
-            if(appFilterVal) {
-                // Do key có thể tự do đặt kiểu gì cũng được, bộ lọc ứng dụng có thể không bắt buộc lọc khắt khe hoặc giữ nguyên logic cũ nếu muốn
-            }
 
             if(filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>`;
