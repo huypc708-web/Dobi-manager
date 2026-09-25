@@ -371,8 +371,6 @@
         .btn-unban:hover { background: #059669; }
         .btn-delete { background: #ef4444; color: #fff; }
         .btn-delete:hover { background: #dc2626; }
-        .btn-check-api { background: #0ea5e9; color: #fff; }
-        .btn-check-api:hover { background: #0284c7; }
 
         .key-code, .account-text {
             color: #38bdf8;
@@ -528,8 +526,8 @@
                     </div>
                 </div>
                 <div class="instruction-card">
-                    <h3>Trạng thái đồng bộ đám mây & Tự check Ban FF</h3>
-                    <p>Hệ thống hỗ trợ quét và kết nối trực tiếp trạng thái khóa (Ban) của Free Fire thông qua UID.</p>
+                    <h3>Hệ thống Quản lý Tài khoản Game</h3>
+                    <p>Quản lý tập trung các tài khoản game của bạn với trạng thái No Band và Band đơn giản, dễ theo dõi.</p>
                 </div>
             </div>
 
@@ -592,19 +590,16 @@
             <!-- Tab: Kho Acc Game -->
             <div id="view-game-accounts" class="view-section">
                 <div class="section-title-row">
-                    <div class="section-title">Quản lý Kho Acc Game & Tự Check Ban FF</div>
+                    <div class="section-title">Quản lý Kho Acc Game</div>
                     <button class="btn-primary" onclick="openGameAccountModal()">+ Thêm Acc Game</button>
                 </div>
 
                 <div class="filters-bar">
-                    <input type="text" class="search-box" placeholder="Tìm kiếm SĐT/Gmail hoặc UID..." id="searchGameInput" onkeyup="renderGameAccounts()">
+                    <input type="text" class="search-box" placeholder="Tìm kiếm SĐT/Gmail..." id="searchGameInput" onkeyup="renderGameAccounts()">
                     <select id="statusGameFilter" onchange="renderGameAccounts()">
                         <option value="">Tất cả trạng thái</option>
-                        <option value="Không ban">Không ban</option>
-                        <option value="Ban đồng">Ban đồng</option>
-                        <option value="Ban ID">Ban ID</option>
-                        <option value="Ban theo số ngày">Ban theo số ngày</option>
-                        <option value="Ban vĩnh viễn">Ban vĩnh viễn</option>
+                        <option value="No Band">No Band</option>
+                        <option value="Band">Band</option>
                     </select>
                 </div>
 
@@ -612,15 +607,14 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 15%;">Loại Acc</th>
-                                <th style="width: 20%;">SĐT/Gmail & UID</th>
-                                <th style="width: 15%;">Mật khẩu</th>
-                                <th style="width: 15%;">Trạng thái</th>
-                                <th style="width: 35%;">Thao tác</th>
+                                <th style="width: 25%;">Loại Acc</th>
+                                <th style="width: 35%;">SĐT/Gmail</th>
+                                <th style="width: 20%;">Trạng thái</th>
+                                <th style="width: 20%;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="gameAccountTableBody">
-                            <tr><td colspan="5" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>
+                            <tr><td colspan="4" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -974,7 +968,7 @@
             }
         }
 
-        /* --- Quản lý Kho Acc Game & Cơ chế tự check Ban FF thông minh --- */
+        /* --- Quản lý Kho Acc Game (Không còn cột Mật khẩu) --- */
         function openGameAccountModal() {
             document.getElementById('modalBodyContent').innerHTML = `
                 <h3>Thêm Acc Game Mới</h3>
@@ -989,26 +983,12 @@
 
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">SĐT/Gmail tài khoản:</label>
                 <input type="text" id="modalGameUsername" placeholder="Nhập SĐT hoặc Gmail đăng nhập...">
-                
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Mật khẩu / Password:</label>
-                <input type="text" id="modalGamePassword" placeholder="Nhập mật khẩu...">
-
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">UID Free Fire (Mã số trong game):</label>
-                <input type="text" id="modalGameUid" placeholder="Ví dụ: 123456789 (Dùng để check Ban)...">
 
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Trạng thái:</label>
-                <select id="modalGameStatus" onchange="checkCustomDaysModal(this.value)">
-                    <option value="Không ban">Không ban</option>
-                    <option value="Ban đồng">Ban đồng</option>
-                    <option value="Ban ID">Ban ID</option>
-                    <option value="Ban theo số ngày">Ban theo số ngày</option>
-                    <option value="Ban vĩnh viễn">Ban vĩnh viễn</option>
+                <select id="modalGameStatus">
+                    <option value="No Band">No Band</option>
+                    <option value="Band">Band</option>
                 </select>
-
-                <div id="modalCustomDaysContainer" style="display: none; margin-bottom: 14px;">
-                    <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Nhập số ngày ban:</label>
-                    <input type="number" id="modalBanDays" value="7" min="1">
-                </div>
 
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="closeModal()">Hủy</button>
@@ -1018,35 +998,13 @@
             document.getElementById('globalModal').style.display = 'flex';
         }
 
-        function checkCustomDaysModal(val) {
-            const container = document.getElementById('modalCustomDaysContainer');
-            if (container) {
-                container.style.display = (val === 'Ban theo số ngày') ? 'block' : 'none';
-            }
-        }
-
-        function checkCustomDaysEdit(val) {
-            const container = document.getElementById('editCustomDaysContainer');
-            if (container) {
-                container.style.display = (val === 'Ban theo số ngày') ? 'block' : 'none';
-            }
-        }
-
         function createGameAccount() {
             const gameType = document.getElementById('modalGameType').value;
             const username = document.getElementById('modalGameUsername').value.trim();
-            const password = document.getElementById('modalGamePassword').value.trim();
-            const gameUid = document.getElementById('modalGameUid').value.trim();
             const statusSelect = document.getElementById('modalGameStatus').value;
 
-            if(!username || !password) {
-                return alert('Vui lòng nhập đầy đủ thông tin đăng nhập!');
-            }
-
-            let finalStatus = statusSelect;
-            if (statusSelect === 'Ban theo số ngày') {
-                const days = document.getElementById('modalBanDays').value || '1';
-                finalStatus = `Ban ${days} ngày`;
+            if(!username) {
+                return alert('Vui lòng nhập SĐT/Gmail tài khoản!');
             }
 
             if (!db.gameAccounts) db.gameAccounts = [];
@@ -1054,9 +1012,7 @@
                 id: Date.now(),
                 gameType: gameType,
                 username: username,
-                password: password,
-                gameUid: gameUid || '',
-                status: finalStatus
+                status: statusSelect
             });
 
             saveData();
@@ -1068,16 +1024,7 @@
         function openEditGameAccountModal(idx) {
             const acc = db.gameAccounts[idx];
             const currentType = acc.gameType || 'Google';
-            const rawStatus = acc.status || 'Không ban';
-            const currentUid = acc.gameUid || '';
-            
-            let dropdownVal = rawStatus;
-            let customDaysVal = 7;
-            if (rawStatus.startsWith('Ban ') && rawStatus !== 'Ban đồng' && rawStatus !== 'Ban ID' && rawStatus !== 'Ban vĩnh viễn') {
-                dropdownVal = 'Ban theo số ngày';
-                const matchedNumbers = rawStatus.match(/\d+/);
-                if (matchedNumbers) customDaysVal = matchedNumbers[0];
-            }
+            const rawStatus = acc.status || 'No Band';
 
             document.getElementById('modalBodyContent').innerHTML = `
                 <h3>Chỉnh sửa Acc Game</h3>
@@ -1092,26 +1039,12 @@
 
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">SĐT/Gmail:</label>
                 <input type="text" id="editGameUsername" value="${acc.username}">
-                
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Mật khẩu / Password:</label>
-                <input type="text" id="editGamePassword" value="${acc.password}">
-
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">UID Free Fire:</label>
-                <input type="text" id="editGameUid" value="${currentUid}" placeholder="Nhập UID Free Fire...">
 
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Trạng thái:</label>
-                <select id="editGameStatus" onchange="checkCustomDaysEdit(this.value)">
-                    <option value="Không ban" ${dropdownVal === 'Không ban' ? 'selected' : ''}>Không ban</option>
-                    <option value="Ban đồng" ${dropdownVal === 'Ban đồng' ? 'selected' : ''}>Ban đồng</option>
-                    <option value="Ban ID" ${dropdownVal === 'Ban ID' ? 'selected' : ''}>Ban ID</option>
-                    <option value="Ban theo số ngày" ${dropdownVal === 'Ban theo số ngày' ? 'selected' : ''}>Ban theo số ngày</option>
-                    <option value="Ban vĩnh viễn" ${dropdownVal === 'Ban vĩnh viễn' ? 'selected' : ''}>Ban vĩnh viễn</option>
+                <select id="editGameStatus">
+                    <option value="No Band" ${rawStatus === 'No Band' ? 'selected' : ''}>No Band</option>
+                    <option value="Band" ${rawStatus === 'Band' ? 'selected' : ''}>Band</option>
                 </select>
-
-                <div id="editCustomDaysContainer" style="display: ${dropdownVal === 'Ban theo số ngày' ? 'block' : 'none'}; margin-bottom: 14px;">
-                    <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Nhập số ngày ban:</label>
-                    <input type="number" id="editBanDays" value="${customDaysVal}" min="1">
-                </div>
 
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="closeModal()">Hủy</button>
@@ -1124,25 +1057,15 @@
         function saveEditedGameAccount(idx) {
             const gameType = document.getElementById('editGameType').value;
             const username = document.getElementById('editGameUsername').value.trim();
-            const password = document.getElementById('editGamePassword').value.trim();
-            const gameUid = document.getElementById('editGameUid').value.trim();
             const statusSelect = document.getElementById('editGameStatus').value;
 
-            if(!username || !password) {
+            if(!username) {
                 return alert('Vui lòng không để trống thông tin!');
-            }
-
-            let finalStatus = statusSelect;
-            if (statusSelect === 'Ban theo số ngày') {
-                const days = document.getElementById('editBanDays').value || '1';
-                finalStatus = `Ban ${days} ngày`;
             }
 
             db.gameAccounts[idx].gameType = gameType;
             db.gameAccounts[idx].username = username;
-            db.gameAccounts[idx].password = password;
-            db.gameAccounts[idx].gameUid = gameUid;
-            db.gameAccounts[idx].status = finalStatus;
+            db.gameAccounts[idx].status = statusSelect;
 
             saveData();
             closeModal();
@@ -1150,66 +1073,8 @@
             showToast("Cập nhật thành công!");
         }
 
-        // Tự động kiểm tra trạng thái ban thông qua API công khai kết hợp CORS Proxy an toàn
-        async function autoCheckFreeFireBan(idx) {
-            const acc = db.gameAccounts[idx];
-            if (!acc.gameUid) {
-                return alert('Tài khoản này chưa có UID Free Fire! Vui lòng bấm Sửa để cập nhật UID trước.');
-            }
-
-            showToast(`Đang kết nối kiểm tra UID: ${acc.gameUid}...`);
-
-            try {
-                // Sử dụng dịch vụ Corsproxy kết hợp với API check ban cộng đồng để bypass lỗi CORS từ trình duyệt
-                const targetUrl = `https://api.xfaraz.dev/ban?uid=${acc.gameUid}`;
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-
-                const response = await fetch(proxyUrl);
-                const wrapper = await response.json();
-                
-                if (wrapper.contents) {
-                    const data = JSON.parse(wrapper.contents);
-                    const isBanned = data.is_banned || data.status === 'Banned' || data.banned === true;
-                    
-                    if (isBanned) {
-                        db.gameAccounts[idx].status = 'Ban vĩnh viễn';
-                        showToast(`⚠️ Cảnh báo: Tài khoản ${acc.username} đã bị KHÓA (Banned)!`);
-                    } else {
-                        db.gameAccounts[idx].status = 'Không ban';
-                        showToast(`✅ Tài khoản ${acc.username} đang hoạt động bình thường!`);
-                    }
-                } else {
-                    throw new Error("Phản hồi trống từ máy chủ check ban");
-                }
-            } catch (error) {
-                console.warn("Lỗi gọi API trực tiếp, kích hoạt cơ chế quét thông minh dự phòng:", error);
-                
-                // Cơ chế dự phòng thông minh (Fallback): Tự động phân tích dựa trên UID mẫu để giả lập kết quả thực tế lên hệ thống Cloud
-                const lastDigit = parseInt(acc.gameUid.slice(-1)) || 0;
-                if (lastDigit % 5 === 0) {
-                    db.gameAccounts[idx].status = 'Ban vĩnh viễn';
-                    showToast(`⚠️ Quét hệ thống: Phát hiện UID ${acc.gameUid} đã bị khóa!`);
-                } else {
-                    db.gameAccounts[idx].status = 'Không ban';
-                    showToast(`✅ Quét hệ thống: UID ${acc.gameUid} sạch, không bị khóa!`);
-                }
-            }
-
-            saveData();
-            renderGameAccounts();
-        }
-
         function changeGameAccountStatus(idx, newStatus) {
-            if (newStatus === 'Ban theo số ngày') {
-                const daysInput = prompt('Nhập số ngày muốn ban:', '7');
-                if (daysInput && !isNaN(daysInput)) {
-                    db.gameAccounts[idx].status = `Ban ${daysInput} ngày`;
-                } else {
-                    return;
-                }
-            } else {
-                db.gameAccounts[idx].status = newStatus;
-            }
+            db.gameAccounts[idx].status = newStatus;
             saveData();
             renderGameAccounts();
             showToast("Đã đổi trạng thái thành công!");
@@ -1236,58 +1101,46 @@
 
             let filtered = db.gameAccounts.filter(a => 
                 a.username.toLowerCase().includes(keyword) || 
-                (a.gameType && a.gameType.toLowerCase().includes(keyword)) ||
-                (a.gameUid && a.gameUid.toLowerCase().includes(keyword))
+                (a.gameType && a.gameType.toLowerCase().includes(keyword))
             );
             
             if(statusVal) {
-                if (statusVal === 'Ban theo số ngày') {
-                    filtered = filtered.filter(a => a.status && a.status.startsWith('Ban ') && a.status !== 'Ban đồng' && a.status !== 'Ban ID' && a.status !== 'Ban vĩnh viễn');
-                } else {
-                    filtered = filtered.filter(a => a.status === statusVal);
-                }
+                filtered = filtered.filter(a => a.status === statusVal);
             }
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = filtered.map((acc) => {
                 const originalIdx = db.gameAccounts.findIndex(item => item.id === acc.id);
                 let badgeClass = 'badge-active';
-                let statusText = acc.status || 'Không ban';
+                let statusText = acc.status || 'No Band';
                 
-                if (statusText === 'Không ban') {
+                if (statusText === 'No Band') {
                     badgeClass = 'badge-active';
                 } else {
                     badgeClass = 'badge-banned';
                 }
 
                 const typeName = acc.gameType || 'Google';
-                const displayUid = acc.gameUid ? `<br><small style="color: #38bdf8;">UID: ${acc.gameUid}</small>` : `<br><small style="color: #64748b;">Chưa có UID</small>`;
 
                 return `
                     <tr>
                         <td><span class="badge badge-type">${typeName}</span></td>
                         <td>
                             <span class="account-text" onclick="copyKey('${acc.username}')" title="Nhấn để copy">${acc.username}</span>
-                            ${displayUid}
                         </td>
-                        <td><span class="account-text" onclick="copyKey('${acc.password}')" title="Nhấn để copy">••••••••</span></td>
                         <td><span class="badge ${badgeClass}">${statusText}</span></td>
                         <td>
                             <div class="action-btns">
-                                <button class="btn-action btn-check-api" onclick="autoCheckFreeFireBan(${originalIdx})" title="Tự động kết nối check Ban FF">Check Ban</button>
                                 <button class="btn-action btn-edit" onclick="openEditGameAccountModal(${originalIdx})">Sửa</button>
                                 
                                 <select onchange="changeGameAccountStatus(${originalIdx}, this.value)" style="padding: 4px; font-size: 11px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 4px; cursor: pointer;">
-                                    <option value="" disabled selected>Trạng thái...</option>
-                                    <option value="Không ban">Không ban</option>
-                                    <option value="Ban đồng">Ban đồng</option>
-                                    <option value="Ban ID">Ban ID</option>
-                                    <option value="Ban theo số ngày">Ban theo ngày...</option>
-                                    <option value="Ban vĩnh viễn">Ban vĩnh viễn</option>
+                                    <option value="" disabled selected>Đổi trạng thái...</option>
+                                    <option value="No Band">No Band</option>
+                                    <option value="Band">Band</option>
                                 </select>
 
                                 <button class="btn-action btn-delete" onclick="deleteGameAccount(${originalIdx})">Xóa</button>
