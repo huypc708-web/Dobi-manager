@@ -597,8 +597,11 @@
                     <input type="text" class="search-box" placeholder="Tìm kiếm SĐT/Gmail hoặc loại acc..." id="searchGameInput" onkeyup="renderGameAccounts()">
                     <select id="statusGameFilter" onchange="renderGameAccounts()">
                         <option value="">Tất cả trạng thái</option>
-                        <option value="Active">Không Ban (Active)</option>
-                        <option value="Banned">Đã Ban (Banned)</option>
+                        <option value="Không ban">Không ban</option>
+                        <option value="Ban đồng">Ban đồng</option>
+                        <option value="Ban ID">Ban ID</option>
+                        <option value="Ban theo số ngày">Ban theo số ngày</option>
+                        <option value="Ban vĩnh viễn">Ban vĩnh viễn</option>
                     </select>
                 </div>
 
@@ -989,10 +992,18 @@
                 <input type="text" id="modalGamePassword" placeholder="Nhập mật khẩu...">
 
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Trạng thái:</label>
-                <select id="modalGameStatus">
-                    <option value="Active">Không Ban (Active)</option>
-                    <option value="Banned">Đã Ban (Banned)</option>
+                <select id="modalGameStatus" onchange="checkCustomDaysModal(this.value)">
+                    <option value="Không ban">Không ban</option>
+                    <option value="Ban đồng">Ban đồng</option>
+                    <option value="Ban ID">Ban ID</option>
+                    <option value="Ban theo số ngày">Ban theo số ngày</option>
+                    <option value="Ban vĩnh viễn">Ban vĩnh viễn</option>
                 </select>
+
+                <div id="modalCustomDaysContainer" style="display: none; margin-bottom: 14px;">
+                    <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Nhập số ngày ban:</label>
+                    <input type="number" id="modalBanDays" value="7" min="1" placeholder="Ví dụ: 7, 30...">
+                </div>
 
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="closeModal()">Hủy</button>
@@ -1002,14 +1013,34 @@
             document.getElementById('globalModal').style.display = 'flex';
         }
 
+        function checkCustomDaysModal(val) {
+            const container = document.getElementById('modalCustomDaysContainer');
+            if (container) {
+                container.style.display = (val === 'Ban theo số ngày') ? 'block' : 'none';
+            }
+        }
+
+        function checkCustomDaysEdit(val) {
+            const container = document.getElementById('editCustomDaysContainer');
+            if (container) {
+                container.style.display = (val === 'Ban theo số ngày') ? 'block' : 'none';
+            }
+        }
+
         function createGameAccount() {
             const gameType = document.getElementById('modalGameType').value;
             const username = document.getElementById('modalGameUsername').value.trim();
             const password = document.getElementById('modalGamePassword').value.trim();
-            const status = document.getElementById('modalGameStatus').value;
+            const statusSelect = document.getElementById('modalGameStatus').value;
 
             if(!username || !password) {
                 return alert('Vui lòng nhập đầy đủ SĐT/Gmail và mật khẩu!');
+            }
+
+            let finalStatus = statusSelect;
+            if (statusSelect === 'Ban theo số ngày') {
+                const days = document.getElementById('modalBanDays').value || '1';
+                finalStatus = `Ban ${days} ngày`;
             }
 
             if (!db.gameAccounts) db.gameAccounts = [];
@@ -1018,7 +1049,7 @@
                 gameType: gameType,
                 username: username,
                 password: password,
-                status: status
+                status: finalStatus
             });
 
             saveData();
@@ -1030,6 +1061,15 @@
         function openEditGameAccountModal(idx) {
             const acc = db.gameAccounts[idx];
             const currentType = acc.gameType || 'Garena';
+            const rawStatus = acc.status || 'Không ban';
+            
+            let dropdownVal = rawStatus;
+            let customDaysVal = 7;
+            if (rawStatus.startsWith('Ban ') && rawStatus !== 'Ban đồng' && rawStatus !== 'Ban ID' && rawStatus !== 'Ban vĩnh viễn') {
+                dropdownVal = 'Ban theo số ngày';
+                const matchedNumbers = rawStatus.match(/\d+/);
+                if (matchedNumbers) customDaysVal = matchedNumbers[0];
+            }
 
             document.getElementById('modalBodyContent').innerHTML = `
                 <h3>Chỉnh sửa Acc Game</h3>
@@ -1049,10 +1089,18 @@
                 <input type="text" id="editGamePassword" value="${acc.password}">
 
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Trạng thái:</label>
-                <select id="editGameStatus">
-                    <option value="Active" ${acc.status === 'Active' ? 'selected' : ''}>Không Ban (Active)</option>
-                    <option value="Banned" ${acc.status === 'Banned' ? 'selected' : ''}>Đã Ban (Banned)</option>
+                <select id="editGameStatus" onchange="checkCustomDaysEdit(this.value)">
+                    <option value="Không ban" ${dropdownVal === 'Không ban' ? 'selected' : ''}>Không ban</option>
+                    <option value="Ban đồng" ${dropdownVal === 'Ban đồng' ? 'selected' : ''}>Ban đồng</option>
+                    <option value="Ban ID" ${dropdownVal === 'Ban ID' ? 'selected' : ''}>Ban ID</option>
+                    <option value="Ban theo số ngày" ${dropdownVal === 'Ban theo số ngày' ? 'selected' : ''}>Ban theo số ngày</option>
+                    <option value="Ban vĩnh viễn" ${dropdownVal === 'Ban vĩnh viễn' ? 'selected' : ''}>Ban vĩnh viễn</option>
                 </select>
+
+                <div id="editCustomDaysContainer" style="display: ${dropdownVal === 'Ban theo số ngày' ? 'block' : 'none'}; margin-bottom: 14px;">
+                    <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Nhập số ngày ban:</label>
+                    <input type="number" id="editBanDays" value="${customDaysVal}" min="1">
+                </div>
 
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="closeModal()">Hủy</button>
@@ -1066,16 +1114,22 @@
             const gameType = document.getElementById('editGameType').value;
             const username = document.getElementById('editGameUsername').value.trim();
             const password = document.getElementById('editGamePassword').value.trim();
-            const status = document.getElementById('editGameStatus').value;
+            const statusSelect = document.getElementById('editGameStatus').value;
 
             if(!username || !password) {
                 return alert('Vui lòng không để trống thông tin!');
             }
 
+            let finalStatus = statusSelect;
+            if (statusSelect === 'Ban theo số ngày') {
+                const days = document.getElementById('editBanDays').value || '1';
+                finalStatus = `Ban ${days} ngày`;
+            }
+
             db.gameAccounts[idx].gameType = gameType;
             db.gameAccounts[idx].username = username;
             db.gameAccounts[idx].password = password;
-            db.gameAccounts[idx].status = status;
+            db.gameAccounts[idx].status = finalStatus;
 
             saveData();
             closeModal();
@@ -1083,11 +1137,20 @@
             showToast("Cập nhật thành công!");
         }
 
-        function toggleBanGameAccount(idx) {
-            const acc = db.gameAccounts[idx];
-            acc.status = acc.status === 'Banned' ? 'Active' : 'Banned';
+        function changeGameAccountStatus(idx, newStatus) {
+            if (newStatus === 'Ban theo số ngày') {
+                const daysInput = prompt('Nhập số ngày muốn ban:', '7');
+                if (daysInput && !isNaN(daysInput)) {
+                    db.gameAccounts[idx].status = `Ban ${daysInput} ngày`;
+                } else {
+                    return;
+                }
+            } else {
+                db.gameAccounts[idx].status = newStatus;
+            }
             saveData();
             renderGameAccounts();
+            showToast("Đã đổi trạng thái thành công!");
         }
 
         function deleteGameAccount(idx) {
@@ -1115,7 +1178,11 @@
             );
             
             if(statusVal) {
-                filtered = filtered.filter(a => a.status === statusVal);
+                if (statusVal === 'Ban theo số ngày') {
+                    filtered = filtered.filter(a => a.status && a.status.startsWith('Ban ') && a.status !== 'Ban đồng' && a.status !== 'Ban ID' && a.status !== 'Ban vĩnh viễn');
+                } else {
+                    filtered = filtered.filter(a => a.status === statusVal);
+                }
             }
 
             if(filtered.length === 0) {
@@ -1126,11 +1193,12 @@
             tbody.innerHTML = filtered.map((acc) => {
                 const originalIdx = db.gameAccounts.findIndex(item => item.id === acc.id);
                 let badgeClass = 'badge-active';
-                let statusText = 'Không Ban';
+                let statusText = acc.status || 'Không ban';
                 
-                if(acc.status === 'Banned') {
+                if (statusText === 'Không ban') {
+                    badgeClass = 'badge-active';
+                } else {
                     badgeClass = 'badge-banned';
-                    statusText = 'Đã Ban';
                 }
 
                 const typeName = acc.gameType || 'Garena';
@@ -1144,10 +1212,16 @@
                         <td>
                             <div class="action-btns">
                                 <button class="btn-action btn-edit" onclick="openEditGameAccountModal(${originalIdx})">Sửa</button>
-                                ${acc.status === 'Banned' ? 
-                                    `<button class="btn-action btn-unban" onclick="toggleBanGameAccount(${originalIdx})">Bỏ Ban</button>` : 
-                                    `<button class="btn-action btn-ban" onclick="toggleBanGameAccount(${originalIdx})">Ban</button>`
-                                }
+                                
+                                <select onchange="changeGameAccountStatus(${originalIdx}, this.value)" style="padding: 4px; font-size: 11px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 4px; cursor: pointer;">
+                                    <option value="" disabled selected>Đổi trạng thái...</option>
+                                    <option value="Không ban">Không ban</option>
+                                    <option value="Ban đồng">Ban đồng</option>
+                                    <option value="Ban ID">Ban ID</option>
+                                    <option value="Ban theo số ngày">Ban theo số ngày...</option>
+                                    <option value="Ban vĩnh viễn">Ban vĩnh viễn</option>
+                                </select>
+
                                 <button class="btn-action btn-delete" onclick="deleteGameAccount(${originalIdx})">Xóa</button>
                             </div>
                         </td>
