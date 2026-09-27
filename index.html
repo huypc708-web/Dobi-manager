@@ -595,7 +595,7 @@
                 </div>
 
                 <div class="filters-bar">
-                    <input type="text" class="search-box" placeholder="Tìm kiếm SĐT/Gmail..." id="searchGameInput" onkeyup="renderGameAccounts()">
+                    <input type="text" class="search-box" placeholder="Tìm SĐT/Gmail, LV hoặc Rank..." id="searchGameInput" onkeyup="renderGameAccounts()">
                     <select id="statusGameFilter" onchange="renderGameAccounts()">
                         <option value="">Tất cả trạng thái</option>
                         <option value="No Band">No Band</option>
@@ -607,14 +607,16 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 25%;">Loại Acc</th>
-                                <th style="width: 35%;">SĐT/Gmail</th>
-                                <th style="width: 20%;">Trạng thái</th>
-                                <th style="width: 20%;">Thao tác</th>
+                                <th style="width: 18%;">Loại Acc</th>
+                                <th style="width: 27%;">SĐT/Gmail</th>
+                                <th style="width: 10%;">LV</th>
+                                <th style="width: 15%;">Rank</th>
+                                <th style="width: 15%;">Trạng thái</th>
+                                <th style="width: 25%;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody id="gameAccountTableBody">
-                            <tr><td colspan="4" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>
+                            <tr><td colspan="6" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -984,7 +986,18 @@
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">SĐT/Gmail tài khoản:</label>
                 <input type="text" id="modalGameUsername" placeholder="Nhập SĐT hoặc Gmail đăng nhập...">
 
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Trạng thái:</label>
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">LV:</label>
+                        <input type="number" id="modalGameLevel" placeholder="Ví dụ: 70" min="1" style="width: 100%;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Rank:</label>
+                        <input type="text" id="modalGameRank" placeholder="Ví dụ: Huyền Thoại" style="width: 100%;">
+                    </div>
+                </div>
+
+                <label style="font-size: 12px; color: #94a3b8; margin: 14px 0 4px; display: block;">Trạng thái:</label>
                 <select id="modalGameStatus">
                     <option value="No Band">No Band</option>
                     <option value="Band">Band</option>
@@ -1008,10 +1021,15 @@
             }
 
             if (!db.gameAccounts) db.gameAccounts = [];
+            const level = document.getElementById('modalGameLevel').value.trim();
+            const rank = document.getElementById('modalGameRank').value.trim();
+
             db.gameAccounts.push({
                 id: Date.now(),
                 gameType: gameType,
                 username: username,
+                level: level,
+                rank: rank,
                 status: statusSelect
             });
 
@@ -1040,7 +1058,18 @@
                 <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">SĐT/Gmail:</label>
                 <input type="text" id="editGameUsername" value="${acc.username}">
 
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Trạng thái:</label>
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">LV:</label>
+                        <input type="number" id="editGameLevel" value="${acc.level || ''}" placeholder="Ví dụ: 70" min="1" style="width: 100%;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Rank:</label>
+                        <input type="text" id="editGameRank" value="${acc.rank || ''}" placeholder="Ví dụ: Huyền Thoại" style="width: 100%;">
+                    </div>
+                </div>
+
+                <label style="font-size: 12px; color: #94a3b8; margin: 14px 0 4px; display: block;">Trạng thái:</label>
                 <select id="editGameStatus">
                     <option value="No Band" ${rawStatus === 'No Band' ? 'selected' : ''}>No Band</option>
                     <option value="Band" ${rawStatus === 'Band' ? 'selected' : ''}>Band</option>
@@ -1057,6 +1086,8 @@
         function saveEditedGameAccount(idx) {
             const gameType = document.getElementById('editGameType').value;
             const username = document.getElementById('editGameUsername').value.trim();
+            const level = document.getElementById('editGameLevel').value.trim();
+            const rank = document.getElementById('editGameRank').value.trim();
             const statusSelect = document.getElementById('editGameStatus').value;
 
             if(!username) {
@@ -1065,6 +1096,8 @@
 
             db.gameAccounts[idx].gameType = gameType;
             db.gameAccounts[idx].username = username;
+            db.gameAccounts[idx].level = level;
+            db.gameAccounts[idx].rank = rank;
             db.gameAccounts[idx].status = statusSelect;
 
             saveData();
@@ -1101,7 +1134,9 @@
 
             let filtered = db.gameAccounts.filter(a => 
                 a.username.toLowerCase().includes(keyword) || 
-                (a.gameType && a.gameType.toLowerCase().includes(keyword))
+                (a.gameType && a.gameType.toLowerCase().includes(keyword)) ||
+                (a.level && String(a.level).toLowerCase().includes(keyword)) ||
+                (a.rank && a.rank.toLowerCase().includes(keyword))
             );
             
             if(statusVal) {
@@ -1109,7 +1144,7 @@
             }
 
             if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>`;
                 return;
             }
 
@@ -1132,6 +1167,8 @@
                         <td>
                             <span class="account-text" onclick="copyKey('${acc.username}')" title="Nhấn để copy">${acc.username}</span>
                         </td>
+                        <td><span class="badge badge-type">${acc.level || '—'}</span></td>
+                        <td><span style="color: #fbbf24; font-weight: 600;">${acc.rank || '—'}</span></td>
                         <td><span class="badge ${badgeClass}">${statusText}</span></td>
                         <td>
                             <div class="action-btns">
