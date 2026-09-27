@@ -12,7 +12,6 @@
 
     <style>
     :root {
-        /* Tông màu đen sâu và xám đậm hơn */
         --bg-base: #09090b;
         --bg-surface: #121215;
         --bg-card: #18181b;
@@ -34,10 +33,11 @@
         --text-dim: #71717a;
         
         --sidebar-width: 260px;
+        --sidebar-width-collapsed: 76px;
         --radius-sm: 8px;
         --radius-md: 12px;
         --radius-lg: 16px;
-        --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     * {
@@ -185,10 +185,69 @@
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        padding: 24px 16px;
+        padding: 20px 14px;
         overflow-y: auto;
+        overflow-x: hidden;
+        transition: var(--transition);
+        position: relative;
     }
     
+    /* Trạng thái thu gọn của Sidebar */
+    .sidebar.collapsed {
+        width: var(--sidebar-width-collapsed);
+        padding: 20px 10px;
+    }
+    .sidebar.collapsed .user-info,
+    .sidebar.collapsed .nav-item span,
+    .sidebar.collapsed .sidebar-toggle-text {
+        display: none;
+    }
+    .sidebar.collapsed .user-profile {
+        justify-content: center;
+        padding: 8px;
+    }
+    .sidebar.collapsed .nav-item {
+        justify-content: center;
+        padding: 12px;
+    }
+    .sidebar.collapsed .nav-item.active {
+        border-left: none;
+        background-color: var(--bg-card);
+        border-radius: var(--radius-sm);
+    }
+
+    .sidebar-toggle-btn {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        padding: 8px 12px;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        transition: var(--transition);
+        margin-bottom: 15px;
+        width: 100%;
+    }
+    .sidebar-toggle-btn:hover {
+        background-color: var(--bg-card-hover);
+        color: var(--text-main);
+        border-color: var(--border-color-light);
+    }
+    .sidebar-toggle-btn svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+        transition: var(--transition);
+    }
+    .sidebar.collapsed .sidebar-toggle-btn svg {
+        transform: rotate(180deg);
+    }
+
     .user-profile {
         display: flex;
         align-items: center;
@@ -197,7 +256,8 @@
         background-color: var(--bg-card);
         border: 1px solid var(--border-color);
         border-radius: var(--radius-md);
-        margin-bottom: 24px;
+        margin-bottom: 15px;
+        transition: var(--transition);
     }
     .user-avatar {
         width: 38px;
@@ -252,6 +312,7 @@
         border-radius: var(--radius-sm);
         cursor: pointer;
         transition: var(--transition);
+        white-space: nowrap;
     }
     .nav-item svg {
         width: 18px;
@@ -575,7 +636,8 @@
         100% { opacity: 0; transform: translateY(20px); }
     }
 </style>
-
+</head>
+<body>
 
 <!-- Màn hình Đăng nhập -->
 <div id="loginOverlay">
@@ -598,8 +660,14 @@
 <!-- Giao diện Dashboard chính -->
 <div id="appContainer">
     <!-- Sidebar -->
-    <div class="sidebar">
+    <div class="sidebar" id="sidebarElement">
         <div>
+            <!-- Nút Thu gọn/Mở rộng Sidebar -->
+            <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Thu gọn / Mở rộng menu">
+                <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+                <span class="sidebar-toggle-text">Thu gọn Menu</span>
+            </button>
+
             <div class="user-profile">
                 <div class="user-avatar">D</div>
                 <div class="user-info">
@@ -609,33 +677,33 @@
             </div>
 
             <div class="nav-menu">
-                <a class="nav-item active" onclick="switchTab('overview', this)">
+                <a class="nav-item active" onclick="switchTab('overview', this)" title="Tổng quan">
                     <svg viewBox="0 0 24 24"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v9h9c-.5-5.07-4.79-9-9-9zm0 11v9c5.07-.5 9-4.79 9-10h-9z"/></svg>
-                    Tổng quan
+                    <span>Tổng quan</span>
                 </a>
-                <a class="nav-item" onclick="switchTab('applications', this)">
+                <a class="nav-item" onclick="switchTab('applications', this)" title="Ứng dụng">
                     <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                    Ứng dụng
+                    <span>Ứng dụng</span>
                 </a>
-                <a class="nav-item" onclick="switchTab('licenses', this)">
+                <a class="nav-item" onclick="switchTab('licenses', this)" title="Quản lý Key">
                     <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
-                    Quản lý Key
+                    <span>Quản lý Key</span>
                 </a>
-                <a class="nav-item" onclick="switchTab('game-accounts', this)">
+                <a class="nav-item" onclick="switchTab('game-accounts', this)" title="Kho Acc Game">
                     <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h18v8zM6 10h2v2H6v-2zm3 0h2v2H9v-2zm3 0h2v2h-2v-2z"/></svg>
-                    Kho Acc Game
+                    <span>Kho Acc Game</span>
                 </a>
-                <a class="nav-item" onclick="switchTab('client-simulator', this)">
+                <a class="nav-item" onclick="switchTab('client-simulator', this)" title="Mô phỏng Client">
                     <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
-                    Mô phỏng Client (App)
+                    <span>Mô phỏng Client (App)</span>
                 </a>
             </div>
         </div>
 
         <div class="sidebar-bottom">
-            <a class="nav-item danger" onclick="handleLogout()">
+            <a class="nav-item danger" onclick="handleLogout()" title="Đăng xuất">
                 <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-                Đăng xuất
+                <span>Đăng xuất</span>
             </a>
         </div>
     </div>
@@ -828,6 +896,12 @@
         setInterval(updateCountdowns, 1000);
     };
 
+    // Chức năng thu gọn/mở rộng Sidebar
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebarElement');
+        sidebar.classList.toggle('collapsed');
+    }
+
     function handleLogin() {
         const u = document.getElementById('loginUser').value.trim();
         const p = document.getElementById('loginPass').value.trim();
@@ -887,7 +961,7 @@
         
         document.getElementById('view-' + tabId).classList.add('active');
         el.classList.add('active');
-        document.getElementById('pageTitle').innerText = el.innerText.trim();
+        document.getElementById('pageTitle').innerText = el.querySelector('span') ? el.querySelector('span').innerText.trim() : el.innerText.trim();
 
         if(tabId === 'licenses') {
             populateAppDropdowns();
@@ -1580,3 +1654,5 @@
         }
     }
 </script>
+</body>
+</html>
