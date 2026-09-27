@@ -5,1413 +5,1578 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dobi Manager - Hệ thống Quản lý Đám mây</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
-        body {
-            background-color: #0b0e14;
-            color: #cbd5e1;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            font-size: 15px;
-        }
-
-        #loginOverlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #0b0e14;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        }
-        .login-box {
-            background-color: #131822;
-            border: 1px solid #1e293b;
-            padding: 40px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        }
-        .login-box h2 {
-            color: #ffffff;
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            text-align: center;
-        }
-        .login-box p {
-            color: #64748b;
-            font-size: 14px;
-            text-align: center;
-            margin-bottom: 25px;
-        }
-        .login-input-group {
-            margin-bottom: 16px;
-        }
-        .login-input-group label {
-            display: block;
-            color: #94a3b8;
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-        .login-input-group input {
-            width: 100%;
-            background-color: #0b0e14;
-            border: 1px solid #1e293b;
-            color: #ffffff;
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            transition: 0.2s;
-        }
-        .login-input-group input:focus {
-            border-color: #38bdf8;
-        }
-        .btn-login {
-            width: 100%;
-            background-color: #ffffff;
-            color: #0b0e14;
-            border: none;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: 10px;
-        }
-        .btn-login:hover {
-            background-color: #e2e8f0;
-        }
-        .login-error {
-            color: #f87171;
-            font-size: 13px;
-            text-align: center;
-            margin-top: 12px;
-            display: none;
-        }
-
-        #appContainer {
-            display: none;
-            width: 100%;
-            height: 100%;
-        }
-
-        .sidebar {
-            width: 270px;
-            background-color: #11151c;
-            border-right: 1px solid #1a2230;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px 14px;
-            overflow-y: auto;
-        }
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 8px 16px 8px;
-            border-bottom: 1px solid #1a2230;
-            margin-bottom: 12px;
-        }
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            background-color: #19202e;
-            border: 1px solid #2a3447;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .user-name {
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .user-email {
-            color: #8892b0;
-            font-size: 12px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .nav-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 13px 16px;
-            color: #94a3b8;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 600;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .nav-item svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-            flex-shrink: 0;
-        }
-        .nav-item:hover {
-            background: rgba(255, 255, 255, 0.03);
-            color: #fff;
-        }
-        .nav-item.active {
-            background: #19202e;
-            color: #fff;
-            font-weight: 700;
-        }
-
-        .sidebar-bottom {
-            border-top: 1px solid #1a2230;
-            padding-top: 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .nav-item.danger {
-            color: #f87171;
-        }
-        .nav-item.danger:hover {
-            background: rgba(239, 68, 68, 0.1);
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 35px 40px;
-            overflow-y: auto;
-            background-color: #0b0e14;
-        }
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-        }
-        .dashboard-title {
-            color: #ffffff;
-            font-size: 26px;
-            font-weight: 700;
-        }
-        .status-badge {
-            background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .status-badge::before {
-            content: '';
-            width: 7px;
-            height: 7px;
-            background-color: #10b981;
-            border-radius: 50%;
-        }
-        .section-title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-        }
-        .section-title {
-            color: #ffffff;
-            font-size: 20px;
-            font-weight: 700;
-        }
-        .btn-primary {
-            background-color: #ffffff;
-            color: #0b0e14;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-primary:hover {
-            background-color: #e2e8f0;
-        }
+    :root {
+        /* Tông màu đen sâu và xám đậm hơn */
+        --bg-base: #09090b;
+        --bg-surface: #121215;
+        --bg-card: #18181b;
+        --bg-card-hover: #1f1f23;
+        --border-color: #27272a;
+        --border-color-light: #3f3f46;
         
-        .view-section { display: none; }
-        .view-section.active { display: block; }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        .stat-card {
-            background-color: #131822;
-            border: 1px solid #1e293b;
-            padding: 20px;
-            border-radius: 8px;
-        }
-        .stat-card h4 {
-            color: #64748b;
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-        .stat-card .number {
-            color: #ffffff;
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .filters-bar {
-            display: flex;
-            gap: 14px;
-            margin-bottom: 22px;
-            flex-wrap: wrap;
-        }
-        .search-box, select, input[type="text"], input[type="number"] {
-            background-color: #131822;
-            border: 1px solid #1e293b;
-            color: #ffffff;
-            padding: 11px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-        }
-        .search-box { flex: 1; min-width: 250px; }
-        select { cursor: pointer; color: #cbd5e1; }
+        --primary: #ffffff;
+        --primary-glow: rgba(255, 255, 255, 0.15);
+        --success: #10b981;
+        --success-glow: rgba(16, 185, 129, 0.2);
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --danger-glow: rgba(239, 68, 68, 0.2);
+        --purple: #a855f7;
         
-        .table-container {
-            background-color: #131822;
-            border: 1px solid #1e293b;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        th {
-            color: #64748b;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 12px;
-            letter-spacing: 0.5px;
-            padding: 16px 18px;
-            border-bottom: 1px solid #1e293b;
-        }
-        td { padding: 16px 18px; border-bottom: 1px solid #1e293b; color: #cbd5e1; vertical-align: middle; }
-        .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
+        --text-main: #ffffff;
+        --text-muted: #a1a1aa;
+        --text-dim: #71717a;
         
-        .badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; display: inline-block; }
-        .badge-active { background: rgba(16, 185, 129, 0.15); color: #34d399; }
-        .badge-banned { background: rgba(239, 68, 68, 0.15); color: #f87171; }
-        .badge-type { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+        --sidebar-width: 260px;
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-        .action-btns {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .btn-action {
-            padding: 6px 10px;
-            font-size: 12px;
-            font-weight: 600;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn-edit { background: #3b82f6; color: #fff; }
-        .btn-edit:hover { background: #2563eb; }
-        .btn-reset { background: #8b5cf6; color: #fff; }
-        .btn-reset:hover { background: #7c3aed; }
-        .btn-ban { background: #f59e0b; color: #fff; }
-        .btn-ban:hover { background: #d97706; }
-        .btn-unban { background: #10b981; color: #fff; }
-        .btn-unban:hover { background: #059669; }
-        .btn-delete { background: #ef4444; color: #fff; }
-        .btn-delete:hover { background: #dc2626; }
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
 
-        .key-code, .account-text {
-            color: #38bdf8;
-            font-family: monospace;
-            cursor: pointer;
-        }
-        .key-code:hover, .account-text:hover { text-decoration: underline; }
+    body {
+        background-color: var(--bg-base);
+        color: var(--text-muted);
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+        font-size: 14px;
+    }
 
-        .instruction-card {
-            background: #131822;
-            border: 1px solid #1e293b;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .instruction-card h3 { color: #fff; margin-bottom: 8px; }
+    /* --- Custom Scrollbar --- */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--border-color-light);
+        border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--text-dim);
+    }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: #131822;
-            border: 1px solid #1e293b;
-            padding: 30px;
-            border-radius: 10px;
-            width: 100%;
-            max-width: 440px;
-        }
-        .modal-content h3 { color: #fff; margin-bottom: 18px; font-size: 18px; font-weight: 700; }
-        .modal-content select, .modal-content input { width: 100%; margin-bottom: 14px; }
-        .modal-btns { display: flex; gap: 12px; justify-content: flex-end; margin-top: 15px; }
-        .btn-cancel { background: #334155; color: #fff; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    /* --- Login Overlay --- */
+    #loginOverlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: radial-gradient(circle at center, #18181b 0%, #09090b 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+    .login-box {
+        background-color: var(--bg-surface);
+        border: 1px solid var(--border-color-light);
+        padding: 45px 40px;
+        border-radius: var(--radius-lg);
+        width: 100%;
+        max-width: 420px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+        position: relative;
+        overflow: hidden;
+    }
+    .login-box::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 3px;
+        background: linear-gradient(90deg, #ffffff, #71717a);
+    }
+    .login-box h2 {
+        color: var(--text-main);
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        text-align: center;
+        letter-spacing: -0.5px;
+    }
+    .login-box p {
+        color: var(--text-dim);
+        font-size: 13px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .login-input-group {
+        margin-bottom: 18px;
+    }
+    .login-input-group label {
+        display: block;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .login-input-group input {
+        width: 100%;
+        background-color: var(--bg-base);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 13px 16px;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        outline: none;
+        transition: var(--transition);
+    }
+    .login-input-group input:focus {
+        border-color: var(--text-main);
+        box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .btn-login {
+        width: 100%;
+        background: #ffffff;
+        color: #09090b;
+        border: none;
+        padding: 13px;
+        border-radius: var(--radius-sm);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: var(--transition);
+        margin-top: 10px;
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+    }
+    .btn-login:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+    .login-error {
+        color: var(--danger);
+        font-size: 13px;
+        text-align: center;
+        margin-top: 16px;
+        display: none;
+        background: var(--danger-glow);
+        padding: 10px;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
 
-        #toast {
-            visibility: hidden;
-            min-width: 220px;
-            background-color: #1e293b;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 12px;
-            position: fixed;
-            z-index: 2000;
-            right: 30px;
-            bottom: 30px;
-            font-size: 14px;
-            border: 1px solid #38bdf8;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        }
-        #toast.show {
-            visibility: visible;
-            animation: fadeInOut 2.5s;
-        }
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateY(20px); }
-            15% { opacity: 1; transform: translateY(0); }
-            85% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(20px); }
-        }
-    </style>
-</head>
-<body>
+    /* --- App Container & Layout --- */
+    #appContainer {
+        display: none;
+        width: 100%;
+        height: 100%;
+    }
 
-    <div id="loginOverlay">
-        <div class="login-box">
-            <h2>Đăng Nhập Quản Trị</h2>
-            <p>Hệ thống Đồng bộ Đám mây - Dobi Manager</p>
-            <div class="login-input-group">
-                <label>Tên đăng nhập</label>
-                <input type="text" id="loginUser" placeholder="Nhập tên đăng nhập...">
-            </div>
-            <div class="login-input-group">
-                <label>Mật khẩu</label>
-                <input type="password" id="loginPass" placeholder="Nhập mật khẩu...">
-            </div>
-            <button class="btn-login" onclick="handleLogin()">Đăng nhập</button>
-            <div id="loginError" class="login-error">Sai tên đăng nhập hoặc mật khẩu!</div>
+    .sidebar {
+        width: var(--sidebar-width);
+        background-color: var(--bg-surface);
+        border-right: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 24px 16px;
+        overflow-y: auto;
+    }
+    
+    .user-profile {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        margin-bottom: 24px;
+    }
+    .user-avatar {
+        width: 38px;
+        height: 38px;
+        background: linear-gradient(135deg, #27272a, #18181b);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: 15px;
+        flex-shrink: 0;
+        border: 1px solid var(--border-color-light);
+    }
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .user-name {
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .user-email {
+        color: var(--success);
+        font-size: 11px;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .nav-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .nav-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .nav-item svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+        flex-shrink: 0;
+        opacity: 0.7;
+        transition: var(--transition);
+    }
+    .nav-item:hover {
+        background-color: var(--bg-card);
+        color: var(--text-main);
+    }
+    .nav-item:hover svg {
+        opacity: 1;
+    }
+    .nav-item.active {
+        background-color: var(--bg-card);
+        color: var(--text-main);
+        font-weight: 700;
+        border-left: 3px solid var(--text-main);
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    .nav-item.active svg {
+        fill: var(--text-main);
+        opacity: 1;
+    }
+
+    .sidebar-bottom {
+        border-top: 1px solid var(--border-color);
+        padding-top: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nav-item.danger {
+        color: var(--danger);
+    }
+    .nav-item.danger:hover {
+        background: var(--danger-glow);
+        color: var(--danger);
+    }
+
+    /* --- Main Content Area --- */
+    .main-content {
+        flex: 1;
+        padding: 30px 40px;
+        overflow-y: auto;
+        background-color: var(--bg-base);
+    }
+    .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .dashboard-title {
+        color: var(--text-main);
+        font-size: 24px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+    .status-badge {
+        background: var(--success-glow);
+        color: var(--success);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .status-badge::before {
+        content: '';
+        width: 7px;
+        height: 7px;
+        background-color: var(--success);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--success);
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .section-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .section-title {
+        color: var(--text-main);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+    }
+    .btn-primary {
+        background: #ffffff;
+        color: #09090b;
+        border: none;
+        padding: 10px 18px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+    
+    .view-section { display: none; }
+    .view-section.active { display: block; animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* --- Stats Grid --- */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+    .stat-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 22px;
+        border-radius: var(--radius-md);
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition);
+    }
+    .stat-card:hover {
+        border-color: var(--border-color-light);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+    .stat-card h4 {
+        color: var(--text-dim);
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 10px;
+    }
+    .stat-card .number {
+        color: var(--text-main);
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: -1px;
+    }
+
+    /* --- Filters & Search --- */
+    .filters-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    .search-box, select, input[type="text"], input[type="number"] {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        padding: 11px 16px;
+        border-radius: var(--radius-sm);
+        font-size: 13px;
+        outline: none;
+        transition: var(--transition);
+    }
+    .search-box:focus, select:focus, input[type="text"]:focus, input[type="number"]:focus {
+        border-color: var(--text-main);
+        box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .search-box { flex: 1; min-width: 250px; }
+    select { cursor: pointer; }
+    
+    /* --- Tables --- */
+    .table-container {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+    th {
+        background-color: #121215;
+        color: var(--text-dim);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.8px;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    td { padding: 14px 18px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background-color: rgba(255, 255, 255, 0.03); }
+    .empty-state { text-align: center; padding: 50px 20px; color: var(--text-dim); font-style: italic; }
+    
+    .badge { padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block; letter-spacing: 0.3px; }
+    .badge-active { background: var(--success-glow); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-banned { background: var(--danger-glow); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-type { background: rgba(255, 255, 255, 0.06); color: var(--text-main); border: 1px solid var(--border-color-light); }
+
+    .action-btns {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .btn-action {
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .btn-edit { background: rgba(255, 255, 255, 0.08); color: #ffffff; border: 1px solid var(--border-color-light); }
+    .btn-edit:hover { background: #ffffff; color: #09090b; }
+    .btn-reset { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .btn-reset:hover { background: #a855f7; color: #fff; }
+    .btn-ban { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .btn-ban:hover { background: #f59e0b; color: #fff; }
+    .btn-unban { background: var(--success-glow); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .btn-unban:hover { background: var(--success); color: #fff; }
+    .btn-delete { background: var(--danger-glow); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .btn-delete:hover { background: var(--danger); color: #fff; }
+
+    .key-code, .account-text {
+        color: var(--text-main);
+        font-family: monospace;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+    .key-code:hover, .account-text:hover { color: var(--text-muted); text-decoration: underline; }
+
+    .instruction-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 24px;
+        border-radius: var(--radius-md);
+        margin-top: 20px;
+    }
+    .instruction-card h3 { color: var(--text-main); margin-bottom: 10px; font-size: 16px; font-weight: 700; }
+    .instruction-card p { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+
+    /* --- Modal --- */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(4px);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    .modal-content {
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color-light);
+        padding: 30px;
+        border-radius: var(--radius-lg);
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85);
+    }
+    .modal-content h3 { color: var(--text-main); margin-bottom: 20px; font-size: 18px; font-weight: 700; }
+    .modal-content select, .modal-content input { width: 100%; margin-bottom: 14px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-cancel { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-color); padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; transition: var(--transition); }
+    .btn-cancel:hover { background: var(--bg-card-hover); color: var(--text-main); }
+
+    /* --- Toast Notification --- */
+    #toast {
+        visibility: hidden;
+        min-width: 240px;
+        background-color: var(--bg-surface);
+        color: var(--text-main);
+        text-align: center;
+        border-radius: var(--radius-sm);
+        padding: 14px 20px;
+        position: fixed;
+        z-index: 2000;
+        right: 30px;
+        bottom: 30px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid var(--border-color-light);
+        box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6);
+    }
+    #toast.show {
+        visibility: visible;
+        animation: fadeInOut 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateY(20px); }
+        15% { opacity: 1; transform: translateY(0); }
+        85% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(20px); }
+    }
+</style>
+
+
+<!-- Màn hình Đăng nhập -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <h2>Đăng Nhập Quản Trị</h2>
+        <p>Hệ thống Đồng bộ Đám mây - Dobi Manager</p>
+        <div class="login-input-group">
+            <label>Tên đăng nhập</label>
+            <input type="text" id="loginUser" placeholder="Nhập tên đăng nhập...">
         </div>
+        <div class="login-input-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="loginPass" placeholder="Nhập mật khẩu...">
+        </div>
+        <button class="btn-login" onclick="handleLogin()">Đăng nhập hệ thống</button>
+        <div id="loginError" class="login-error">Sai tên đăng nhập hoặc mật khẩu!</div>
     </div>
+</div>
 
-    <div id="appContainer">
-        <div class="sidebar">
-            <div>
-                <div class="user-profile">
-                    <div class="user-avatar">D</div>
-                    <div class="user-info">
-                        <span class="user-name">dobi</span>
-                        <span class="user-email">Đã xác thực Admin</span>
-                    </div>
-                </div>
-
-                <div class="nav-menu">
-                    <a class="nav-item active" onclick="switchTab('overview', this)">
-                        <svg viewBox="0 0 24 24"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v9h9c-.5-5.07-4.79-9-9-9zm0 11v9c5.07-.5 9-4.79 9-10h-9z"/></svg>
-                        Tổng quan
-                    </a>
-                    <a class="nav-item" onclick="switchTab('applications', this)">
-                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                        Ứng dụng
-                    </a>
-                    <a class="nav-item" onclick="switchTab('licenses', this)">
-                        <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
-                        Quản lý Key
-                    </a>
-                    <a class="nav-item" onclick="switchTab('game-accounts', this)">
-                        <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h18v8zM6 10h2v2H6v-2zm3 0h2v2H9v-2zm3 0h2v2h-2v-2z"/></svg>
-                        Kho Acc Game
-                    </a>
-                    <a class="nav-item" onclick="switchTab('client-simulator', this)">
-                        <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
-                        Mô phỏng Client (App)
-                    </a>
+<!-- Giao diện Dashboard chính -->
+<div id="appContainer">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div>
+            <div class="user-profile">
+                <div class="user-avatar">D</div>
+                <div class="user-info">
+                    <span class="user-name">dobi</span>
+                    <span class="user-email">Đã xác thực Admin</span>
                 </div>
             </div>
 
-            <div class="sidebar-bottom">
-                <a class="nav-item danger" onclick="handleLogout()">
-                    <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-                    Đăng xuất
+            <div class="nav-menu">
+                <a class="nav-item active" onclick="switchTab('overview', this)">
+                    <svg viewBox="0 0 24 24"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v9h9c-.5-5.07-4.79-9-9-9zm0 11v9c5.07-.5 9-4.79 9-10h-9z"/></svg>
+                    Tổng quan
+                </a>
+                <a class="nav-item" onclick="switchTab('applications', this)">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                    Ứng dụng
+                </a>
+                <a class="nav-item" onclick="switchTab('licenses', this)">
+                    <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                    Quản lý Key
+                </a>
+                <a class="nav-item" onclick="switchTab('game-accounts', this)">
+                    <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h18v8zM6 10h2v2H6v-2zm3 0h2v2H9v-2zm3 0h2v2h-2v-2z"/></svg>
+                    Kho Acc Game
+                </a>
+                <a class="nav-item" onclick="switchTab('client-simulator', this)">
+                    <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
+                    Mô phỏng Client (App)
                 </a>
             </div>
         </div>
 
-        <div class="main-content">
-            <div class="header-top">
-                <div class="dashboard-title" id="pageTitle">Tổng quan</div>
-                <div class="status-badge">Đã kết nối đám mây</div>
-            </div>
-
-            <div id="view-overview" class="view-section active">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <h4>Tổng số Ứng dụng</h4>
-                        <div class="number" id="statApps">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Tổng số Key</h4>
-                        <div class="number" id="statLicenses">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Key đang Hoạt động</h4>
-                        <div class="number" id="statActive">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Tổng số Acc Game</h4>
-                        <div class="number" id="statGameAccounts">0</div>
-                    </div>
-                </div>
-                <div class="instruction-card">
-                    <h3>Hệ thống Quản lý Tài khoản Game</h3>
-                    <p>Quản lý tập trung các tài khoản game của bạn với trạng thái No Band và Band đơn giản, dễ theo dõi.</p>
-                </div>
-            </div>
-
-            <div id="view-applications" class="view-section">
-                <div class="section-title-row">
-                    <div class="section-title">Quản lý Ứng dụng</div>
-                    <button class="btn-primary" onclick="openAppModal()">+ Thêm Ứng dụng</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Tên Ứng dụng</th>
-                                <th>Mã Bí mật (Secret Key)</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="appTableBody">
-                            <tr><td colspan="3" class="empty-state">Không tìm thấy ứng dụng nào.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="view-licenses" class="view-section">
-                <div class="section-title-row">
-                    <div class="section-title">Quản lý License Key</div>
-                    <button class="btn-primary" onclick="openLicenseModal()">+ Tạo Key Mới</button>
-                </div>
-
-                <div class="filters-bar">
-                    <input type="text" class="search-box" placeholder="Tìm kiếm theo mã key..." id="searchInput" onkeyup="renderLicenses()">
-                    <select id="statusFilter" onchange="renderLicenses()">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="Active">Đang hoạt động (Active)</option>
-                        <option value="Banned">Đã khóa (Banned)</option>
-                    </select>
-                    <select id="appSelectFilter" onchange="renderLicenses()">
-                        <option value="">Tất cả Ứng dụng</option>
-                    </select>
-                </div>
-
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 25%;">License Key</th>
-                                <th style="width: 25%;">Trạng thái & Thiết bị</th>
-                                <th style="width: 25%;">Thời gian đếm ngược</th>
-                                <th style="width: 25%;">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="licenseTableBody">
-                            <tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tab: Kho Acc Game -->
-            <div id="view-game-accounts" class="view-section">
-                <div class="section-title-row">
-                    <div class="section-title">Quản lý Kho Acc Game</div>
-                    <button class="btn-primary" onclick="openGameAccountModal()">+ Thêm Acc Game</button>
-                </div>
-
-                <div class="filters-bar">
-                    <input type="text" class="search-box" placeholder="Tìm SĐT/Gmail, LV hoặc Rank..." id="searchGameInput" onkeyup="renderGameAccounts()">
-                    <select id="statusGameFilter" onchange="renderGameAccounts()">
-                        <option value="">Tất cả trạng thái</option>
-                        <option value="No Band">No Band</option>
-                        <option value="Band">Band</option>
-                    </select>
-                </div>
-
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 18%;">Loại Acc</th>
-                                <th style="width: 27%;">SĐT/Gmail</th>
-                                <th style="width: 10%;">LV</th>
-                                <th style="width: 15%;">Rank</th>
-                                <th style="width: 15%;">Trạng thái</th>
-                                <th style="width: 25%;">Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="gameAccountTableBody">
-                            <tr><td colspan="6" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="view-client-simulator" class="view-section">
-                <div class="section-title-row">
-                    <div class="section-title">Mô phỏng Phần mềm Client Nhập Key & Reset HWID</div>
-                </div>
-
-                <div style="max-width: 500px; margin: 0 auto; background: #131822; border: 1px solid #1e293b; padding: 30px; border-radius: 12px;">
-                    <div style="text-align: center; margin-bottom: 25px;">
-                        <h3 style="color: #fff; font-size: 20px; font-weight: 700; margin-bottom: 6px;">Đăng nhập Bản quyền & Reset HWID</h3>
-                        <p style="color: #64748b; font-size: 13px;">Giao diện giả lập khi người dùng chạy tool/phần mềm</p>
-                    </div>
-
-                    <div class="login-input-group">
-                        <label>Nhập License Key</label>
-                        <input type="text" id="simKeyInput" placeholder="Ví dụ: Bất kỳ kiểu gì cũng được">
-                    </div>
-
-                    <div style="display: flex; gap: 10px; margin-top: 5px;">
-                        <button class="btn-login" style="background-color: #38bdf8; color: #0b0e14; flex: 1;" onclick="simulateClientLogin()">Xác thực Key</button>
-                        <button class="btn-login" style="background-color: #8b5cf6; color: #fff; flex: 1;" onclick="simulateClientResetHWID()">Reset HWID</button>
-                    </div>
-
-                    <div id="simResultBox" style="margin-top: 18px; padding: 12px; border-radius: 6px; font-size: 13px; font-weight: 600; text-align: center; display: none;"></div>
-                </div>
-            </div>
+        <div class="sidebar-bottom">
+            <a class="nav-item danger" onclick="handleLogout()">
+                <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                Đăng xuất
+            </a>
         </div>
     </div>
 
-    <div class="modal" id="globalModal">
-        <div class="modal-content" id="modalBodyContent"></div>
-    </div>
+    <!-- Main Content Body -->
+    <div class="main-content">
+        <div class="header-top">
+            <div class="dashboard-title" id="pageTitle">Tổng quan</div>
+            <div class="status-badge">Đã kết nối đám mây</div>
+        </div>
 
-    <div id="toast">Đã sao chép thành công!</div>
-
-    <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyC9bzr6Jgn1W3aMtrV_ndwPB-npr5lSzk",
-            authDomain: "dobi-manager.firebaseapp.com",
-            projectId: "dobi-manager",
-            storageBucket: "dobi-manager.firebasestorage.app",
-            messagingSenderId: "637080746223",
-            appId: "1:637080746223:web:293995d7b0eb5c44e6c31a",
-            measurementId: "G-V5WQ1X21Y9"
-        };
-
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        let db = {
-            apps: [],
-            licenses: [],
-            users: [],
-            gameAccounts: []
-        };
-
-        window.onload = function() {
-            handleLogout();
-            setInterval(updateCountdowns, 1000);
-        };
-
-        function handleLogin() {
-            const u = document.getElementById('loginUser').value.trim();
-            const p = document.getElementById('loginPass').value.trim();
-            const err = document.getElementById('loginError');
-
-            if(u === 'dobi' && p === 'Giahui12@') {
-                showApp();
-            } else {
-                err.style.display = 'block';
-            }
-        }
-
-        function handleLogout() {
-            document.getElementById('appContainer').style.display = 'none';
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('loginUser').value = '';
-            document.getElementById('loginPass').value = '';
-            document.getElementById('loginError').style.display = 'none';
-        }
-
-        function showApp() {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'flex';
-            initFirebaseListener();
-        }
-
-        function initFirebaseListener() {
-            database.ref('dobimanager').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    db = {
-                        apps: data.apps || [],
-                        licenses: data.licenses || [],
-                        users: data.users || [],
-                        gameAccounts: data.gameAccounts || []
-                    };
-                } else {
-                    database.ref('dobimanager').set({ apps: [], licenses: [], users: [], gameAccounts: [] });
-                }
-                updateStats();
-                const activeTab = document.querySelector('.view-section.active');
-                if(activeTab) {
-                    if(activeTab.id === 'view-licenses') renderLicenses();
-                    if(activeTab.id === 'view-applications') renderApps();
-                    if(activeTab.id === 'view-game-accounts') renderGameAccounts();
-                }
-            });
-        }
-
-        function saveData() {
-            database.ref('dobimanager').set(db);
-        }
-
-        function switchTab(tabId, el) {
-            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            
-            document.getElementById('view-' + tabId).classList.add('active');
-            el.classList.add('active');
-            document.getElementById('pageTitle').innerText = el.innerText.trim();
-
-            if(tabId === 'licenses') {
-                populateAppDropdowns();
-                renderLicenses();
-            } else if(tabId === 'applications') {
-                renderApps();
-            } else if(tabId === 'game-accounts') {
-                renderGameAccounts();
-            } else if(tabId === 'overview') {
-                updateStats();
-            }
-        }
-
-        function updateStats() {
-            if(!document.getElementById('statApps')) return;
-            document.getElementById('statApps').innerText = db.apps.length;
-            document.getElementById('statLicenses').innerText = db.licenses.length;
-            document.getElementById('statActive').innerText = db.licenses.filter(l => l.status === 'Active').length;
-            if(document.getElementById('statGameAccounts')) {
-                document.getElementById('statGameAccounts').innerText = db.gameAccounts.length;
-            }
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.innerText = message;
-            toast.className = "show";
-            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2500);
-        }
-
-        function copyKey(keyText) {
-            navigator.clipboard.writeText(keyText).then(() => {
-                showToast("Đã sao chép: " + keyText);
-            });
-        }
-
-        function openAppModal() {
-            document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Thêm Ứng dụng mới</h3>
-                <input type="text" id="appNameInput" placeholder="Tên ứng dụng...">
-                <div class="modal-btns">
-                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                    <button class="btn-primary" onclick="createApp()">Tạo</button>
+        <!-- Tab: Tổng quan -->
+        <div id="view-overview" class="view-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Tổng số Ứng dụng</h4>
+                    <div class="number" id="statApps">0</div>
                 </div>
-            `;
-            document.getElementById('globalModal').style.display = 'flex';
-        }
-
-        function closeModal() {
-            document.getElementById('globalModal').style.display = 'none';
-        }
-
-        function createApp() {
-            const name = document.getElementById('appNameInput').value.trim();
-            if(!name) return alert('Vui lòng nhập tên ứng dụng!');
-            db.apps.push({ id: Date.now(), name: name, secret: 'sec_' + Math.random().toString(36).substring(7) });
-            saveData();
-            closeModal();
-            renderApps();
-        }
-
-        function renderApps() {
-            const tbody = document.getElementById('appTableBody');
-            if(!tbody) return;
-            if(db.apps.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="3" class="empty-state">Không tìm thấy ứng dụng nào.</td></tr>`;
-                return;
-            }
-            tbody.innerHTML = db.apps.map((app, idx) => `
-                <tr>
-                    <td><strong>${app.name}</strong></td>
-                    <td><code style="color: #38bdf8;">${app.secret}</code></td>
-                    <td><button class="btn-action btn-delete" onclick="deleteApp(${idx})">Xóa</button></td>
-                </tr>
-            `).join('');
-        }
-
-        function deleteApp(idx) {
-            if(confirm('Bạn có chắc chắn muốn xóa ứng dụng này?')) {
-                db.apps.splice(idx, 1);
-                saveData();
-                renderApps();
-            }
-        }
-
-        function populateAppDropdowns() {
-            const select = document.getElementById('appSelectFilter');
-            if(!select) return;
-            select.innerHTML = '<option value="">Tất cả Ứng dụng</option>' + db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
-        }
-
-        function openLicenseModal() {
-            if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Ứng dụng trước khi tạo License Key!');
-            
-            const defaultRandomKey = 'DOBI-' + Math.random().toString(36).substring(2, 8).toUpperCase() + '-' + Math.floor(Math.random() * 9000 + 1000);
-
-            document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Tạo License Key Mới</h3>
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Chọn ứng dụng:</label>
-                <select id="modalAppSelect">${db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('')}</select>
-                
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Nhập mã Key:</label>
-                <input type="text" id="modalCustomKeyInput" value="${defaultRandomKey}" style="margin-bottom: 14px;">
-
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Thời lượng tùy chỉnh:</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-                    <input type="number" id="modalDurationValue" value="1" min="1" style="flex: 1; margin-bottom: 0;">
-                    <select id="modalDurationUnit" style="flex: 1; margin-bottom: 0;">
-                        <option value="minutes">Phút (Test)</option>
-                        <option value="hours">Giờ (Test)</option>
-                        <option value="days" selected>Ngày</option>
-                        <option value="lifetime">Vĩnh viễn (Lifetime)</option>
-                    </select>
+                <div class="stat-card">
+                    <h4>Tổng số Key</h4>
+                    <div class="number" id="statLicenses">0</div>
                 </div>
-
-                <input type="hidden" id="modalMaxDevices" value="1">
-                
-                <div class="modal-btns">
-                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                    <button class="btn-primary" onclick="generateLicense()">Tạo Key</button>
+                <div class="stat-card">
+                    <h4>Key đang Hoạt động</h4>
+                    <div class="number" id="statActive">0</div>
                 </div>
-            `;
-            document.getElementById('globalModal').style.display = 'flex';
-        }
-
-        function generateLicense() {
-            const customKey = document.getElementById('modalCustomKeyInput').value.trim();
-            if (!customKey) {
-                return alert('Vui lòng nhập mã License Key!');
-            }
-
-            const isExist = db.licenses.some(item => item.key.toLowerCase() === customKey.toLowerCase());
-            if (isExist) {
-                return alert('Mã Key này đã tồn tại trên hệ thống!');
-            }
-
-            const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
-            const unit = document.getElementById('modalDurationUnit').value;
-            const maxDevices = 1; 
-            
-            const now = Date.now();
-            let expiry = 'Lifetime';
-            let multiplier = 0;
-            if (unit === 'minutes') multiplier = 60 * 1000;
-            else if (unit === 'hours') multiplier = 60 * 60 * 1000;
-            else if (unit === 'days') multiplier = 24 * 60 * 60 * 1000;
-
-            if (unit !== 'lifetime') {
-                expiry = now + (val * multiplier);
-            }
-
-            db.licenses.push({
-                key: customKey,
-                status: 'Active',
-                durationValue: val,
-                durationUnit: unit,
-                maxDevices: maxDevices,
-                currentDevices: 0,
-                expiryTimestamp: expiry
-            });
-            saveData();
-            closeModal();
-            renderLicenses();
-            showToast("Đã tạo key thành công!");
-        }
-
-        function openEditLicenseModal(originalIdx) {
-            const l = db.licenses[originalIdx];
-            const currentVal = l.durationValue || 1;
-            const currentUnit = l.durationUnit || 'days';
-
-            document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Tùy chỉnh Key: ${l.key}</h3>
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Thời hạn mới:</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-                    <input type="number" id="editDurationValue" value="${currentVal}" min="1" style="flex: 1; margin-bottom: 0;">
-                    <select id="editDurationUnit" style="flex: 1; margin-bottom: 0;">
-                        <option value="minutes" ${currentUnit === 'minutes' ? 'selected' : ''}>Phút</option>
-                        <option value="hours" ${currentUnit === 'hours' ? 'selected' : ''}>Giờ</option>
-                        <option value="days" ${currentUnit === 'days' ? 'selected' : ''}>Ngày</option>
-                        <option value="lifetime" ${currentUnit === 'lifetime' ? 'selected' : ''}>Vĩnh viễn</option>
-                    </select>
+                <div class="stat-card">
+                    <h4>Tổng số Acc Game</h4>
+                    <div class="number" id="statGameAccounts">0</div>
                 </div>
+            </div>
+            <div class="instruction-card">
+                <h3>Hệ thống Quản lý Tài khoản Game & Bản quyền</h3>
+                <p>Quản lý tập trung các tài khoản game của bạn với trạng thái No Band và Band đơn giản, dễ theo dõi cùng hệ thống xác thực Key bảo mật qua đám mây realtime.</p>
+            </div>
+        </div>
 
-                <div class="modal-btns">
-                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                    <button class="btn-primary" onclick="saveEditedLicense(${originalIdx})">Lưu thay đổi</button>
-                </div>
-            `;
-            document.getElementById('globalModal').style.display = 'flex';
-        }
+        <!-- Tab: Ứng dụng -->
+        <div id="view-applications" class="view-section">
+            <div class="section-title-row">
+                <div class="section-title">Quản lý Ứng dụng</div>
+                <button class="btn-primary" onclick="openAppModal()">+ Thêm Ứng dụng</button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tên Ứng dụng</th>
+                            <th>Mã Bí mật (Secret Key)</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appTableBody">
+                        <tr><td colspan="3" class="empty-state">Không tìm thấy ứng dụng nào.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        function saveEditedLicense(idx) {
-            const newVal = parseInt(document.getElementById('editDurationValue').value) || 1;
-            const newUnit = document.getElementById('editDurationUnit').value;
-            
-            db.licenses[idx].maxDevices = 1; 
-            db.licenses[idx].durationValue = newVal;
-            db.licenses[idx].durationUnit = newUnit;
-            
-            const now = Date.now();
-            if (newUnit === 'lifetime') {
-                db.licenses[idx].expiryTimestamp = 'Lifetime';
-            } else {
-                let multiplier = 24 * 60 * 60 * 1000;
-                if (newUnit === 'minutes') multiplier = 60 * 1000;
-                else if (newUnit === 'hours') multiplier = 60 * 60 * 1000;
-                db.licenses[idx].expiryTimestamp = now + (newVal * multiplier);
-            }
+        <!-- Tab: Quản lý Key -->
+        <div id="view-licenses" class="view-section">
+            <div class="section-title-row">
+                <div class="section-title">Quản lý License Key</div>
+                <button class="btn-primary" onclick="openLicenseModal()">+ Tạo Key Mới</button>
+            </div>
 
-            db.licenses[idx].status = 'Active';
-            if (db.licenses[idx].remainingTimeBeforeBan) {
-                delete db.licenses[idx].remainingTimeBeforeBan;
-            }
-            saveData();
-            closeModal();
-            renderLicenses();
-            showToast("Đã cập nhật key thành công!");
-        }
-
-        function resetDevices(idx) {
-            if (confirm('Bạn có chắc chắn muốn reset thiết bị của key này?')) {
-                db.licenses[idx].currentDevices = 0;
-                saveData();
-                renderLicenses();
-                showToast("Đã reset thiết bị thành công!");
-            }
-        }
-
-        /* --- Quản lý Kho Acc Game (Không còn cột Mật khẩu) --- */
-        function openGameAccountModal() {
-            document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Thêm Acc Game Mới</h3>
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Chọn Phương thức đăng nhập:</label>
-                <select id="modalGameType">
-                    <option value="Google">Google</option>
-                    <option value="Facebook">Facebook</option>
-                    <option value="Garena">Garena</option>
-                    <option value="Vk">Vk</option>
-                    <option value="X">X</option>
+            <div class="filters-bar">
+                <input type="text" class="search-box" placeholder="Tìm kiếm theo mã key..." id="searchInput" onkeyup="renderLicenses()">
+                <select id="statusFilter" onchange="renderLicenses()">
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="Active">Đang hoạt động (Active)</option>
+                    <option value="Banned">Đã khóa (Banned)</option>
                 </select>
+                <select id="appSelectFilter" onchange="renderLicenses()">
+                    <option value="">Tất cả Ứng dụng</option>
+                </select>
+            </div>
 
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">SĐT/Gmail tài khoản:</label>
-                <input type="text" id="modalGameUsername" placeholder="Nhập SĐT hoặc Gmail đăng nhập...">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">License Key</th>
+                            <th style="width: 25%;">Trạng thái & Thiết bị</th>
+                            <th style="width: 25%;">Thời gian đếm ngược</th>
+                            <th style="width: 25%;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="licenseTableBody">
+                        <tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">LV:</label>
-                        <input type="number" id="modalGameLevel" placeholder="Ví dụ: 70" min="1" style="width: 100%;">
-                    </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Rank:</label>
-                        <input type="text" id="modalGameRank" placeholder="Ví dụ: Huyền Thoại" style="width: 100%;">
-                    </div>
-                </div>
+        <!-- Tab: Kho Acc Game -->
+        <div id="view-game-accounts" class="view-section">
+            <div class="section-title-row">
+                <div class="section-title">Quản lý Kho Acc Game</div>
+                <button class="btn-primary" onclick="openGameAccountModal()">+ Thêm Acc Game</button>
+            </div>
 
-                <label style="font-size: 12px; color: #94a3b8; margin: 14px 0 4px; display: block;">Trạng thái:</label>
-                <select id="modalGameStatus">
+            <div class="filters-bar">
+                <input type="text" class="search-box" placeholder="Tìm SĐT/Gmail, LV hoặc Rank..." id="searchGameInput" onkeyup="renderGameAccounts()">
+                <select id="statusGameFilter" onchange="renderGameAccounts()">
+                    <option value="">Tất cả trạng thái</option>
                     <option value="No Band">No Band</option>
                     <option value="Band">Band</option>
                 </select>
+            </div>
 
-                <div class="modal-btns">
-                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                    <button class="btn-primary" onclick="createGameAccount()">Lưu Acc</button>
-                </div>
-            `;
-            document.getElementById('globalModal').style.display = 'flex';
-        }
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 18%;">Loại Acc</th>
+                            <th style="width: 27%;">SĐT/Gmail</th>
+                            <th style="width: 10%;">LV</th>
+                            <th style="width: 15%;">Rank</th>
+                            <th style="width: 15%;">Trạng thái</th>
+                            <th style="width: 25%;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gameAccountTableBody">
+                        <tr><td colspan="6" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        function createGameAccount() {
-            const gameType = document.getElementById('modalGameType').value;
-            const username = document.getElementById('modalGameUsername').value.trim();
-            const statusSelect = document.getElementById('modalGameStatus').value;
+        <!-- Tab: Mô phỏng Client -->
+        <div id="view-client-simulator" class="view-section">
+            <div class="section-title-row">
+                <div class="section-title">Mô phỏng Phần mềm Client Nhập Key & Reset HWID</div>
+            </div>
 
-            if(!username) {
-                return alert('Vui lòng nhập SĐT/Gmail tài khoản!');
-            }
-
-            if (!db.gameAccounts) db.gameAccounts = [];
-            const level = document.getElementById('modalGameLevel').value.trim();
-            const rank = document.getElementById('modalGameRank').value.trim();
-
-            db.gameAccounts.push({
-                id: Date.now(),
-                gameType: gameType,
-                username: username,
-                level: level,
-                rank: rank,
-                status: statusSelect
-            });
-
-            saveData();
-            closeModal();
-            renderGameAccounts();
-            showToast("Thêm tài khoản game thành công!");
-        }
-
-        function openEditGameAccountModal(idx) {
-            const acc = db.gameAccounts[idx];
-            const currentType = acc.gameType || 'Google';
-            const rawStatus = acc.status || 'No Band';
-
-            document.getElementById('modalBodyContent').innerHTML = `
-                <h3>Chỉnh sửa Acc Game</h3>
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Phương thức đăng nhập:</label>
-                <select id="editGameType">
-                    <option value="Google" ${currentType === 'Google' ? 'selected' : ''}>Google</option>
-                    <option value="Facebook" ${currentType === 'Facebook' ? 'selected' : ''}>Facebook</option>
-                    <option value="Garena" ${currentType === 'Garena' ? 'selected' : ''}>Garena</option>
-                    <option value="Vk" ${currentType === 'Vk' ? 'selected' : ''}>Vk</option>
-                    <option value="X" ${currentType === 'X' ? 'selected' : ''}>X</option>
-                </select>
-
-                <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">SĐT/Gmail:</label>
-                <input type="text" id="editGameUsername" value="${acc.username}">
-
-                <div style="display: flex; gap: 10px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">LV:</label>
-                        <input type="number" id="editGameLevel" value="${acc.level || ''}" placeholder="Ví dụ: 70" min="1" style="width: 100%;">
-                    </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: 12px; color: #94a3b8; margin-bottom: 4px; display: block;">Rank:</label>
-                        <input type="text" id="editGameRank" value="${acc.rank || ''}" placeholder="Ví dụ: Huyền Thoại" style="width: 100%;">
-                    </div>
+            <div style="max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); padding: 35px; border-radius: var(--radius-lg); box-shadow: 0 15px 35px rgba(0,0,0,0.4);">
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <h3 style="color: var(--text-main); font-size: 18px; font-weight: 700; margin-bottom: 6px;">Đăng nhập Bản quyền & Reset HWID</h3>
+                    <p style="color: var(--text-dim); font-size: 13px;">Giao diện giả lập khi người dùng chạy tool/phần mềm</p>
                 </div>
 
-                <label style="font-size: 12px; color: #94a3b8; margin: 14px 0 4px; display: block;">Trạng thái:</label>
-                <select id="editGameStatus">
-                    <option value="No Band" ${rawStatus === 'No Band' ? 'selected' : ''}>No Band</option>
-                    <option value="Band" ${rawStatus === 'Band' ? 'selected' : ''}>Band</option>
-                </select>
-
-                <div class="modal-btns">
-                    <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                    <button class="btn-primary" onclick="saveEditedGameAccount(${idx})">Cập nhật</button>
+                <div class="login-input-group">
+                    <label>Nhập License Key</label>
+                    <input type="text" id="simKeyInput" placeholder="Ví dụ: dobi-1d-XXXXXX">
                 </div>
-            `;
-            document.getElementById('globalModal').style.display = 'flex';
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn-login" style="background: #ffffff; color: #09090b; flex: 1; margin-top: 0;" onclick="simulateClientLogin()">Xác thực Key</button>
+                    <button class="btn-login" style="background: #27272a; color: #ffffff; flex: 1; margin-top: 0;" onclick="simulateClientResetHWID()">Reset HWID</button>
+                </div>
+
+                <div id="simResultBox" style="margin-top: 20px; padding: 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; text-align: center; display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Global Modal -->
+<div class="modal" id="globalModal">
+    <div class="modal-content" id="modalBodyContent"></div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast">Đã sao chép thành công!</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyC9bzr6Jgn1W3aMtrV_ndwPB-npr5lSzk",
+        authDomain: "dobi-manager.firebaseapp.com",
+        projectId: "dobi-manager",
+        storageBucket: "dobi-manager.firebasestorage.app",
+        messagingSenderId: "637080746223",
+        appId: "1:637080746223:web:293995d7b0eb5c44e6c31a",
+        measurementId: "G-V5WQ1X21Y9"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let db = {
+        apps: [],
+        licenses: [],
+        users: [],
+        gameAccounts: []
+    };
+
+    window.onload = function() {
+        handleLogout();
+        setInterval(updateCountdowns, 1000);
+    };
+
+    function handleLogin() {
+        const u = document.getElementById('loginUser').value.trim();
+        const p = document.getElementById('loginPass').value.trim();
+        const err = document.getElementById('loginError');
+
+        if(u === 'dobi' && p === 'Giahui12@') {
+            showApp();
+        } else {
+            err.style.display = 'block';
         }
+    }
 
-        function saveEditedGameAccount(idx) {
-            const gameType = document.getElementById('editGameType').value;
-            const username = document.getElementById('editGameUsername').value.trim();
-            const level = document.getElementById('editGameLevel').value.trim();
-            const rank = document.getElementById('editGameRank').value.trim();
-            const statusSelect = document.getElementById('editGameStatus').value;
+    function handleLogout() {
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('loginOverlay').style.display = 'flex';
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+        document.getElementById('loginError').style.display = 'none';
+    }
 
-            if(!username) {
-                return alert('Vui lòng không để trống thông tin!');
+    function showApp() {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'flex';
+        initFirebaseListener();
+    }
+
+    function initFirebaseListener() {
+        database.ref('dobimanager').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                db = {
+                    apps: data.apps || [],
+                    licenses: data.licenses || [],
+                    users: data.users || [],
+                    gameAccounts: data.gameAccounts || []
+                };
+            } else {
+                database.ref('dobimanager').set({ apps: [], licenses: [], users: [], gameAccounts: [] });
             }
-
-            db.gameAccounts[idx].gameType = gameType;
-            db.gameAccounts[idx].username = username;
-            db.gameAccounts[idx].level = level;
-            db.gameAccounts[idx].rank = rank;
-            db.gameAccounts[idx].status = statusSelect;
-
-            saveData();
-            closeModal();
-            renderGameAccounts();
-            showToast("Cập nhật thành công!");
-        }
-
-        function changeGameAccountStatus(idx, newStatus) {
-            db.gameAccounts[idx].status = newStatus;
-            saveData();
-            renderGameAccounts();
-            showToast("Đã đổi trạng thái thành công!");
-        }
-
-        function deleteGameAccount(idx) {
-            if(confirm('Bạn có chắc chắn muốn xóa tài khoản này khỏi kho?')) {
-                db.gameAccounts.splice(idx, 1);
-                saveData();
-                renderGameAccounts();
+            updateStats();
+            const activeTab = document.querySelector('.view-section.active');
+            if(activeTab) {
+                if(activeTab.id === 'view-licenses') renderLicenses();
+                if(activeTab.id === 'view-applications') renderApps();
+                if(activeTab.id === 'view-game-accounts') renderGameAccounts();
             }
+        });
+    }
+
+    function saveData() {
+        database.ref('dobimanager').set(db);
+    }
+
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        
+        document.getElementById('view-' + tabId).classList.add('active');
+        el.classList.add('active');
+        document.getElementById('pageTitle').innerText = el.innerText.trim();
+
+        if(tabId === 'licenses') {
+            populateAppDropdowns();
+            renderLicenses();
+        } else if(tabId === 'applications') {
+            renderApps();
+        } else if(tabId === 'game-accounts') {
+            renderGameAccounts();
+        } else if(tabId === 'overview') {
+            updateStats();
         }
+    }
 
-        function renderGameAccounts() {
-            const tbody = document.getElementById('gameAccountTableBody');
-            const searchInputEl = document.getElementById('searchGameInput');
-            const statusFilterEl = document.getElementById('statusGameFilter');
+    function updateStats() {
+        if(!document.getElementById('statApps')) return;
+        document.getElementById('statApps').innerText = db.apps.length;
+        document.getElementById('statLicenses').innerText = db.licenses.length;
+        document.getElementById('statActive').innerText = db.licenses.filter(l => l.status === 'Active').length;
+        if(document.getElementById('statGameAccounts')) {
+            document.getElementById('statGameAccounts').innerText = db.gameAccounts.length;
+        }
+    }
 
-            if (!tbody) return;
-            if (!db.gameAccounts) db.gameAccounts = [];
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.className = "show";
+        setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2500);
+    }
 
-            const keyword = searchInputEl ? searchInputEl.value.toLowerCase() : '';
-            const statusVal = statusFilterEl ? statusFilterEl.value : '';
+    function copyKey(keyText) {
+        navigator.clipboard.writeText(keyText).then(() => {
+            showToast("Đã sao chép: " + keyText);
+        });
+    }
 
-            let filtered = db.gameAccounts.filter(a => 
-                a.username.toLowerCase().includes(keyword) || 
-                (a.gameType && a.gameType.toLowerCase().includes(keyword)) ||
-                (a.level && String(a.level).toLowerCase().includes(keyword)) ||
-                (a.rank && a.rank.toLowerCase().includes(keyword))
-            );
+    function openAppModal() {
+        document.getElementById('modalBodyContent').innerHTML = `
+            <h3>Thêm Ứng dụng mới</h3>
+            <input type="text" id="appNameInput" placeholder="Tên ứng dụng...">
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                <button class="btn-primary" onclick="createApp()">Tạo</button>
+            </div>
+        `;
+        document.getElementById('globalModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('globalModal').style.display = 'none';
+    }
+
+    function createApp() {
+        const name = document.getElementById('appNameInput').value.trim();
+        if(!name) return alert('Vui lòng nhập tên ứng dụng!');
+        db.apps.push({ id: Date.now(), name: name, secret: 'sec_' + Math.random().toString(36).substring(7) });
+        saveData();
+        closeModal();
+        renderApps();
+    }
+
+    function renderApps() {
+        const tbody = document.getElementById('appTableBody');
+        if(!tbody) return;
+        if(db.apps.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="empty-state">Không tìm thấy ứng dụng nào.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = db.apps.map((app, idx) => `
+            <tr>
+                <td><strong>${app.name}</strong></td>
+                <td><code style="color: var(--text-main); font-family: monospace;">${app.secret}</code></td>
+                <td><button class="btn-action btn-delete" onclick="deleteApp(${idx})">Xóa</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function deleteApp(idx) {
+        if(confirm('Bạn có chắc chắn muốn xóa ứng dụng này?')) {
+            db.apps.splice(idx, 1);
+            saveData();
+            renderApps();
+        }
+    }
+
+    function populateAppDropdowns() {
+        const select = document.getElementById('appSelectFilter');
+        if(!select) return;
+        select.innerHTML = '<option value="">Tất cả Ứng dụng</option>' + db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
+    }
+
+    function generateDefaultKey(val, unit) {
+        let unitCode = 'm';
+        if (unit === 'minutes') unitCode = 'm';
+        else if (unit === 'hours') unitCode = 'h';
+        else if (unit === 'days') unitCode = 'd';
+        else if (unit === 'lifetime') unitCode = 'lt';
+
+        const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+        return `dobi-${val}${unitCode}-${randomPart}`;
+    }
+
+    function updateModalKeyPattern() {
+        const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
+        const unit = document.getElementById('modalDurationUnit').value;
+        const keyInput = document.getElementById('modalCustomKeyInput');
+        if(keyInput) {
+            keyInput.value = generateDefaultKey(val, unit);
+        }
+    }
+
+    function openLicenseModal() {
+        if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Ứng dụng trước khi tạo License Key!');
+        
+        const defaultVal = 1;
+        const defaultUnit = 'days';
+        const defaultRandomKey = generateDefaultKey(defaultVal, defaultUnit);
+
+        document.getElementById('modalBodyContent').innerHTML = `
+            <h3>Tạo License Key Mới</h3>
+            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Chọn ứng dụng:</label>
+            <select id="modalAppSelect">${db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('')}</select>
             
-            if(statusVal) {
-                filtered = filtered.filter(a => a.status === statusVal);
+            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Thời lượng:</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                <input type="number" id="modalDurationValue" value="${defaultVal}" min="1" style="flex: 1; margin-bottom: 0;" oninput="updateModalKeyPattern()">
+                <select id="modalDurationUnit" style="flex: 1; margin-bottom: 0;" onchange="updateModalKeyPattern()">
+                    <option value="minutes">Phút (Test)</option>
+                    <option value="hours">Giờ (Test)</option>
+                    <option value="days" selected>Ngày</option>
+                    <option value="lifetime">Vĩnh viễn (Lifetime)</option>
+                </select>
+            </div>
+
+            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Mã Key tự động (có thể sửa):</label>
+            <input type="text" id="modalCustomKeyInput" value="${defaultRandomKey}" style="margin-bottom: 14px;">
+
+            <input type="hidden" id="modalMaxDevices" value="1">
+            
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                <button class="btn-primary" onclick="generateLicense()">Tạo Key</button>
+            </div>
+        `;
+        document.getElementById('globalModal').style.display = 'flex';
+    }
+
+    function generateLicense() {
+        const customKey = document.getElementById('modalCustomKeyInput').value.trim();
+        if (!customKey) {
+            return alert('Vui lòng nhập mã License Key!');
+        }
+
+        const isExist = db.licenses.some(item => item.key.toLowerCase() === customKey.toLowerCase());
+        if (isExist) {
+            return alert('Mã Key này đã tồn tại trên hệ thống!');
+        }
+
+        const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
+        const unit = document.getElementById('modalDurationUnit').value;
+        const maxDevices = 1; 
+        
+        const now = Date.now();
+        let expiry = 'Lifetime';
+        let multiplier = 0;
+        if (unit === 'minutes') multiplier = 60 * 1000;
+        else if (unit === 'hours') multiplier = 60 * 60 * 1000;
+        else if (unit === 'days') multiplier = 24 * 60 * 60 * 1000;
+
+        if (unit !== 'lifetime') {
+            expiry = now + (val * multiplier);
+        }
+
+        db.licenses.push({
+            key: customKey,
+            status: 'Active',
+            durationValue: val,
+            durationUnit: unit,
+            maxDevices: maxDevices,
+            currentDevices: 0,
+            expiryTimestamp: expiry
+        });
+        saveData();
+        closeModal();
+        renderLicenses();
+        showToast("Đã tạo key thành công!");
+    }
+
+    function openEditLicenseModal(originalIdx) {
+        const l = db.licenses[originalIdx];
+        const currentVal = l.durationValue || 1;
+        const currentUnit = l.durationUnit || 'days';
+
+        document.getElementById('modalBodyContent').innerHTML = `
+            <h3>Tùy chỉnh Key: ${l.key}</h3>
+            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Thời hạn mới:</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+                <input type="number" id="editDurationValue" value="${currentVal}" min="1" style="flex: 1; margin-bottom: 0;">
+                <select id="editDurationUnit" style="flex: 1; margin-bottom: 0;">
+                    <option value="minutes" ${currentUnit === 'minutes' ? 'selected' : ''}>Phút</option>
+                    <option value="hours" ${currentUnit === 'hours' ? 'selected' : ''}>Giờ</option>
+                    <option value="days" ${currentUnit === 'days' ? 'selected' : ''}>Ngày</option>
+                    <option value="lifetime" ${currentUnit === 'lifetime' ? 'selected' : ''}>Vĩnh viễn</option>
+                </select>
+            </div>
+
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                <button class="btn-primary" onclick="saveEditedLicense(${originalIdx})">Lưu thay đổi</button>
+            </div>
+        `;
+        document.getElementById('globalModal').style.display = 'flex';
+    }
+
+    function saveEditedLicense(idx) {
+        const newVal = parseInt(document.getElementById('editDurationValue').value) || 1;
+        const newUnit = document.getElementById('editDurationUnit').value;
+        
+        db.licenses[idx].maxDevices = 1; 
+        db.licenses[idx].durationValue = newVal;
+        db.licenses[idx].durationUnit = newUnit;
+        
+        const now = Date.now();
+        if (newUnit === 'lifetime') {
+            db.licenses[idx].expiryTimestamp = 'Lifetime';
+        } else {
+            let multiplier = 24 * 60 * 60 * 1000;
+            if (newUnit === 'minutes') multiplier = 60 * 1000;
+            else if (newUnit === 'hours') multiplier = 60 * 60 * 1000;
+            db.licenses[idx].expiryTimestamp = now + (newVal * multiplier);
+        }
+
+        db.licenses[idx].status = 'Active';
+        if (db.licenses[idx].remainingTimeBeforeBan) {
+            delete db.licenses[idx].remainingTimeBeforeBan;
+        }
+        saveData();
+        closeModal();
+        renderLicenses();
+        showToast("Đã cập nhật key thành công!");
+    }
+
+    function resetDevices(idx) {
+        if (confirm('Bạn có chắc chắn muốn reset thiết bị của key này?')) {
+            db.licenses[idx].currentDevices = 0;
+            saveData();
+            renderLicenses();
+            showToast("Đã reset thiết bị thành công!");
+        }
+    }
+
+    function openGameAccountModal() {
+        document.getElementById('modalBodyContent').innerHTML = `
+            <h3>Thêm Acc Game Mới</h3>
+            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Chọn Phương thức đăng nhập:</label>
+            <select id="modalGameType">
+                <option value="Google">Google</option>
+                <option value="Facebook">Facebook</option>
+                <option value="Garena">Garena</option>
+                <option value="Vk">Vk</option>
+                <option value="X">X</option>
+            </select>
+
+            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">SĐT/Gmail tài khoản:</label>
+            <input type="text" id="modalGameUsername" placeholder="Nhập SĐT hoặc Gmail đăng nhập...">
+
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">LV:</label>
+                    <input type="number" id="modalGameLevel" placeholder="Ví dụ: 70" min="1" style="width: 100%;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Rank:</label>
+                    <input type="text" id="modalGameRank" placeholder="Ví dụ: Huyền Thoại" style="width: 100%;">
+                </div>
+            </div>
+
+            <label style="font-size: 11px; color: var(--text-dim); margin: 14px 0 4px; display: block; font-weight: 600; text-transform: uppercase;">Trạng thái:</label>
+            <select id="modalGameStatus">
+                <option value="No Band">No Band</option>
+                <option value="Band">Band</option>
+            </select>
+
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                <button class="btn-primary" onclick="createGameAccount()">Lưu Acc</button>
+            </div>
+        `;
+        document.getElementById('globalModal').style.display = 'flex';
+    }
+
+    function createGameAccount() {
+        const gameType = document.getElementById('modalGameType').value;
+        const username = document.getElementById('modalGameUsername').value.trim();
+        const statusSelect = document.getElementById('modalGameStatus').value;
+
+        if(!username) {
+            return alert('Vui lòng nhập SĐT/Gmail tài khoản!');
+        }
+
+        if (!db.gameAccounts) db.gameAccounts = [];
+        const level = document.getElementById('modalGameLevel').value.trim();
+        const rank = document.getElementById('modalGameRank').value.trim();
+
+        db.gameAccounts.push({
+            id: Date.now(),
+            gameType: gameType,
+            username: username,
+            level: level,
+            rank: rank,
+            status: statusSelect
+        });
+
+        saveData();
+        closeModal();
+        renderGameAccounts();
+        showToast("Thêm tài khoản game thành công!");
+    }
+
+    function openEditGameAccountModal(idx) {
+        const acc = db.gameAccounts[idx];
+        const currentType = acc.gameType || 'Google';
+        const rawStatus = acc.status || 'No Band';
+
+        document.getElementById('modalBodyContent').innerHTML = `
+            <h3>Chỉnh sửa Acc Game</h3>
+            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Phương thức đăng nhập:</label>
+            <select id="editGameType">
+                <option value="Google" ${currentType === 'Google' ? 'selected' : ''}>Google</option>
+                <option value="Facebook" ${currentType === 'Facebook' ? 'selected' : ''}>Facebook</option>
+                <option value="Garena" ${currentType === 'Garena' ? 'selected' : ''}>Garena</option>
+                <option value="Vk" ${currentType === 'Vk' ? 'selected' : ''}>Vk</option>
+                <option value="X" ${currentType === 'X' ? 'selected' : ''}>X</option>
+            </select>
+
+            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">SĐT/Gmail:</label>
+            <input type="text" id="editGameUsername" value="${acc.username}">
+
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">LV:</label>
+                    <input type="number" id="editGameLevel" value="${acc.level || ''}" placeholder="Ví dụ: 70" min="1" style="width: 100%;">
+                </div>
+                <div style="flex: 1;">
+                    <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Rank:</label>
+                    <input type="text" id="editGameRank" value="${acc.rank || ''}" placeholder="Ví dụ: Huyền Thoại" style="width: 100%;">
+                </div>
+            </div>
+
+            <label style="font-size: 11px; color: var(--text-dim); margin: 14px 0 4px; display: block; font-weight: 600; text-transform: uppercase;">Trạng thái:</label>
+            <select id="editGameStatus">
+                <option value="No Band" ${rawStatus === 'No Band' ? 'selected' : ''}>No Band</option>
+                <option value="Band" ${rawStatus === 'Band' ? 'selected' : ''}>Band</option>
+            </select>
+
+            <div class="modal-btns">
+                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
+                <button class="btn-primary" onclick="saveEditedGameAccount(${idx})">Cập nhật</button>
+            </div>
+        `;
+        document.getElementById('globalModal').style.display = 'flex';
+    }
+
+    function saveEditedGameAccount(idx) {
+        const gameType = document.getElementById('editGameType').value;
+        const username = document.getElementById('editGameUsername').value.trim();
+        const level = document.getElementById('editGameLevel').value.trim();
+        const rank = document.getElementById('editGameRank').value.trim();
+        const statusSelect = document.getElementById('editGameStatus').value;
+
+        if(!username) {
+            return alert('Vui lòng không để trống thông tin!');
+        }
+
+        db.gameAccounts[idx].gameType = gameType;
+        db.gameAccounts[idx].username = username;
+        db.gameAccounts[idx].level = level;
+        db.gameAccounts[idx].rank = rank;
+        db.gameAccounts[idx].status = statusSelect;
+
+        saveData();
+        closeModal();
+        renderGameAccounts();
+        showToast("Cập nhật thành công!");
+    }
+
+    function changeGameAccountStatus(idx, newStatus) {
+        db.gameAccounts[idx].status = newStatus;
+        saveData();
+        renderGameAccounts();
+        showToast("Đã đổi trạng thái thành công!");
+    }
+
+    function deleteGameAccount(idx) {
+        if(confirm('Bạn có chắc chắn muốn xóa tài khoản này khỏi kho?')) {
+            db.gameAccounts.splice(idx, 1);
+            saveData();
+            renderGameAccounts();
+        }
+    }
+
+    function renderGameAccounts() {
+        const tbody = document.getElementById('gameAccountTableBody');
+        const searchInputEl = document.getElementById('searchGameInput');
+        const statusFilterEl = document.getElementById('statusGameFilter');
+
+        if (!tbody) return;
+        if (!db.gameAccounts) db.gameAccounts = [];
+
+        const keyword = searchInputEl ? searchInputEl.value.toLowerCase() : '';
+        const statusVal = statusFilterEl ? statusFilterEl.value : '';
+
+        let filtered = db.gameAccounts.filter(a => 
+            a.username.toLowerCase().includes(keyword) || 
+            (a.gameType && a.gameType.toLowerCase().includes(keyword)) ||
+            (a.level && String(a.level).toLowerCase().includes(keyword)) ||
+            (a.rank && a.rank.toLowerCase().includes(keyword))
+        );
+        
+        if(statusVal) {
+            filtered = filtered.filter(a => a.status === statusVal);
+        }
+
+        if(filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map((acc) => {
+            const originalIdx = db.gameAccounts.findIndex(item => item.id === acc.id);
+            let badgeClass = 'badge-active';
+            let statusText = acc.status || 'No Band';
+            
+            if (statusText === 'No Band') {
+                badgeClass = 'badge-active';
+            } else {
+                badgeClass = 'badge-banned';
             }
 
-            if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>`;
-                return;
+            const typeName = acc.gameType || 'Google';
+
+            return `
+                <tr>
+                    <td><span class="badge badge-type">${typeName}</span></td>
+                    <td>
+                        <span class="account-text" onclick="copyKey('${acc.username}')" title="Nhấn để copy">${acc.username}</span>
+                    </td>
+                    <td><span class="badge badge-type">${acc.level || '—'}</span></td>
+                    <td><span style="color: var(--warning); font-weight: 700;">${acc.rank || '—'}</span></td>
+                    <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-action btn-edit" onclick="openEditGameAccountModal(${originalIdx})">Sửa</button>
+                            
+                            <select onchange="changeGameAccountStatus(${originalIdx}, this.value)" style="padding: 5px 8px; font-size: 11px; background: var(--bg-surface); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">
+                                <option value="" disabled selected>Trạng thái...</option>
+                                <option value="No Band">No Band</option>
+                                <option value="Band">Band</option>
+                            </select>
+
+                            <button class="btn-action btn-delete" onclick="deleteGameAccount(${originalIdx})">Xóa</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function simulateClientLogin() {
+        const inputKey = document.getElementById('simKeyInput').value.trim();
+        const resultBox = document.getElementById('simResultBox');
+
+        resultBox.style.display = 'block';
+
+        if (!inputKey) {
+            resultBox.style.background = 'var(--danger-glow)';
+            resultBox.style.color = 'var(--danger)';
+            resultBox.innerText = '❌ Vui lòng nhập mã License Key!';
+            return;
+        }
+
+        const l = db.licenses.find(item => item.key.toLowerCase() === inputKey.toLowerCase());
+
+        if (!l) {
+            resultBox.style.background = 'var(--danger-glow)';
+            resultBox.style.color = 'var(--danger)';
+            resultBox.innerText = '❌ Mã Key không tồn tại trên hệ thống!';
+            return;
+        }
+
+        if (l.status === 'Banned') {
+            resultBox.style.background = 'var(--danger-glow)';
+            resultBox.style.color = 'var(--danger)';
+            resultBox.innerText = '❌ Key này đã bị khóa (Banned)!';
+            return;
+        }
+
+        const now = Date.now();
+        if (l.expiryTimestamp !== 'Lifetime' && now > parseInt(l.expiryTimestamp)) {
+            resultBox.style.background = 'var(--danger-glow)';
+            resultBox.style.color = 'var(--danger)';
+            resultBox.innerText = '❌ Key này đã hết hạn sử dụng!';
+            return;
+        }
+
+        l.maxDevices = 1;
+        if (l.currentDevices === undefined) l.currentDevices = 0;
+
+        if (l.currentDevices >= 1) {
+            resultBox.style.background = 'var(--danger-glow)';
+            resultBox.style.color = 'var(--danger)';
+            resultBox.innerText = '❌ Key đã được kích hoạt trên thiết bị khác! Hãy dùng Reset HWID.';
+            return;
+        }
+
+        l.currentDevices = 1;
+        saveData();
+
+        resultBox.style.background = 'var(--success-glow)';
+        resultBox.style.color = 'var(--success)';
+        resultBox.innerText = '✅ Xác thực thành công! (1/1 thiết bị)';
+    }
+
+    function simulateClientResetHWID() {
+        const inputKey = document.getElementById('simKeyInput').value.trim();
+        const resultBox = document.getElementById('simResultBox');
+
+        resultBox.style.display = 'block';
+
+        if (!inputKey) {
+            resultBox.style.background = 'var(--danger-glow)';
+            resultBox.style.color = 'var(--danger)';
+            resultBox.innerText = '❌ Vui lòng nhập mã License Key cần reset!';
+            return;
+        }
+
+        const l = db.licenses.find(item => item.key.toLowerCase() === inputKey.toLowerCase());
+
+        if (!l) {
+            resultBox.style.background = 'var(--danger-glow)';
+            resultBox.style.color = 'var(--danger)';
+            resultBox.innerText = '❌ Mã Key không tồn tại!';
+            return;
+        }
+
+        l.currentDevices = 0;
+        saveData();
+
+        resultBox.style.background = 'rgba(168, 85, 247, 0.15)';
+        resultBox.style.color = '#d8b4fe';
+        resultBox.innerText = '🔄 Đã Reset HWID thành công! (0/1 thiết bị)';
+    }
+
+    function renderLicenses() {
+        const tbody = document.getElementById('licenseTableBody');
+        const searchInputEl = document.getElementById('searchInput');
+        const statusFilterEl = document.getElementById('statusFilter');
+
+        if (!tbody) return;
+
+        const keyword = searchInputEl ? searchInputEl.value.toLowerCase() : '';
+        const statusVal = statusFilterEl ? statusFilterEl.value : '';
+
+        let filtered = db.licenses.filter(l => l.key.toLowerCase().includes(keyword));
+        if(statusVal) filtered = filtered.filter(l => l.status === statusVal);
+
+        if(filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtered.map((l) => {
+            const originalIdx = db.licenses.findIndex(item => item.key === l.key);
+            let badgeClass = 'badge-active';
+            let statusText = 'Đang hoạt động';
+            
+            if(l.status === 'Banned') {
+                badgeClass = 'badge-banned';
+                statusText = 'Đã khóa';
             }
 
-            tbody.innerHTML = filtered.map((acc) => {
-                const originalIdx = db.gameAccounts.findIndex(item => item.id === acc.id);
-                let badgeClass = 'badge-active';
-                let statusText = acc.status || 'No Band';
-                
-                if (statusText === 'No Band') {
-                    badgeClass = 'badge-active';
+            const currentDev = l.currentDevices || 0;
+
+            return `
+                <tr>
+                    <td><span class="key-code" onclick="copyKey('${l.key}')">${l.key}</span></td>
+                    <td>
+                        <span class="badge ${badgeClass}">${statusText}</span><br>
+                        <small style="color: var(--text-dim); margin-top: 4px; display: inline-block;">🖥️ Thiết bị: ${currentDev} / 1 máy</small>
+                    </td>
+                    <td><span class="countdown-timer" data-index="${originalIdx}" data-expiry="${l.expiryTimestamp}" data-status="${l.status}">Đang tính toán...</span></td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-action btn-edit" onclick="openEditLicenseModal(${originalIdx})">Sửa</button>
+                            <button class="btn-action btn-reset" onclick="resetDevices(${originalIdx})">Reset HWID</button>
+                            ${l.status === 'Banned' ? 
+                                `<button class="btn-action btn-unban" onclick="toggleBan(${originalIdx})">Mở</button>` : 
+                                `<button class="btn-action btn-ban" onclick="toggleBan(${originalIdx})">Khóa</button>`
+                            }
+                            <button class="btn-action btn-delete" onclick="deleteLicense(${originalIdx})">Xóa</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        updateCountdowns();
+    }
+
+    function updateCountdowns() {
+        const timers = document.querySelectorAll('.countdown-timer');
+        const now = Date.now();
+
+        timers.forEach(timer => {
+            const expiry = timer.getAttribute('data-expiry');
+            const status = timer.getAttribute('data-status');
+            const originalIdx = timer.getAttribute('data-index');
+            const l = db.licenses[originalIdx];
+            if (!l) return;
+
+            if (status === 'Banned') {
+                if (l.remainingTimeBeforeBan) {
+                    const diff = l.remainingTimeBeforeBan;
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                    
+                    timer.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s (Đóng băng)`;
                 } else {
-                    badgeClass = 'badge-banned';
+                    timer.innerText = 'Đã đóng băng';
                 }
-
-                const typeName = acc.gameType || 'Google';
-
-                return `
-                    <tr>
-                        <td><span class="badge badge-type">${typeName}</span></td>
-                        <td>
-                            <span class="account-text" onclick="copyKey('${acc.username}')" title="Nhấn để copy">${acc.username}</span>
-                        </td>
-                        <td><span class="badge badge-type">${acc.level || '—'}</span></td>
-                        <td><span style="color: #fbbf24; font-weight: 600;">${acc.rank || '—'}</span></td>
-                        <td><span class="badge ${badgeClass}">${statusText}</span></td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-action btn-edit" onclick="openEditGameAccountModal(${originalIdx})">Sửa</button>
-                                
-                                <select onchange="changeGameAccountStatus(${originalIdx}, this.value)" style="padding: 4px; font-size: 11px; background: #1e293b; color: #fff; border: 1px solid #334155; border-radius: 4px; cursor: pointer;">
-                                    <option value="" disabled selected>Đổi trạng thái...</option>
-                                    <option value="No Band">No Band</option>
-                                    <option value="Band">Band</option>
-                                </select>
-
-                                <button class="btn-action btn-delete" onclick="deleteGameAccount(${originalIdx})">Xóa</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-        /* --- Kết thúc phần Acc Game --- */
-
-        function simulateClientLogin() {
-            const inputKey = document.getElementById('simKeyInput').value.trim();
-            const resultBox = document.getElementById('simResultBox');
-
-            resultBox.style.display = 'block';
-
-            if (!inputKey) {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Vui lòng nhập mã License Key!';
-                return;
-            }
-
-            const l = db.licenses.find(item => item.key.toLowerCase() === inputKey.toLowerCase());
-
-            if (!l) {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Mã Key không tồn tại trên hệ thống!';
-                return;
-            }
-
-            if (l.status === 'Banned') {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Key này đã bị khóa (Banned)!';
-                return;
-            }
-
-            const now = Date.now();
-            if (l.expiryTimestamp !== 'Lifetime' && now > parseInt(l.expiryTimestamp)) {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Key này đã hết hạn sử dụng!';
-                return;
-            }
-
-            l.maxDevices = 1;
-            if (l.currentDevices === undefined) l.currentDevices = 0;
-
-            if (l.currentDevices >= 1) {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Key đã được kích hoạt trên thiết bị khác! Hãy dùng Reset HWID.';
-                return;
-            }
-
-            l.currentDevices = 1;
-            saveData();
-
-            resultBox.style.background = 'rgba(16, 185, 129, 0.15)';
-            resultBox.style.color = '#34d399';
-            resultBox.innerText = '✅ Xác thực thành công! (1/1 thiết bị)';
-        }
-
-        function simulateClientResetHWID() {
-            const inputKey = document.getElementById('simKeyInput').value.trim();
-            const resultBox = document.getElementById('simResultBox');
-
-            resultBox.style.display = 'block';
-
-            if (!inputKey) {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Vui lòng nhập mã License Key cần reset!';
-                return;
-            }
-
-            const l = db.licenses.find(item => item.key.toLowerCase() === inputKey.toLowerCase());
-
-            if (!l) {
-                resultBox.style.background = 'rgba(239, 68, 68, 0.15)';
-                resultBox.style.color = '#f87171';
-                resultBox.innerText = '❌ Mã Key không tồn tại!';
-                return;
-            }
-
-            l.currentDevices = 0;
-            saveData();
-
-            resultBox.style.background = 'rgba(139, 92, 246, 0.15)';
-            resultBox.style.color = '#a78bfa';
-            resultBox.innerText = '🔄 Đã Reset HWID thành công! (0/1 thiết bị)';
-        }
-
-        function renderLicenses() {
-            const tbody = document.getElementById('licenseTableBody');
-            const searchInputEl = document.getElementById('searchInput');
-            const statusFilterEl = document.getElementById('statusFilter');
-
-            if (!tbody) return;
-
-            const keyword = searchInputEl ? searchInputEl.value.toLowerCase() : '';
-            const statusVal = statusFilterEl ? statusFilterEl.value : '';
-
-            let filtered = db.licenses.filter(l => l.key.toLowerCase().includes(keyword));
-            if(statusVal) filtered = filtered.filter(l => l.status === statusVal);
-
-            if(filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = filtered.map((l) => {
-                const originalIdx = db.licenses.findIndex(item => item.key === l.key);
-                let badgeClass = 'badge-active';
-                let statusText = 'Đang hoạt động';
-                
-                if(l.status === 'Banned') {
-                    badgeClass = 'badge-banned';
-                    statusText = 'Đã khóa';
-                }
-
-                const currentDev = l.currentDevices || 0;
-
-                return `
-                    <tr>
-                        <td><span class="key-code" onclick="copyKey('${l.key}')">${l.key}</span></td>
-                        <td>
-                            <span class="badge ${badgeClass}">${statusText}</span><br>
-                            <small style="color: #38bdf8;">🖥️ Thiết bị: ${currentDev} / 1 máy</small>
-                        </td>
-                        <td><span class="countdown-timer" data-index="${originalIdx}" data-expiry="${l.expiryTimestamp}" data-status="${l.status}">Đang tính toán...</span></td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn-action btn-edit" onclick="openEditLicenseModal(${originalIdx})">Sửa</button>
-                                <button class="btn-action btn-reset" onclick="resetDevices(${originalIdx})">Reset HWID</button>
-                                ${l.status === 'Banned' ? 
-                                    `<button class="btn-action btn-unban" onclick="toggleBan(${originalIdx})">Mở</button>` : 
-                                    `<button class="btn-action btn-ban" onclick="toggleBan(${originalIdx})">Khóa</button>`
-                                }
-                                <button class="btn-action btn-delete" onclick="deleteLicense(${originalIdx})">Xóa</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-
-            updateCountdowns();
-        }
-
-        function updateCountdowns() {
-            const timers = document.querySelectorAll('.countdown-timer');
-            const now = Date.now();
-
-            timers.forEach(timer => {
-                const expiry = timer.getAttribute('data-expiry');
-                const status = timer.getAttribute('data-status');
-                const originalIdx = timer.getAttribute('data-index');
-                const l = db.licenses[originalIdx];
-                if (!l) return;
-
-                if (status === 'Banned') {
-                    if (l.remainingTimeBeforeBan) {
-                        const diff = l.remainingTimeBeforeBan;
+                timer.style.color = 'var(--danger)';
+            } else if (expiry && expiry !== 'null' && expiry !== 'undefined') {
+                if (expiry === 'Lifetime') {
+                    timer.innerText = 'Vĩnh viễn';
+                    timer.style.color = 'var(--success)';
+                } else {
+                    const diff = parseInt(expiry) - now;
+                    if (diff <= 0) {
+                        timer.innerText = 'Đã hết hạn';
+                        timer.style.color = 'var(--danger)';
+                    } else {
                         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                        
-                        timer.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s (Đóng băng)`;
-                    } else {
-                        timer.innerText = 'Đã đóng băng';
-                    }
-                    timer.style.color = '#f87171';
-                } else if (expiry && expiry !== 'null' && expiry !== 'undefined') {
-                    if (expiry === 'Lifetime') {
-                        timer.innerText = 'Vĩnh viễn';
-                        timer.style.color = '#34d399';
-                    } else {
-                        const diff = parseInt(expiry) - now;
-                        if (diff <= 0) {
-                            timer.innerText = 'Đã hết hạn';
-                            timer.style.color = '#f87171';
+
+                        if (days > 0) {
+                            timer.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+                        } else if (hours > 0) {
+                            timer.innerText = `${hours}h ${minutes}m ${seconds}s`;
                         } else {
-                            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-                            if (days > 0) {
-                                timer.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-                            } else if (hours > 0) {
-                                timer.innerText = `${hours}h ${minutes}m ${seconds}s`;
-                            } else {
-                                timer.innerText = `${minutes}m ${seconds}s`;
-                            }
-                            timer.style.color = '#38bdf8';
+                            timer.innerText = `${minutes}m ${seconds}s`;
                         }
+                        timer.style.color = 'var(--text-main)';
                     }
                 }
-            });
-        }
-
-        function toggleBan(idx) {
-            const l = db.licenses[idx];
-            const now = Date.now();
-
-            if (l.status === 'Banned') {
-                if (l.expiryTimestamp !== 'Lifetime' && l.remainingTimeBeforeBan) {
-                    l.expiryTimestamp = now + l.remainingTimeBeforeBan;
-                    delete l.remainingTimeBeforeBan;
-                }
-                l.status = 'Active';
-            } else {
-                if (l.expiryTimestamp !== 'Lifetime') {
-                    const timeLeft = parseInt(l.expiryTimestamp) - now;
-                    l.remainingTimeBeforeBan = timeLeft > 0 ? timeLeft : 0;
-                }
-                l.status = 'Banned';
-                l.currentDevices = 0;
             }
+        });
+    }
+
+    function toggleBan(idx) {
+        const l = db.licenses[idx];
+        const now = Date.now();
+
+        if (l.status === 'Banned') {
+            if (l.expiryTimestamp !== 'Lifetime' && l.remainingTimeBeforeBan) {
+                l.expiryTimestamp = now + l.remainingTimeBeforeBan;
+                delete l.remainingTimeBeforeBan;
+            }
+            l.status = 'Active';
+        } else {
+            if (l.expiryTimestamp !== 'Lifetime') {
+                const timeLeft = parseInt(l.expiryTimestamp) - now;
+                l.remainingTimeBeforeBan = timeLeft > 0 ? timeLeft : 0;
+            }
+            l.status = 'Banned';
+            l.currentDevices = 0;
+        }
+        saveData();
+        renderLicenses();
+    }
+
+    function deleteLicense(idx) {
+        if(confirm('Bạn có chắc chắn muốn xóa key này?')) {
+            db.licenses.splice(idx, 1);
             saveData();
             renderLicenses();
         }
-
-        function deleteLicense(idx) {
-            if(confirm('Bạn có chắc chắn muốn xóa key này?')) {
-                db.licenses.splice(idx, 1);
-                saveData();
-                renderLicenses();
-            }
-        }
-    </script>
-</body>
-</html>
+    }
+</script>
