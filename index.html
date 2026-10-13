@@ -57,7 +57,6 @@
         font-size: 14px;
     }
 
-    /* --- Custom Scrollbar --- */
     ::-webkit-scrollbar {
         width: 6px;
         height: 6px;
@@ -73,7 +72,6 @@
         background: var(--text-dim);
     }
 
-    /* --- Login Overlay --- */
     #loginOverlay {
         position: fixed;
         top: 0; left: 0; width: 100%; height: 100%;
@@ -171,7 +169,6 @@
         border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
-    /* --- App Container & Layout --- */
     #appContainer {
         display: none;
         width: 100%;
@@ -618,219 +615,4 @@
         border: 1px solid var(--border-color-light);
         box-shadow: 0 10px 25px -5px rgba(0,0,0,0.6);
     }
-    #toast.show {
-        visibility: visible;
-        animation: fadeInOut 2.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    @keyframes fadeInOut {
-        0% { opacity: 0; transform: translateY(20px); }
-        15% { opacity: 1; transform: translateY(0); }
-        85% { opacity: 1; transform: translateY(0); }
-        100% { opacity: 0; transform: translateY(20px); }
-    }
-</style>
-</head>
-<body>
-
-<!-- Màn hình Đăng nhập -->
-<div id="loginOverlay">
-    <div class="login-box">
-        <h2>Đăng Nhập Quản Trị</h2>
-        <p>Hệ thống Đồng bộ Đám mây - Dobi Manager</p>
-        <div class="login-input-group">
-            <label>Tên đăng nhập</label>
-            <input type="text" id="loginUser" placeholder="Nhập tên đăng nhập..." autocomplete="username">
-        </div>
-        <div class="login-input-group">
-            <label>Mật khẩu</label>
-            <input type="password" id="loginPass" placeholder="Nhập mật khẩu..." autocomplete="current-password">
-        </div>
-        <button class="btn-login" id="btnLoginAction" type="button">Đăng nhập hệ thống</button>
-        <div id="loginError" class="login-error">Sai tên đăng nhập hoặc mật khẩu!</div>
-    </div>
-</div>
-
-<!-- Giao diện Dashboard chính -->
-<div id="appContainer">
-    <div class="sidebar" id="sidebarElement">
-        <div>
-            <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Thu gọn / Mở rộng menu">
-                <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-                <span class="sidebar-toggle-text">Thu gọn Menu</span>
-            </button>
-
-            <div class="user-profile">
-                <div class="user-avatar">D</div>
-                <div class="user-info">
-                    <span class="user-name">dobi</span>
-                    <span class="user-email">Đã xác thực Admin</span>
-                </div>
-            </div>
-
-            <div class="nav-menu">
-                <a class="nav-item active" onclick="switchTab('overview', this)" title="Tổng quan">
-                    <svg viewBox="0 0 24 24"><path d="M11 2v20c-5.07-.5-9-4.79-9-10s3.93-9.5 9-10zm2 0v9h9c-.5-5.07-4.79-9-9-9zm0 11v9c5.07-.5 9-4.79 9-10h-9z"/></svg>
-                    <span>Tổng quan</span>
-                </a>
-                <a class="nav-item" onclick="switchTab('applications', this)" title="Ứng dụng">
-                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                    <span>Ứng dụng</span>
-                </a>
-                <a class="nav-item" onclick="switchTab('licenses', this)" title="Quản lý Key">
-                    <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
-                    <span>Quản lý Key</span>
-                </a>
-                <a class="nav-item" onclick="switchTab('game-accounts', this)" title="Kho Acc Game">
-                    <svg viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 10H3V8h18v8zM6 10h2v2H6v-2zm3 0h2v2H9v-2zm3 0h2v2h-2v-2z"/></svg>
-                    <span>Kho Acc Game</span>
-                </a>
-                <a class="nav-item" onclick="switchTab('client-simulator', this)" title="Mô phỏng Client">
-                    <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
-                    <span>Mô phỏng Client (App)</span>
-                </a>
-            </div>
-        </div>
-
-        <div class="sidebar-bottom">
-            <a class="nav-item danger" onclick="handleLogout()" title="Đăng xuất">
-                <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-                <span>Đăng xuất</span>
-            </a>
-        </div>
-    </div>
-
-    <div class="main-content">
-        <div class="header-top">
-            <div class="dashboard-title" id="pageTitle">Tổng quan</div>
-            <div class="status-badge">Đã kết nối đám mây</div>
-        </div>
-
-        <!-- Tab: Tổng quan -->
-        <div id="view-overview" class="view-section active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h4>Tổng số Ứng dụng</h4>
-                    <div class="number" id="statApps">0</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Tổng số Key</h4>
-                    <div class="number" id="statLicenses">0</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Key đang Hoạt động</h4>
-                    <div class="number" id="statActive">0</div>
-                </div>
-                <div class="stat-card">
-                    <h4>Tổng số Acc Game</h4>
-                    <div class="number" id="statGameAccounts">0</div>
-                </div>
-            </div>
-            <div class="instruction-card">
-                <h3>Hệ thống Quản lý Tài khoản Game & Bản quyền</h3>
-                <p>Quản lý tập trung các tài khoản game của bạn với trạng thái No Band và Band đơn giản, dễ theo dõi cùng hệ thống xác thực Key bảo mật qua đám mây realtime.</p>
-            </div>
-        </div>
-
-        <!-- Tab: Ứng dụng -->
-        <div id="view-applications" class="view-section">
-            <div class="section-title-row">
-                <div class="section-title">Quản lý Ứng dụng</div>
-                <button class="btn-primary" onclick="openAppModal()">+ Thêm Ứng dụng</button>
-            </div>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tên Ứng dụng</th>
-                            <th>Mã Bí mật (Secret Key)</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="appTableBody">
-                        <tr><td colspan="3" class="empty-state">Không tìm thấy ứng dụng nào.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab: Quản lý Key -->
-        <div id="view-licenses" class="view-section">
-            <div class="section-title-row">
-                <div class="section-title">Quản lý License Key</div>
-                <button class="btn-primary" onclick="openLicenseModal()">+ Tạo Key Mới</button>
-            </div>
-
-            <div class="filters-bar">
-                <input type="text" class="search-box" placeholder="Tìm kiếm theo mã key..." id="searchInput" onkeyup="renderLicenses()">
-                <select id="statusFilter" onchange="renderLicenses()">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="Active">Đang hoạt động (Active)</option>
-                    <option value="Banned">Đã khóa (Banned)</option>
-                </select>
-                <select id="appSelectFilter" onchange="renderLicenses()">
-                    <option value="">Tất cả Ứng dụng</option>
-                </select>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">License Key</th>
-                            <th style="width: 25%;">Trạng thái & Thiết bị</th>
-                            <th style="width: 25%;">Thời gian đếm ngược</th>
-                            <th style="width: 25%;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="licenseTableBody">
-                        <tr><td colspan="4" class="empty-state">Không tìm thấy key nào.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab: Kho Acc Game -->
-        <div id="view-game-accounts" class="view-section">
-            <div class="section-title-row">
-                <div class="section-title">Quản lý Kho Acc Game</div>
-                <button class="btn-primary" onclick="openGameAccountModal()">+ Thêm Acc Game</button>
-            </div>
-
-            <div class="filters-bar">
-                <input type="text" class="search-box" placeholder="Tìm SĐT/Gmail, LV hoặc Rank..." id="searchGameInput" onkeyup="renderGameAccounts()">
-                <select id="statusGameFilter" onchange="renderGameAccounts()">
-                    <option value="">Tất cả trạng thái</option>
-                    <option value="No Band">No Band</option>
-                    <option value="Band">Band</option>
-                </select>
-            </div>
-
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 18%;">Loại Acc</th>
-                            <th style="width: 27%;">SĐT/Gmail</th>
-                            <th style="width: 10%;">LV</th>
-                            <th style="width: 15%;">Rank</th>
-                            <th style="width: 15%;">Trạng thái</th>
-                            <th style="width: 25%;">Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="gameAccountTableBody">
-                        <tr><td colspan="6" class="empty-state">Không tìm thấy tài khoản game nào.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tab: Mô phỏng Client -->
-        <div id="view-client-simulator" class="view-section">
-            <div class="section-title-row">
-                <div class="section-title">Mô phỏng Phần mềm Client Nhập Key & Reset HWID</div>
-            </div>
-
-            <div style="max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); padding: 35px; border-radius: var(--radius-lg); box-shadow: 0 15px 35px rgba(0,0,0,0.4);">
-                <div style="text-align: center; margin-bottom: 25px;">
-                    <h3 style="color: var(--text-main); font-size: 18px; font-weight: 700; margin-bottom: 6px;">Đăng nhập Bản quyền & Reset HWID</h3>
-                    <p style="color: var(--text-dim); font-size: 13px;">Giao diện giả lập khi người dùng chạy tool/phần mềm</p
+    #
