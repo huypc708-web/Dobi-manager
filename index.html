@@ -192,7 +192,6 @@
         position: relative;
     }
     
-    /* Trạng thái thu gọn của Sidebar */
     .sidebar.collapsed {
         width: var(--sidebar-width-collapsed);
         padding: 20px 10px;
@@ -358,7 +357,6 @@
         color: var(--danger);
     }
 
-    /* --- Main Content Area --- */
     .main-content {
         flex: 1;
         padding: 30px 40px;
@@ -447,7 +445,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* --- Stats Grid --- */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -483,14 +480,13 @@
         letter-spacing: -1px;
     }
 
-    /* --- Filters & Search --- */
     .filters-bar {
         display: flex;
         gap: 12px;
         margin-bottom: 20px;
         flex-wrap: wrap;
     }
-    .search-box, select, input[type="text"], input[type="number"] {
+    .search-box, select, input[type="text"], input[type="number"], input[type="password"] {
         background-color: var(--bg-card);
         border: 1px solid var(--border-color);
         color: var(--text-main);
@@ -500,14 +496,13 @@
         outline: none;
         transition: var(--transition);
     }
-    .search-box:focus, select:focus, input[type="text"]:focus, input[type="number"]:focus {
+    .search-box:focus, select:focus, input:focus {
         border-color: var(--text-main);
         box-shadow: 0 0 0 3px var(--primary-glow);
     }
     .search-box { flex: 1; min-width: 250px; }
     select { cursor: pointer; }
     
-    /* --- Tables --- */
     .table-container {
         background-color: var(--bg-card);
         border: 1px solid var(--border-color);
@@ -581,7 +576,6 @@
     .instruction-card h3 { color: var(--text-main); margin-bottom: 10px; font-size: 16px; font-weight: 700; }
     .instruction-card p { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
 
-    /* --- Modal --- */
     .modal {
         display: none;
         position: fixed;
@@ -607,7 +601,6 @@
     .btn-cancel { background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border-color); padding: 10px 16px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; transition: var(--transition); }
     .btn-cancel:hover { background: var(--bg-card-hover); color: var(--text-main); }
 
-    /* --- Toast Notification --- */
     #toast {
         visibility: hidden;
         min-width: 240px;
@@ -646,23 +639,21 @@
         <p>Hệ thống Đồng bộ Đám mây - Dobi Manager</p>
         <div class="login-input-group">
             <label>Tên đăng nhập</label>
-            <input type="text" id="loginUser" placeholder="Nhập tên đăng nhập...">
+            <input type="text" id="loginUser" placeholder="Nhập tên đăng nhập..." autocomplete="username">
         </div>
         <div class="login-input-group">
             <label>Mật khẩu</label>
-            <input type="password" id="loginPass" placeholder="Nhập mật khẩu...">
+            <input type="password" id="loginPass" placeholder="Nhập mật khẩu..." autocomplete="current-password">
         </div>
-        <button class="btn-login" onclick="handleLogin()">Đăng nhập hệ thống</button>
+        <button class="btn-login" id="btnLoginAction" type="button">Đăng nhập hệ thống</button>
         <div id="loginError" class="login-error">Sai tên đăng nhập hoặc mật khẩu!</div>
     </div>
 </div>
 
 <!-- Giao diện Dashboard chính -->
 <div id="appContainer">
-    <!-- Sidebar -->
     <div class="sidebar" id="sidebarElement">
         <div>
-            <!-- Nút Thu gọn/Mở rộng Sidebar -->
             <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Thu gọn / Mở rộng menu">
                 <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
                 <span class="sidebar-toggle-text">Thu gọn Menu</span>
@@ -708,7 +699,6 @@
         </div>
     </div>
 
-    <!-- Main Content Body -->
     <div class="main-content">
         <div class="header-top">
             <div class="dashboard-title" id="pageTitle">Tổng quan</div>
@@ -843,443 +833,4 @@
             <div style="max-width: 480px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); padding: 35px; border-radius: var(--radius-lg); box-shadow: 0 15px 35px rgba(0,0,0,0.4);">
                 <div style="text-align: center; margin-bottom: 25px;">
                     <h3 style="color: var(--text-main); font-size: 18px; font-weight: 700; margin-bottom: 6px;">Đăng nhập Bản quyền & Reset HWID</h3>
-                    <p style="color: var(--text-dim); font-size: 13px;">Giao diện giả lập khi người dùng chạy tool/phần mềm</p>
-                </div>
-
-                <div class="login-input-group">
-                    <label>Nhập License Key</label>
-                    <input type="text" id="simKeyInput" placeholder="Ví dụ: dobi-1d-XXXXXX">
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="btn-login" style="background: #ffffff; color: #09090b; flex: 1; margin-top: 0;" onclick="simulateClientLogin()">Xác thực Key</button>
-                    <button class="btn-login" style="background: #27272a; color: #ffffff; flex: 1; margin-top: 0;" onclick="simulateClientResetHWID()">Reset HWID</button>
-                </div>
-
-                <div id="simResultBox" style="margin-top: 20px; padding: 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; text-align: center; display: none;"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Global Modal -->
-<div class="modal" id="globalModal">
-    <div class="modal-content" id="modalBodyContent"></div>
-</div>
-
-<!-- Toast Notification -->
-<div id="toast">Đã sao chép thành công!</div>
-
-<script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyC9bzr6Jgn1W3aMtrV_ndwPB-npr5lSzk",
-        authDomain: "dobi-manager.firebaseapp.com",
-        projectId: "dobi-manager",
-        storageBucket: "dobi-manager.firebasestorage.app",
-        messagingSenderId: "637080746223",
-        appId: "1:637080746223:web:293995d7b0eb5c44e6c31a",
-        measurementId: "G-V5WQ1X21Y9"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    let db = {
-        apps: [],
-        licenses: [],
-        users: [],
-        gameAccounts: []
-    };
-
-    window.onload = function() {
-        handleLogout();
-        setInterval(updateCountdowns, 1000);
-    };
-
-    // Chức năng thu gọn/mở rộng Sidebar
-    function toggleSidebar() {
-        const sidebar = document.getElementById('sidebarElement');
-        sidebar.classList.toggle('collapsed');
-    }
-
-    function handleLogin() {
-        const u = document.getElementById('loginUser').value.trim();
-        const p = document.getElementById('loginPass').value.trim();
-        const err = document.getElementById('loginError');
-
-        if(u === 'dobi' && p === 'Giahui12@') {
-            showApp();
-        } else {
-            err.style.display = 'block';
-        }
-    }
-
-    function handleLogout() {
-        document.getElementById('appContainer').style.display = 'none';
-        document.getElementById('loginOverlay').style.display = 'flex';
-        document.getElementById('loginUser').value = '';
-        document.getElementById('loginPass').value = '';
-        document.getElementById('loginError').style.display = 'none';
-    }
-
-    function showApp() {
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('appContainer').style.display = 'flex';
-        initFirebaseListener();
-    }
-
-    function initFirebaseListener() {
-        database.ref('dobimanager').on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                db = {
-                    apps: data.apps || [],
-                    licenses: data.licenses || [],
-                    users: data.users || [],
-                    gameAccounts: data.gameAccounts || []
-                };
-            } else {
-                database.ref('dobimanager').set({ apps: [], licenses: [], users: [], gameAccounts: [] });
-            }
-            updateStats();
-            const activeTab = document.querySelector('.view-section.active');
-            if(activeTab) {
-                if(activeTab.id === 'view-licenses') renderLicenses();
-                if(activeTab.id === 'view-applications') renderApps();
-                if(activeTab.id === 'view-game-accounts') renderGameAccounts();
-            }
-        });
-    }
-
-    function saveData() {
-        database.ref('dobimanager').set(db);
-    }
-
-    function switchTab(tabId, el) {
-        document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-        
-        document.getElementById('view-' + tabId).classList.add('active');
-        el.classList.add('active');
-        document.getElementById('pageTitle').innerText = el.querySelector('span') ? el.querySelector('span').innerText.trim() : el.innerText.trim();
-
-        if(tabId === 'licenses') {
-            populateAppDropdowns();
-            renderLicenses();
-        } else if(tabId === 'applications') {
-            renderApps();
-        } else if(tabId === 'game-accounts') {
-            renderGameAccounts();
-        } else if(tabId === 'overview') {
-            updateStats();
-        }
-    }
-
-    function updateStats() {
-        if(!document.getElementById('statApps')) return;
-        document.getElementById('statApps').innerText = db.apps.length;
-        document.getElementById('statLicenses').innerText = db.licenses.length;
-        document.getElementById('statActive').innerText = db.licenses.filter(l => l.status === 'Active').length;
-        if(document.getElementById('statGameAccounts')) {
-            document.getElementById('statGameAccounts').innerText = db.gameAccounts.length;
-        }
-    }
-
-    function showToast(message) {
-        const toast = document.getElementById('toast');
-        toast.innerText = message;
-        toast.className = "show";
-        setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2500);
-    }
-
-    function copyKey(keyText) {
-        navigator.clipboard.writeText(keyText).then(() => {
-            showToast("Đã sao chép: " + keyText);
-        });
-    }
-
-    function openAppModal() {
-        document.getElementById('modalBodyContent').innerHTML = `
-            <h3>Thêm Ứng dụng mới</h3>
-            <input type="text" id="appNameInput" placeholder="Tên ứng dụng...">
-            <div class="modal-btns">
-                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                <button class="btn-primary" onclick="createApp()">Tạo</button>
-            </div>
-        `;
-        document.getElementById('globalModal').style.display = 'flex';
-    }
-
-    function closeModal() {
-        document.getElementById('globalModal').style.display = 'none';
-    }
-
-    function createApp() {
-        const name = document.getElementById('appNameInput').value.trim();
-        if(!name) return alert('Vui lòng nhập tên ứng dụng!');
-        db.apps.push({ id: Date.now(), name: name, secret: 'sec_' + Math.random().toString(36).substring(7) });
-        saveData();
-        closeModal();
-        renderApps();
-    }
-
-    function renderApps() {
-        const tbody = document.getElementById('appTableBody');
-        if(!tbody) return;
-        if(db.apps.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" class="empty-state">Không tìm thấy ứng dụng nào.</td></tr>`;
-            return;
-        }
-        tbody.innerHTML = db.apps.map((app, idx) => `
-            <tr>
-                <td><strong>${app.name}</strong></td>
-                <td><code style="color: var(--text-main); font-family: monospace;">${app.secret}</code></td>
-                <td><button class="btn-action btn-delete" onclick="deleteApp(${idx})">Xóa</button></td>
-            </tr>
-        `).join('');
-    }
-
-    function deleteApp(idx) {
-        if(confirm('Bạn có chắc chắn muốn xóa ứng dụng này?')) {
-            db.apps.splice(idx, 1);
-            saveData();
-            renderApps();
-        }
-    }
-
-    function populateAppDropdowns() {
-        const select = document.getElementById('appSelectFilter');
-        if(!select) return;
-        select.innerHTML = '<option value="">Tất cả Ứng dụng</option>' + db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('');
-    }
-
-    function generateDefaultKey(val, unit) {
-        let unitCode = 'm';
-        if (unit === 'minutes') unitCode = 'm';
-        else if (unit === 'hours') unitCode = 'h';
-        else if (unit === 'days') unitCode = 'd';
-        else if (unit === 'lifetime') unitCode = 'lt';
-
-        const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
-        return `dobi-${val}${unitCode}-${randomPart}`;
-    }
-
-    function updateModalKeyPattern() {
-        const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
-        const unit = document.getElementById('modalDurationUnit').value;
-        const keyInput = document.getElementById('modalCustomKeyInput');
-        if(keyInput) {
-            keyInput.value = generateDefaultKey(val, unit);
-        }
-    }
-
-    function openLicenseModal() {
-        if(db.apps.length === 0) return alert('Vui lòng tạo ít nhất 1 Ứng dụng trước khi tạo License Key!');
-        
-        const defaultVal = 1;
-        const defaultUnit = 'days';
-        const defaultRandomKey = generateDefaultKey(defaultVal, defaultUnit);
-
-        document.getElementById('modalBodyContent').innerHTML = `
-            <h3>Tạo License Key Mới</h3>
-            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Chọn ứng dụng:</label>
-            <select id="modalAppSelect">${db.apps.map(a => `<option value="${a.name}">${a.name}</option>`).join('')}</select>
-            
-            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Thời lượng:</label>
-            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-                <input type="number" id="modalDurationValue" value="${defaultVal}" min="1" style="flex: 1; margin-bottom: 0;" oninput="updateModalKeyPattern()">
-                <select id="modalDurationUnit" style="flex: 1; margin-bottom: 0;" onchange="updateModalKeyPattern()">
-                    <option value="minutes">Phút (Test)</option>
-                    <option value="hours">Giờ (Test)</option>
-                    <option value="days" selected>Ngày</option>
-                    <option value="lifetime">Vĩnh viễn (Lifetime)</option>
-                </select>
-            </div>
-
-            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Mã Key tự động (có thể sửa):</label>
-            <input type="text" id="modalCustomKeyInput" value="${defaultRandomKey}" style="margin-bottom: 14px;">
-
-            <input type="hidden" id="modalMaxDevices" value="1">
-            
-            <div class="modal-btns">
-                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                <button class="btn-primary" onclick="generateLicense()">Tạo Key</button>
-            </div>
-        `;
-        document.getElementById('globalModal').style.display = 'flex';
-    }
-
-    function generateLicense() {
-        const customKey = document.getElementById('modalCustomKeyInput').value.trim();
-        if (!customKey) {
-            return alert('Vui lòng nhập mã License Key!');
-        }
-
-        const isExist = db.licenses.some(item => item.key.toLowerCase() === customKey.toLowerCase());
-        if (isExist) {
-            return alert('Mã Key này đã tồn tại trên hệ thống!');
-        }
-
-        const val = parseInt(document.getElementById('modalDurationValue').value) || 1;
-        const unit = document.getElementById('modalDurationUnit').value;
-        const maxDevices = 1; 
-        
-        const now = Date.now();
-        let expiry = 'Lifetime';
-        let multiplier = 0;
-        if (unit === 'minutes') multiplier = 60 * 1000;
-        else if (unit === 'hours') multiplier = 60 * 60 * 1000;
-        else if (unit === 'days') multiplier = 24 * 60 * 60 * 1000;
-
-        if (unit !== 'lifetime') {
-            expiry = now + (val * multiplier);
-        }
-
-        db.licenses.push({
-            key: customKey,
-            status: 'Active',
-            durationValue: val,
-            durationUnit: unit,
-            maxDevices: maxDevices,
-            currentDevices: 0,
-            expiryTimestamp: expiry
-        });
-        saveData();
-        closeModal();
-        renderLicenses();
-        showToast("Đã tạo key thành công!");
-    }
-
-    function openEditLicenseModal(originalIdx) {
-        const l = db.licenses[originalIdx];
-        const currentVal = l.durationValue || 1;
-        const currentUnit = l.durationUnit || 'days';
-
-        document.getElementById('modalBodyContent').innerHTML = `
-            <h3>Tùy chỉnh Key: ${l.key}</h3>
-            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Thời hạn mới:</label>
-            <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-                <input type="number" id="editDurationValue" value="${currentVal}" min="1" style="flex: 1; margin-bottom: 0;">
-                <select id="editDurationUnit" style="flex: 1; margin-bottom: 0;">
-                    <option value="minutes" ${currentUnit === 'minutes' ? 'selected' : ''}>Phút</option>
-                    <option value="hours" ${currentUnit === 'hours' ? 'selected' : ''}>Giờ</option>
-                    <option value="days" ${currentUnit === 'days' ? 'selected' : ''}>Ngày</option>
-                    <option value="lifetime" ${currentUnit === 'lifetime' ? 'selected' : ''}>Vĩnh viễn</option>
-                </select>
-            </div>
-
-            <div class="modal-btns">
-                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                <button class="btn-primary" onclick="saveEditedLicense(${originalIdx})">Lưu thay đổi</button>
-            </div>
-        `;
-        document.getElementById('globalModal').style.display = 'flex';
-    }
-
-    function saveEditedLicense(idx) {
-        const newVal = parseInt(document.getElementById('editDurationValue').value) || 1;
-        const newUnit = document.getElementById('editDurationUnit').value;
-        
-        db.licenses[idx].maxDevices = 1; 
-        db.licenses[idx].durationValue = newVal;
-        db.licenses[idx].durationUnit = newUnit;
-        
-        const now = Date.now();
-        if (newUnit === 'lifetime') {
-            db.licenses[idx].expiryTimestamp = 'Lifetime';
-        } else {
-            let multiplier = 24 * 60 * 60 * 1000;
-            if (newUnit === 'minutes') multiplier = 60 * 1000;
-            else if (newUnit === 'hours') multiplier = 60 * 60 * 1000;
-            db.licenses[idx].expiryTimestamp = now + (newVal * multiplier);
-        }
-
-        db.licenses[idx].status = 'Active';
-        if (db.licenses[idx].remainingTimeBeforeBan) {
-            delete db.licenses[idx].remainingTimeBeforeBan;
-        }
-        saveData();
-        closeModal();
-        renderLicenses();
-        showToast("Đã cập nhật key thành công!");
-    }
-
-    function resetDevices(idx) {
-        if (confirm('Bạn có chắc chắn muốn reset thiết bị của key này?')) {
-            db.licenses[idx].currentDevices = 0;
-            saveData();
-            renderLicenses();
-            showToast("Đã reset thiết bị thành công!");
-        }
-    }
-
-    function openGameAccountModal() {
-        document.getElementById('modalBodyContent').innerHTML = `
-            <h3>Thêm Acc Game Mới</h3>
-            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Chọn Phương thức đăng nhập:</label>
-            <select id="modalGameType">
-                <option value="Google">Google</option>
-                <option value="Facebook">Facebook</option>
-                <option value="Garena">Garena</option>
-                <option value="Vk">Vk</option>
-                <option value="X">X</option>
-            </select>
-
-            <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">SĐT/Gmail tài khoản:</label>
-            <input type="text" id="modalGameUsername" placeholder="Nhập SĐT hoặc Gmail đăng nhập...">
-
-            <div style="display: flex; gap: 10px;">
-                <div style="flex: 1;">
-                    <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">LV:</label>
-                    <input type="number" id="modalGameLevel" placeholder="Ví dụ: 70" min="1" style="width: 100%;">
-                </div>
-                <div style="flex: 1;">
-                    <label style="font-size: 11px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 600; text-transform: uppercase;">Rank:</label>
-                    <input type="text" id="modalGameRank" placeholder="Ví dụ: Huyền Thoại" style="width: 100%;">
-                </div>
-            </div>
-
-            <label style="font-size: 11px; color: var(--text-dim); margin: 14px 0 4px; display: block; font-weight: 600; text-transform: uppercase;">Trạng thái:</label>
-            <select id="modalGameStatus">
-                <option value="No Band">No Band</option>
-                <option value="Band">Band</option>
-            </select>
-
-            <div class="modal-btns">
-                <button class="btn-cancel" onclick="closeModal()">Hủy</button>
-                <button class="btn-primary" onclick="createGameAccount()">Lưu Acc</button>
-            </div>
-        `;
-        document.getElementById('globalModal').style.display = 'flex';
-    }
-
-    function createGameAccount() {
-        const gameType = document.getElementById('modalGameType').value;
-        const username = document.getElementById('modalGameUsername').value.trim();
-        const statusSelect = document.getElementById('modalGameStatus').value;
-
-        if(!username) {
-            return alert('Vui lòng nhập SĐT/Gmail tài khoản!');
-        }
-
-        if (!db.gameAccounts) db.gameAccounts = [];
-        const level = document.getElementById('modalGameLevel').value.trim();
-        const rank = document.getElementById('modalGameRank').value.trim();
-
-        db.gameAccounts.push({
-            id: Date.now(),
-            gameType: gameType,
-            username: username,
-            level: level,
-            rank: rank,
-            status: statusSelect
-        });
-
-        saveData();
-        closeModal();
-        renderGameAccounts();
-        showToast("Thêm tài khoản game thành công!");
-    }
-
-    function openEditGameAccountModa... (Còn 18 KB) 
-    
+                    <p style="color: var(--text-dim); font-size: 13px;">Giao diện giả lập khi người dùng chạy tool/phần mềm</p
